@@ -1,0 +1,58 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "description": "The root object.",
+    "properties": {
+        "$schema": true,
+        "name": {
+            "type": "string",
+            "description": "The name of the level."
+        },
+        "key": {
+            "type": "object",
+            "description": "The tile types that will be used in this level's layout. Every key inside here must be exactly one character long and it must not be a space.",
+            "propertyNames": {
+                "pattern": "^.$"
+            },
+            "patternProperties": {
+                "^.*$": {
+                    "type": "object",
+                    "description": "A single character definition.",
+                    "properties": {
+                        "tile": {
+                            "type": "object",
+                            "description": "If present, this character will represent a tile. This object's data define the properties of this tile.",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "description": "The type of this tile. Can be \"normal\".",
+                                    "markdownDescription": "The type of this tile. Can be `\"normal\"`."
+                                }
+                            },
+                            "required": [
+                                "type"
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            }
+        },
+        "layout": {
+            "type": "array",
+            "description": "The layout of the level. Only characters defined inside of the key field can be used in the layout. Additionally, a space represents an empty field.",
+            "markdownDescription": "The layout of the level. Only characters defined inside of the `key` field can be used in the layout. Additionally, a space represents an empty field.",
+            "items": {
+                "type": "string",
+                "description": "A single row of the layout. Every row must have the same width."
+            }
+        }
+    },
+    "required": [
+        "name",
+        "key",
+        "layout"
+    ],
+    "additionalProperties": false
+}

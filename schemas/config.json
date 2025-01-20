@@ -1,0 +1,78 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "description": "The root object.",
+    "properties": {
+        "$schema": true,
+        "name": {
+            "type": "string",
+            "description": "The game name to be displayed in Rich Presence and in the game window."
+        },
+        "windowTitle": {
+            "type": "string",
+            "description": "The window title which the engine window will have, if defined."
+        },
+        "engineVersion": {
+            "type": "string",
+            "description": "Specifies the version a game is for, e.g. \"v0.48.0\".",
+            "markdownDescription": "Specifies the version a game is for, e.g. `\"v0.48.0\"`."
+        },
+        "nativeResolution": {
+            "$ref": "_structures/Vector2.json",
+            "description": "The native resolution of the game."
+        },
+        "tickRate": {
+            "type": "integer",
+            "description": "The number of ticks to be performed per second. Defaults to 120.",
+            "markdownDescription": "The number of ticks to be performed per second. Defaults to `120`."
+        },
+        "renderOnCanvas": {
+            "type": "boolean",
+            "description": "If set, the game frames will be rendered on a canvas and that canvas will be resized instead of game elements (sprites, fonts, etc.) themselves."
+        },
+        "canvasRenderingMode": {
+            "type": "string",
+            "description": "If the canvas rendering is enabled, this field determines the exact rendering properties.",
+            "oneOf": [
+                {
+                    "const": "filtered",
+                    "description": "Default value. The canvas will be stretched to the maximum vertical extent with smooth scaling. The aspect ratio will be preserved."
+                },
+                {
+                    "const": "pixel",
+                    "description": "The canvas will be stretched to the maximum vertical extent without smooth scaling. The aspect ratio will be preserved. When scaled up, every separate pixel will be visible."
+                }
+            ]
+        },
+        "richPresence": {
+            "type": "object",
+            "description": "Defines the Discord Rich Presence behavior.",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Should be always true, unless you want the game to be a secret. In that case, loading a game with this flag set to false causes Rich Presence to disconnect.",
+                    "markdownDescription": "Should be always `true`, unless you want the game to be a secret. In that case, loading a game with this flag set to `false` causes Rich Presence to disconnect."
+                },
+                "applicationID": {
+                    "type": "string",
+                    "description": "Optional. If defined, this will be used as an Application ID when running this game, instead of the default OpenSMCE one."
+                }
+            },
+            "required": [
+                "enabled"
+            ],
+            "additionalProperties": false
+        },
+        "useUI2": {
+            "type": "boolean",
+            "description": "Enables experimental UI2 support. The game will launch using UI2 instead of legacy UI."
+        }
+    },
+    "required": [
+        "engineVersion",
+        "nativeResolution",
+        "tickRate",
+        "richPresence"
+    ],
+    "additionalProperties": false
+}

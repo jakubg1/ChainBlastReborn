@@ -1,0 +1,42 @@
+local class = require "com.class"
+
+---@class SpriteConfig
+---@overload fun(data, path):SpriteConfig
+local SpriteConfig = class:derive("SpriteConfig")
+
+local u = require("src.Configs.utils")
+
+
+
+---Constructs a new Sprite Config.
+---@param data table Raw sprite data.
+---@param path string Path to the file. The file is not loaded here, but is used in error messages.
+function SpriteConfig:new(data, path)
+    self.image = u.parseImage(data.path, path, "path")
+    self.frameSize = u.parseVec2(data.frameSize, path, "frameSize")
+
+    if data.frameCuts then
+        self.frameCuts = {
+            x1 = u.parseInteger(data.frameCuts.x1, path, "frameCuts.x1"),
+            x2 = u.parseInteger(data.frameCuts.x2, path, "frameCuts.x2"),
+            y1 = u.parseInteger(data.frameCuts.y1, path, "frameCuts.y1"),
+            y2 = u.parseInteger(data.frameCuts.y2, path, "frameCuts.y2")
+        }
+    end
+
+    self.states = {}
+    for i, stateData in ipairs(data.states) do
+        local state = {
+            pos = u.parseVec2(stateData.pos, path, "states[" .. tostring(i) .. "].pos"),
+            frames = u.parseVec2(stateData.frames, path, "states[" .. tostring(i) .. "].frames"),
+            frameSize = u.parseVec2Opt(stateData.frameSize, path, "states[" .. tostring(i) .. "].frameSize")
+        }
+        self.states[i] = state
+    end
+
+    self.batched = u.parseBooleanOpt(data.batched, path, "batched")
+end
+
+
+
+return SpriteConfig

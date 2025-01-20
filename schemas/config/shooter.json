@@ -1,0 +1,281 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "description": "The root object.",
+    "properties": {
+        "$schema": true,
+        "movement": {
+            "$ref": "shooter_movement.json",
+            "description": "Describes the positioning and movement of the shooter."
+        },
+        "sprite": {
+            "$ref": "../_structures/Sprite.json",
+            "description": "The sprite for the shooter to be used."
+        },
+        "spriteOffset": {
+            "$ref": "../_structures/Vector2.json",
+            "description": "The offset of the shooter sprite. Defaults to (0, 0).",
+            "markdownDescription": "The offset of the shooter sprite. Defaults to `(0, 0)`."
+        },
+        "spriteAnchor": {
+            "$ref": "../_structures/Vector2.json",
+            "description": "The anchor point of the shooter sprite. Defaults to (0.5, 0).",
+            "markdownDescription": "The anchor point of the shooter sprite. Defaults to `(0.5, 0)`."
+        },
+        "shadowSprite": {
+            "$ref": "../_structures/Sprite.json",
+            "description": "The shadow sprite for the shooter to be used."
+        },
+        "shadowSpriteOffset": {
+            "$ref": "../_structures/Vector2.json",
+            "description": "The offset of the shooter shadow sprite. Defaults to (8, 8).",
+            "markdownDescription": "The offset of the shooter shadow sprite. Defaults to `(8, 8)`."
+        },
+        "shadowSpriteAnchor": {
+            "$ref": "../_structures/Vector2.json",
+            "description": "The anchor point of the shooter shadow sprite. Defaults to (0.5, 0).",
+            "markdownDescription": "The anchor point of the shooter shadow sprite. Defaults to `(0.5, 0)`."
+        },
+        "spheres": {
+            "type": "array",
+            "description": "A list of primary spheres that can be shot.",
+            "items": {
+                "type": "object",
+                "description": "A single primary sphere.",
+                "properties": {
+                    "pos": {
+                        "$ref": "../_structures/Vector2.json",
+                        "description": "The position of the sphere, relative to the shooter."
+                    },
+                    "shotPos": {
+                        "$ref": "../_structures/Vector2.json",
+                        "description": "If present, this is the position - relative to the shooter - that the sphere will warp to when shot and will start moving from that position. If absent, the sphere will start flying from its current position without any modifications."
+                    }
+                },
+                "required": [
+                    "pos"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "nextBallSprites": {
+            "type": "object",
+            "description": "Contains next ball sprites for all possible sphere colors. Key names must be stringified integers.",
+            "propertyNames": {
+                "pattern": "^[-]?[0-9]*$"
+            },
+            "patternProperties": {
+                "^.*$": {
+                    "type": "object",
+                    "description": "Contains next sphere sprite data for that particular sphere color.",
+                    "properties": {
+                        "sprite": {
+                            "$ref": "../_structures/Sprite.json",
+                            "description": "A sprite used to draw the shooter's next color indicator."
+                        },
+                        "spriteAnimationSpeed": {
+                            "type": "number",
+                            "description": "When defined, the next sphere sprite will animate with that speed in frames per second.",
+                            "minimum": 0.0
+                        }
+                    },
+                    "required": [
+                        "sprite"
+                    ],
+                    "additionalProperties": false
+                }
+            }
+        },
+        "nextBallOffset": {
+            "$ref": "../_structures/Vector2.json",
+            "description": "The offset of the shooter's next ball sprite. Defaults to (0, 21).",
+            "markdownDescription": "The offset of the shooter's next ball sprite. Defaults to `(0, 21)`."
+        },
+        "nextBallAnchor": {
+            "$ref": "../_structures/Vector2.json",
+            "description": "The anchor point of the shooter's next ball sprite. Defaults to (0.5, 0).",
+            "markdownDescription": "The anchor point of the shooter's next ball sprite. Defaults to `(0.5, 0)`."
+        },
+        "reticle": {
+            "type": "object",
+            "description": "Describes the appearance of a shooting reticle.",
+            "properties": {
+                "sprite": {
+                    "$ref": "../_structures/Sprite.json",
+                    "description": "The aiming reticle sprite to use when Aiming Retical is on. Will fallback to the default drawn caret if not defined."
+                },
+                "offset": {
+                    "$ref": "../_structures/Vector2.json",
+                    "description": "The aiming reticle's offset, relative to the position the cursor is aiming at."
+                },
+                "nextBallSprite": {
+                    "$ref": "../_structures/Sprite.json",
+                    "description": "The aiming reticle's next ball sprite to use when Aiming Retical is on. Will only be drawn if sprite is defined.",
+                    "markdownDescription": "The aiming reticle's next ball sprite to use when Aiming Retical is on. Will only be drawn if `sprite` is defined."
+                },
+                "nextBallOffset": {
+                    "$ref": "../_structures/Vector2.json",
+                    "description": "The aiming reticle's offset, relative to the top-left of the aiming retical."
+                },
+                "radiusSprite": {
+                    "$ref": "../_structures/Sprite.json",
+                    "description": "The aiming reticle's sprite for spheres with ranged effects, like Fireballs or Color Clouds."
+                },
+                "colorFadeTime": {
+                    "type": "number",
+                    "description": "The time which the reticle should take to fade into the new color, in seconds.",
+                    "exclusiveMinimum": 0.0
+                },
+                "nextColorFadeTime": {
+                    "type": "number",
+                    "description": "The time which the reticle's next color indicator should take to fade into the new color, in seconds.",
+                    "exclusiveMinimum": 0.0
+                }
+            },
+            "additionalProperties": false
+        },
+        "sounds": {
+            "type": "object",
+            "description": "Defines the sounds the shooter makes.",
+            "properties": {
+                "sphereSwap": {
+                    "$ref": "../_structures/SoundEvent.json",
+                    "description": "A sound event played when the shooter's spheres are swapped."
+                },
+                "sphereFill": {
+                    "$ref": "../_structures/SoundEvent.json",
+                    "description": "A sound event played when the shooter is filled with newly generated spheres."
+                }
+            },
+            "required": [
+                "sphereSwap",
+                "sphereFill"
+            ],
+            "additionalProperties": false
+        },
+        "speedShotBeam": {
+            "type": "object",
+            "description": "Describes the appearance of a speed shot beam.",
+            "properties": {
+                "sprite": {
+                    "$ref": "../_structures/Sprite.json",
+                    "description": "The sprite to be used by the Speed Shot beam."
+                },
+                "fadeTime": {
+                    "type": "number",
+                    "description": "How long the speed shot beam should fade in or out, in seconds.",
+                    "minimum": 0.0
+                },
+                "renderingType": {
+                    "type": "string",
+                    "description": "Defines how the speed shot beam is rendered.",
+                    "oneOf": [
+                        {
+                            "const": "full",
+                            "description": "The full beam is always visible."
+                        },
+                        {
+                            "const": "cut",
+                            "description": "The beam is cut where it intersects a sphere train."
+                        },
+                        {
+                            "const": "scale",
+                            "description": "The beam is shrunk so its top is touching a sphere train."
+                        }
+                    ]
+                },
+                "colored": {
+                    "type": "boolean",
+                    "description": "Whether the beam should be colored with the current sphere color."
+                }
+            },
+            "required": [
+                "sprite",
+                "fadeTime",
+                "renderingType",
+                "colored"
+            ],
+            "additionalProperties": false
+        },
+        "speedShotParticle": {
+            "$ref": "../_structures/Particle.json",
+            "description": "Persistent particle packet. If defined, it will spawn when a speed shot powerup is obtained, and despawn when the speed shot beam diminishes."
+        },
+        "shotCooldown": {
+            "type": "number",
+            "description": "The minimum time between the shots, in seconds. If multishot is set to false, this time will be counted since the previous shot sphere has been appended/disappeared.",
+            "markdownDescription": "The minimum time between the shots, in seconds. If `multishot` is set to `false`, this time will be counted since the previous shot sphere has been appended/disappeared.",
+            "minimum": 0.0
+        },
+        "shotCooldownFade": {
+            "type": "number",
+            "description": "The duration of the ball appearing animation, in seconds. During this time you can't shoot balls yet. This time is counted after shotCooldown, so the effective cooldown is this plus that value.",
+            "markdownDescription": "The duration of the ball appearing animation, in seconds. During this time you can't shoot balls yet. This time is counted after `shotCooldown`, so the effective cooldown is this plus that value.",
+            "minimum": 0.0
+        },
+        "multishot": {
+            "type": "boolean",
+            "description": "If set, the player will be able to shoot another sphere before the previous one has hit the sphere train."
+        },
+        "destroySphereOnFail": {
+            "type": "boolean",
+            "description": "If set, when the level is lost, the sphere held by the shooter will show its destruction particles. Otherwise, the ball will just disappear."
+        },
+        "shootSpeed": {
+            "type": "number",
+            "description": "The default speed of how fast the shot spheres will be, in pixels per second.",
+            "exclusiveMinimum": 0.0
+        },
+        "knockback": {
+            "type": "object",
+            "description": "Defines how the shooter should play its knockback animation.",
+            "properties": {
+                "duration": {
+                    "type": "number",
+                    "description": "The duration of the knockback animation.",
+                    "exclusiveMinimum": 0.0
+                },
+                "strength": {
+                    "type": "number",
+                    "description": "The strength of the knockback animation. This is the movement distance in pixels.",
+                    "exclusiveMinimum": 0.0
+                },
+                "speedShotDuration": {
+                    "type": "number",
+                    "description": "The duration of the knockback animation, if under the Speed Shot effect.",
+                    "exclusiveMinimum": 0.0
+                },
+                "speedShotStrength": {
+                    "type": "number",
+                    "description": "The strength of the knockback animation, if under the Speed Shot effect.",
+                    "exclusiveMinimum": 0.0
+                }
+            },
+            "required": [
+                "duration",
+                "strength"
+            ],
+            "additionalProperties": false
+        },
+        "hitboxOffset": {
+            "$ref": "../_structures/Vector2.json",
+            "description": "The offset of the Shooter's hitbox in pixels."
+        },
+        "hitboxSize": {
+            "$ref": "../_structures/Vector2.json",
+            "description": "The size of the Shooter's hitbox in pixels."
+        }
+    },
+    "required": [
+        "movement",
+        "sprite",
+        "spheres",
+        "nextBallSprites",
+        "sounds",
+        "speedShotBeam",
+        "speedShotParticle",
+        "shootSpeed",
+        "hitboxSize"
+    ],
+    "additionalProperties": false
+}

@@ -1,0 +1,117 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "description": "A sphere hit behavior.",
+    "properties": {
+        "type": {
+            "enum": [
+                "normal",
+                "destroySpheres",
+                "recolorSpheres"
+            ]
+        }
+    },
+    "allOf": [
+        {
+            "properties": {
+                "type": {
+                    "description": "A sphere hit behavior type."
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "normal",
+                        "description": "The sphere gets appended to the sphere train where it landed."
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "$schema": true,
+                    "type": true
+                },
+                "additionalProperties": false
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "destroySpheres",
+                        "description": "The sphere gets destroyed and destroys the spheres selected by the provided sphere selector."
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "$schema": true,
+                    "type": true,
+                    "selector": {
+                        "$ref": "../_structures/SphereSelector.json",
+                        "description": "The Sphere Selector which will select the spheres to be destroyed."
+                    },
+                    "scoreEvent": {
+                        "$ref": "../_structures/ScoreEvent.json",
+                        "description": "A Score Event which will be executed once for the whole batch of spheres."
+                    },
+                    "scoreEventPerSphere": {
+                        "$ref": "../_structures/ScoreEvent.json",
+                        "description": "A Score Event which will be executed separately for each Sphere that is destroyed."
+                    }
+                },
+                "required": [
+                    "selector"
+                ],
+                "additionalProperties": false
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "recolorSpheres",
+                        "description": "The sphere gets destroyed and changes the color of the spheres selected by the provided sphere selector."
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "$schema": true,
+                    "type": true,
+                    "selector": {
+                        "$ref": "../_structures/SphereSelector.json",
+                        "description": "The Sphere Selector which will select the spheres of which the color will be changed."
+                    },
+                    "color": {
+                        "type": "integer",
+                        "description": "Which color the spheres will be changed to."
+                    },
+                    "particle": {
+                        "$ref": "../_structures/Particle.json",
+                        "description": "A one-time particle packet launched for all affected spheres."
+                    }
+                },
+                "required": [
+                    "selector",
+                    "color"
+                ],
+                "additionalProperties": false
+            }
+        }
+    ],
+    "required": [
+        "type"
+    ]
+}

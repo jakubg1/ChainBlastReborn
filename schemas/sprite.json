@@ -1,0 +1,83 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "description": "The root entry.",
+    "properties": {
+        "$schema": true,
+        "path": {
+            "$ref": "_structures/Image.json",
+            "description": "The path to an image associated with this Sprite."
+        },
+        "frameSize": {
+            "$ref": "_structures/Vector2.json",
+            "description": "The size of a single frame."
+        },
+        "frameCuts": {
+            "type": "object",
+            "description": "If specified, this Sprite will be a nine-slice sprite. Nine-sliced sprites do not specify their own size, which means that the rendered rectangle size needs to be specified whenever this Sprite is referred to. Not all structures support this notation, and only support standard sprites. The frameSize field still needs to be specified and is the full rectangle size.",
+            "markdownDescription": "If specified, this Sprite will be a nine-slice sprite. Nine-sliced sprites do not specify their own size, which means that the rendered rectangle size needs to be specified whenever this Sprite is referred to. Not all structures support this notation, and only support standard sprites. The `frameSize` field still needs to be specified and is the full rectangle size.",
+            "properties": {
+                "x1": {
+                    "type": "integer",
+                    "description": "The first vertical cut offset, in pixels.",
+                    "minimum": 0
+                },
+                "x2": {
+                    "type": "integer",
+                    "description": "The second vertical cut offset, in pixels.",
+                    "minimum": 0
+                },
+                "y1": {
+                    "type": "integer",
+                    "description": "The first horizontal cut offset, in pixels.",
+                    "minimum": 0
+                },
+                "y2": {
+                    "type": "integer",
+                    "description": "The second horizontal cut offset, in pixels.",
+                    "minimum": 0
+                }
+            },
+            "required": [
+                "x1",
+                "x2",
+                "y1",
+                "y2"
+            ],
+            "additionalProperties": false
+        },
+        "states": {
+            "type": "array",
+            "description": "A list of possible states this Sprite could have.",
+            "items": {
+                "type": "object",
+                "description": "A single state.",
+                "properties": {
+                    "pos": {
+                        "$ref": "_structures/Vector2.json",
+                        "description": "The upper left position of this State's first frame."
+                    },
+                    "frames": {
+                        "$ref": "_structures/Vector2.json",
+                        "description": "The amount of frames this Sprite has. Each next frame is horizontally adjacent to the previous one, ascending towards right."
+                    }
+                },
+                "required": [
+                    "pos",
+                    "frames"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "batched": {
+            "type": "boolean",
+            "description": "Unused."
+        }
+    },
+    "required": [
+        "path",
+        "frameSize",
+        "states"
+    ],
+    "additionalProperties": false
+}

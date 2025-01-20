@@ -1,0 +1,107 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "description": "The root entry.",
+    "properties": {
+        "$schema": true,
+        "particle": {
+            "$ref": "../_structures/Particle.json",
+            "description": "A persistent particle packet which will be applied to any affected sphere."
+        },
+        "time": {
+            "type": "number",
+            "description": "After how many seconds the spheres will be destroyed. If the effect can spread, the timer will start once the infection process is completed.",
+            "minimum": 0.0
+        },
+        "infectionSize": {
+            "type": "integer",
+            "description": "How many times the effect expansion should occur.",
+            "minimum": 0
+        },
+        "infectionTime": {
+            "type": "number",
+            "description": "Time between the expansions, in seconds.",
+            "minimum": 0.0
+        },
+        "applySound": {
+            "$ref": "../_structures/SoundEvent.json",
+            "description": "A sound event to be played when a sphere gets this effect."
+        },
+        "destroySound": {
+            "$ref": "../_structures/SoundEvent.json",
+            "description": "A sound event to be played when spheres afflicted with this effect are destroyed."
+        },
+        "destroyScoreEvent": {
+            "$ref": "../_structures/ScoreEvent.json",
+            "description": "A score event to be executed when spheres affected with this effect are destroyed."
+        },
+        "destroyParticle": {
+            "$ref": "../_structures/Particle.json",
+            "description": "A one-time particle packet used when a sphere with this effect is destroyed."
+        },
+        "destroyCollectible": {
+            "$ref": "../_structures/CollectibleGenerator.json",
+            "description": "The collectible generator to be used when spheres with this effect are destroyed."
+        },
+        "levelLossProtection": {
+            "type": "boolean",
+            "description": "If set to true, a group with spheres with this effect applied will not trigger a level loss when past the path's end node.",
+            "markdownDescription": "If set to `true`, a group with spheres with this effect applied will not trigger a level loss when past the path's end node."
+        },
+        "immobile": {
+            "type": "boolean",
+            "description": "If true, the spheres affected with this effect will stop.",
+            "markdownDescription": "If `true`, the spheres affected with this effect will stop."
+        },
+        "fragile": {
+            "type": "boolean",
+            "description": "If true, the spheres affected with this effect can be destroyed by shooting through them.",
+            "markdownDescription": "If `true`, the spheres affected with this effect can be destroyed by shooting through them."
+        },
+        "canBoostCombo": {
+            "type": "boolean",
+            "description": "If true, the level combo value may rise after destroying a group with this effect.",
+            "markdownDescription": "If `true`, the level combo value may rise after destroying a group with this effect."
+        },
+        "canBoostChain": {
+            "type": "boolean",
+            "description": "If true, the chain combo value may rise after destroying a group with this effect.",
+            "markdownDescription": "If `true`, the chain combo value may rise after destroying a group with this effect."
+        },
+        "applyChainMultiplier": {
+            "type": "boolean",
+            "description": "If true, the score value obtained from destroying the affected spheres will be multiplied by the current chain combo value.",
+            "markdownDescription": "If `true`, the score value obtained from destroying the affected spheres will be multiplied by the current chain combo value."
+        },
+        "canKeepCombo": {
+            "type": "boolean",
+            "description": "Whether shot spheres with this effect should not be counted towards combo reset."
+        },
+        "causeCheck": {
+            "type": "boolean",
+            "description": "When set to false, two groups of spheres of the same sphere effect which happen to collide will behave as one, ignoring the \"cause\" sphere.",
+            "markdownDescription": "When set to `false`, two groups of spheres of the same sphere effect which happen to collide will behave as one, ignoring the \"cause\" sphere."
+        },
+        "ghostTime": {
+            "type": "number",
+            "description": "Optional. If defined, the spheres will not be destroyed, but instead will transform into ghosts. This means they will appear as destroyed, but will still physically exist for the given time. It is highly recommended to not set this, as ghost spheres are designed for Zuma sphere physics recreation.",
+            "exclusiveMinimum": 0.0
+        }
+    },
+    "required": [
+        "time",
+        "infectionSize",
+        "infectionTime",
+        "destroySound",
+        "destroyScoreEvent",
+        "levelLossProtection",
+        "immobile",
+        "fragile",
+        "canBoostCombo",
+        "canBoostChain",
+        "applyChainMultiplier",
+        "canKeepCombo",
+        "causeCheck"
+    ],
+    "additionalProperties": false
+}

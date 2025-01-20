@@ -1,0 +1,8 @@
+- (object) - The root object.
+    - name (string) - The name of the level.
+    - key (object) <<^.$>> - The tile types that will be used in this level's layout. Every key inside here must be exactly one character long and it must not be a space.
+        - (object) - A single character definition.
+            - tile* (object) - If present, this character will represent a tile. This object's data define the properties of this tile.
+                - type (string) - The type of this tile. Can be `"normal"`.
+    - layout (array) - The layout of the level. Only characters defined inside of the `key` field can be used in the layout. Additionally, a space represents an empty field.
+        - (string) - A single row of the layout. Every row must have the same width.
