@@ -1,0 +1,4 @@
+{
+    "$schema": "../../../schemas/music_track.json",
+    "audio": "music/cb1_danger.mp3"
+}

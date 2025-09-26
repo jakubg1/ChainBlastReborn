@@ -38,6 +38,9 @@ function Level:new(game)
     self.bombMeterTime = nil
     self.bombMeterCoords = {}
 
+    self.powerMeter = 0
+    self.powerColor = 0
+
     self.timeElapsed = 0
     self.maxCombo = 0
     self.largestGroup = 0
@@ -64,6 +67,16 @@ function Level:new(game)
     self.hudExtraTimeValue = 0
     self.clockAlarm = nil
     self.dangerMusicFlag = false
+    self.POWER_METER_COLORS = {
+        [0] = Color(1, 1, 1),
+        Color(0.9, 0.1, 0.3),
+        Color(0.1, 0.4, 0.9),
+        Color(1, 0.4, 0),
+        --[0] = {1, 1, 1},
+        --{0.1, 0.4, 0.9},
+        --{1, 0.4, 0},
+        --{0.9, 0.1, 0.3}
+    }
 
     self.levelMusic = _Game.resourceManager:getMusic("music_tracks/level_music.json")
     self.dangerMusic = _Game.resourceManager:getMusic("music_tracks/danger_music.json")
@@ -73,7 +86,7 @@ function Level:new(game)
 
     self.stars = {}
     for i = 1, 1500 do
-        self.stars[i] = LevelStar(true)
+        --self.stars[i] = LevelStar(true)
     end
 end
 
@@ -110,7 +123,7 @@ function Level:update(dt)
             end
 
             -- Pause the game after 3 seconds of inactivity.
-            if self.lastMousePos == _MousePos and self:isTimerTicking() then
+            if self.lastMousePos == _MousePos and self:isTimerTicking() and not self.board:isSelectionActive() then
                 self.mouseIdleTime = self.mouseIdleTime + dt
                 if not self.pause and self.mouseIdleTime > 3 then
                     self:togglePause()
@@ -319,7 +332,7 @@ end
 
 
 ---Adds time to this level's timer.
----@param amount number The amount of seconds to be added.
+---@param amount number The amount of seconds to be added to the clock.
 function Level:addTime(amount)
     self.time = self.time + amount
     self.hudExtraTimeAlpha = 2
@@ -330,7 +343,11 @@ end
 
 ---Starts counting time down in this level.
 function Level:startTimer()
+    if self.timeCounting or self.game.player.disableTimeLimit then
+        return
+    end
     self.timeCounting = true
+    _Game:playSound("sound_events/clock.json")
 end
 
 
@@ -390,6 +407,23 @@ function Level:addToBombMeter(amount)
         self.bombMeterTime = 0
         _Game:playSound("sound_events/bomb_alarm.json")
     end
+end
+
+
+
+---Adds the given amount of power points to the power gauge.
+---If the current power color is 0 (any), the power gauge takes on that color.
+---If the given color is different to the current power color, the power points are discarded.
+---@param amount integer The amount of the power points.
+---@param color integer Color of the power.
+function Level:addToPowerMeter(amount, color)
+    if self.powerColor ~= 0 and self.powerColor ~= color then
+        return
+    end
+    if self.powerColor == 0 then
+        self.powerColor = color
+    end
+    self.powerMeter = self.powerMeter + amount
 end
 
 
@@ -462,13 +496,13 @@ function Level:draw()
 
     -- Pause screen
     if self.pauseAnimation > 0 then
-        _DrawRect(Vec2(57, 0), Vec2(143, 150), Color(0, 0, 0), self.pauseAnimation)
-        self.game.font:draw("Game Paused", Vec2(128, 70), Vec2(0.5), Color(1, 1, 0), self.pauseAnimation)
+        _DrawFillRect(Vec2(57, 0), Vec2(180, 200), Color(0, 0, 0), self.pauseAnimation)
+        self.game.font:draw("Game Paused", natRes / 2 + Vec2(0, -5), Vec2(0.5), Color(1, 1, 0), self.pauseAnimation)
         local alpha = 0.5 + (_TotalTime % 2) * 0.5
         if _TotalTime % 2 > 1 then
             alpha = 1 + (1 - _TotalTime % 2) * 0.5
         end
-        self.game.font:draw("Click to continue", Vec2(128, 80), Vec2(0.5), nil, self.pauseAnimation * alpha)
+        self.game.font:draw("Click to continue", natRes / 2 + Vec2(0, 5), Vec2(0.5), nil, self.pauseAnimation * alpha)
     end
 
     -- Level start
@@ -501,23 +535,26 @@ function Level:draw()
         end
 
         -- Timer
-        self.game.font:draw("Time", Vec2(35, 20), Vec2(0.5, 0), nil, self.hudAlpha)
-        if self.time < 9.9 then
-            if self.time > 5 or not self:isTimerTicking() or _TotalTime % 0.25 < 0.125 then
-                self.game.font:draw(string.format("%.2f", self.time), Vec2(36, 150), Vec2(0.5, 0), Color(1, 0, 0), self.hudAlpha)
+        if not self.game.player.disableTimeLimit then
+            self.game.font:draw("Time", Vec2(35, 20), Vec2(0.5, 0), nil, self.hudAlpha)
+            if self.time < 9.9 then
+                if self.time > 5 or not self:isTimerTicking() or _TotalTime % 0.25 < 0.125 then
+                    self.game.font:draw(string.format("%.2f", self.time), Vec2(36, 150), Vec2(0.5, 0), Color(1, 0, 0), self.hudAlpha)
+                end
+            else
+                self.game.font:draw(string.format("%.1d:%.2d", self.time / 60, self.time % 60), Vec2(36, 150), Vec2(0.5, 0), nil, self.hudAlpha)
             end
-        else
-            self.game.font:draw(string.format("%.1d:%.2d", self.time / 60, self.time % 60), Vec2(36, 150), Vec2(0.5, 0), nil, self.hudAlpha)
-        end
-        _DrawRect(Vec2(32, 34), Vec2(7, 112), Color(0.7, 0.5, 0.3), self.hudAlpha)
-        _DrawFillRect(Vec2(33, 35), Vec2(5, 110), Color(0.1, 0.1, 0.1), self.hudAlpha)
-        local t = math.min(self.time / self.maxTime, 1)
-        _DrawFillRect(Vec2(33, 35 + 110 * (1 - t)), Vec2(5, 110 * t), Color(1, 0.7, 0.1), self.hudAlpha)
-        if self.hudExtraTimeAlpha > 0 then
-            --self.game.font:draw(string.format("+%s", self.hudExtraTimeValue), Vec2(78, 75), Vec2(1, 0), nil, self.hudAlpha * self.hudExtraTimeAlpha)
+            _DrawRect(Vec2(32, 34), Vec2(7, 112), Color(0.7, 0.5, 0.3), self.hudAlpha)
+            _DrawFillRect(Vec2(33, 35), Vec2(5, 110), Color(0.1, 0.1, 0.1), self.hudAlpha)
+            local t = math.min(self.time / self.maxTime, 1)
+            _DrawFillRect(Vec2(33, 35 + 110 * (1 - t)), Vec2(5, 110 * t), Color(1, 0.7, 0.1), self.hudAlpha)
+            if self.hudExtraTimeAlpha > 0 then
+                --self.game.font:draw(string.format("+%s", self.hudExtraTimeValue), Vec2(78, 75), Vec2(1, 0), nil, self.hudAlpha * self.hudExtraTimeAlpha)
+            end
         end
 
-        -- Power meter
+        -- Old power (bomb) meter
+        --[[
         self.game.font:draw("Power", Vec2(285, 20), Vec2(0.5, 0), nil, self.hudAlpha)
         _DrawRect(Vec2(281, 34), Vec2(7, 112), Color(0.7, 0.5, 0.3), self.hudAlpha)
         if self.bombMeterTime then
@@ -531,6 +568,15 @@ function Level:draw()
             _DrawFillRect(Vec2(282, 35 + 110 * (1 - t)), Vec2(5, 110 * t), color, self.hudAlpha)
             self.game.font:draw(tostring(self.bombMeter), Vec2(286, 150), Vec2(1, 0), nil, self.hudAlpha)
         end
+        ]]
+
+        -- New power meter
+        self.game.font:draw("Power", Vec2(285, 20), Vec2(0.5, 0), nil, self.hudAlpha)
+        _DrawRect(Vec2(281, 34), Vec2(7, 112), Color(0.7, 0.5, 0.3), self.hudAlpha)
+        local color = (self.powerMeter > 90 and _TotalTime % 0.3 < 0.15) and Color(1, 1, 1) or self.POWER_METER_COLORS[self.powerColor]
+        local t = math.min(self.powerMeter / 100, 1)
+        _DrawFillRect(Vec2(282, 35 + 110 * (1 - t)), Vec2(5, 110 * t), color, self.hudAlpha)
+        self.game.font:draw(tostring(self.powerMeter), Vec2(286, 150), Vec2(1, 0), nil, self.hudAlpha)
 
         if self.data.multiplierEnabled then
             self.game.font:draw("Multiplier", Vec2(50, 165), Vec2(1, 0), nil, self.hudAlpha)

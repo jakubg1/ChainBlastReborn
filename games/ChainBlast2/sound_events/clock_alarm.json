@@ -1,0 +1,6 @@
+{
+    "$schema": "../../../schemas/sound_event.json",
+    "sound": "sounds/clock1.wav",
+    "volume": 0.5,
+    "loop": true
+}

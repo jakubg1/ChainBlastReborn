@@ -12,6 +12,7 @@ local Menu = require("src.Game.Menu")
 local Level = require("src.Game.Level")
 local Transition = require("src.Game.Transition")
 local Particle2 = require("src.Game.Particle2")
+local ChainFragment = require("src.Game.ChainFragment")
 
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
@@ -115,6 +116,22 @@ end
 ---@param color Color? The starting color of the Particle. TODO: Replace with data.
 function GameMain:spawnParticle(pos, type, color)
 	table.insert(self.particles, Particle2(self, pos, type, color))
+end
+
+
+
+---Spawns a bunch of new Particle Fragments.
+---@param pos Vector2 The initial position of the Particle.
+---@param type string The type of the Particle. TODO: Replace with data.
+---@param sprite Sprite The split sprite. A new particle will be created for each state.
+---@param state integer The state ID to pick a frame from.
+---@param frame integer The frame ID to be picked. This will determine a single frame which will be split.
+---@param maxParticles integer? Maximum number of fragments which should spawn.
+function GameMain:spawnParticleFragments(pos, type, sprite, state, frame, maxParticles)
+	local splitSprite = sprite:split(state, frame)
+	for i = 1, math.min(splitSprite:getStateCount(), maxParticles or math.huge) do
+		table.insert(self.particles, ChainFragment(self, pos, type, splitSprite, i))
+	end
 end
 
 

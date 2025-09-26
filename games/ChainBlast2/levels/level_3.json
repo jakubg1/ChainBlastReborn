@@ -1,0 +1,35 @@
+{
+    "$schema": "../../schemas/level.json",
+    "name": "3",
+    "time": 45,
+    "multiplierEnabled": false,
+    "enablePowerups": false,
+    "key": {
+        "X": {
+            "tile": {
+                "type": "normal"
+            }
+        },
+        "#": {
+            "tile": {
+                "type": "normal"
+            },
+            "chain": {
+                "type": "crate",
+                "color": 0,
+                "health": 2
+            }
+        }
+    },
+    "layout": [
+        "   XXXXX   ",
+        "  XXXXXXX  ",
+        " XX##X##XX ",
+        " X#######X ",
+        " X#######X ",
+        " XX#####XX ",
+        " XXX###XXX ",
+        "  XXX#XXX  ",
+        "   XXXXX   "
+    ]
+}

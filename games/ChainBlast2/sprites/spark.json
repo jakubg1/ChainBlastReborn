@@ -1,0 +1,21 @@
+{
+    "$schema": "../../../schemas/sprite.json",
+    "path": "images/spark.png",
+    "frameSize": {
+        "x": 3,
+        "y": 3
+    },
+    "states": [
+        {
+            "pos": {
+                "x": 0,
+                "y": 0
+            },
+            "frames": {
+                "x": 1,
+                "y": 1
+            }
+        }
+    ],
+    "batched": false
+}

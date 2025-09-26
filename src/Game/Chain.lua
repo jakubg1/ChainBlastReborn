@@ -20,9 +20,10 @@ function Chain:new(board, coords, type)
     self.type = type
 
     -- 1 = straight, 2 = cross
-    self.shape = math.random() < 0.05 and 2 or 1
+    self.shape = math.random() < 1/15 and 2 or 1
     -- 0 = rainbow / uncolored crate
     self.color = math.random(1, 3)
+    self.health = 1
 
     -- 1 = vertical, 2 = horizontal
     self.rotation = self.shape == 2 and 1 or math.random(1, 2)
@@ -48,7 +49,12 @@ function Chain:new(board, coords, type)
     self.releaseRotationSpeed = nil
     self.panicTime = nil
     self.panicOffset = Vec2()
+    self.shakeTime = nil
+    self.shakeOffset = Vec2()
     self.destroyDelay = nil
+    self.flashTime = nil
+    ---@type {delay: number, time: number}[]
+    self.flashQueue = {}
 
     self.sprites = {
         _Game.resourceManager:getSprite("sprites/chain_red.json"),
@@ -73,6 +79,7 @@ function Chain:new(board, coords, type)
         _Game.resourceManager:getSprite("sprites/crate_yellow.json")
     }
     self.crateDestroySound = _Game.resourceManager:getSoundEvent("sound_events/crate_destroy.json")
+    self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
 
     self.delQueue = false
 end
@@ -146,11 +153,42 @@ function Chain:update(dt)
         self.panicOffset = Vec2(love.math.randomNormal(self.panicTime), love.math.randomNormal(self.panicTime))
     end
 
+    -- Shake animation
+    if self.shakeTime then
+        self.shakeTime = self.shakeTime - dt
+        if self.shakeTime > 0 then
+            if self.shakeOffset.x == 0 and self.shakeOffset.y == 0 then
+                self.shakeOffset = Vec2(math.random() < 0.5 and -1 or 1, math.random() < 0.5 and -1 or 1)
+            end
+        else
+            self.shakeOffset = Vec2()
+            self.shakeTime = nil
+        end
+    end
+
     -- Destruction delay
     if self.destroyDelay then
         self.destroyDelay = self.destroyDelay - dt
         if self.destroyDelay <= 0 then
             self:destroy()
+        end
+    end
+
+    -- Flash time
+    if self.flashTime then
+        self.flashTime = self.flashTime - dt
+        if self.flashTime <= 0 then
+            self.flashTime = nil
+        end
+    end
+
+    -- Flash queue
+    for i = #self.flashQueue, 1, -1 do
+        local entry = self.flashQueue[i]
+        entry.delay = entry.delay - dt
+        if entry.delay <= 0 then
+            table.remove(self.flashQueue, i)
+            self:flash(entry.time)
         end
     end
 end
@@ -380,7 +418,7 @@ end
 ---Starts the shuffle animation for this Chain and updates its coordinates.
 ---This function DOES NOT update the position of this Chain on the board.
 ---Use `Board:shuffleChain()` instead.
----@param coords any
+---@param coords Vector2 The new chain position.
 function Chain:shuffleTo(coords)
     if not self.shuffleTarget then
         self.board.shufflingChainCount = self.board.shufflingChainCount + 1
@@ -416,6 +454,46 @@ end
 ---Starts the panic animation for this Chain (shaking rapidly).
 function Chain:panic()
     self.panicTime = 0
+end
+
+
+
+---Shakes the chain slightly for the provided duration.
+---@param duration number The duration of the shake in seconds.
+function Chain:shake(duration)
+    self.shakeTime = duration
+end
+
+
+
+---Damages this Chain. If its health hits 0, it is also destroyed.
+function Chain:damage()
+    self.health = self.health - 1
+    if self.health == 0 then
+        self:destroy()
+    else
+        if self.type == "crate" then
+            self:flash(0.1)
+            for i = 1, 5 do
+                _Game.game:spawnParticle(self:getPos() + 7 + Vec2(love.math.randomNormal(2, 0), love.math.randomNormal(2, 0)), "chip")
+            end
+            self.crateDestroySound:play()
+            _Game.game:shakeScreen(1, nil, 20, 0.15)
+        end
+    end
+end
+
+
+
+---Flashes the chain white for a specified amount of time.
+---@param duration number Flash duration in seconds.
+---@param delay number? If specified, the flash will be delayed by this duration in seconds.
+function Chain:flash(duration, delay)
+    if delay then
+        table.insert(self.flashQueue, {delay = delay, time = duration})
+        return
+    end
+    self.flashTime = duration
 end
 
 
@@ -465,21 +543,24 @@ function Chain:destroy(delay)
     end
 
     -- Spawn some particles.
+    local pos = self:getPos() + 7
     if self.type == "chain" then
         for i = 1, 8 do
-            _Game.game:spawnParticle(self:getPos() + 7 + Vec2(math.random() * 5):rotate(math.random() * math.pi * 2), "spark")
+            --_Game.game:spawnParticle(pos + Vec2(math.random() * 5):rotate(math.random() * math.pi * 2), "spark")
         end
         if _Game.game.settings.chainExplosionStyle == "legacy" then
-            _Game.game:spawnParticle(self:getPos() + 7, "chain_explosion")
+            _Game.game:spawnParticle(pos, "chain_explosion")
+            _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame())
         elseif _Game.game.settings.chainExplosionStyle == "new" then
-            _Game.game:spawnParticle(self:getPos() + 7, "flare")
+            _Game.game:spawnParticle(pos, "flare")
         end
     elseif self.type == "crate" then
         for i = 1, 20 do
-            _Game.game:spawnParticle(self:getPos() + 7 + Vec2(love.math.randomNormal(2, 0), love.math.randomNormal(2, 0)), "chip")
+            _Game.game:spawnParticle(pos + Vec2(love.math.randomNormal(2, 0), love.math.randomNormal(2, 0)), "chip")
         end
+        _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame(), 4)
         for i = 1, 4 do
-            _Game.game:spawnParticle(self:getPos() + 7 + Vec2(math.random() * 5):rotate(math.random() * math.pi * 2), "spark")
+            --_Game.game:spawnParticle(pos + Vec2(math.random() * 5):rotate(math.random() * math.pi * 2), "spark")
         end
     end
 
@@ -490,9 +571,9 @@ function Chain:destroy(delay)
 
     -- Shake the screen.
     if self.type == "chain" then
-        _Game.game:shakeScreen(2, nil, 20, 0.05)
+        --_Game.game:shakeScreen(0.5, nil, 20, 0.15)
     elseif self.type == "crate" then
-        _Game.game:shakeScreen(3, nil, 10, 0.1)
+        _Game.game:shakeScreen(2, nil, 20, 0.15)
     end
 end
 
@@ -512,7 +593,7 @@ function Chain:getPos()
     if self.releasePos then
         return self.releasePos
     end
-    return self.board:getTilePos(self.visualCoords) + self.panicOffset
+    return self.board:getTilePos(self.visualCoords) + self.panicOffset + self.shakeOffset
 end
 
 
@@ -528,6 +609,7 @@ function Chain:getSprite()
         end
         return self.crateSprites[self.color]
     end
+    error(string.format("Illegal chain type: %s", self.type))
 end
 
 
@@ -548,8 +630,9 @@ function Chain:getState()
         end
         return self.rotation
     elseif self.type == "crate" then
-        return 1
+        return math.max(self.health, 1)
     end
+    error(string.format("Illegal chain type: %s", self.type))
 end
 
 
@@ -570,6 +653,7 @@ function Chain:getFrame()
     elseif self.type == "crate" then
         return 1
     end
+    error(string.format("Illegal chain type: %s", self.type))
 end
 
 
@@ -582,15 +666,22 @@ function Chain:draw(offset)
         pos = pos + offset
     end
     local sprite = self:getSprite()
-    sprite:drawWithShadow(pos, nil, self:getState(), self:getFrame(), nil, nil, nil, nil, 0.6)
+    local state = self:getState()
+    local frame = self:getFrame()
+    local shader = self.flashTime and self.flashShader
+    -- Draw the shadow.
+    sprite:drawWithShadow(pos, nil, state, frame, nil, nil, nil, nil, shader, 0.6)
+    -- Draw the debugging sprite.
     if _Debug.chainDebug then
         local logicalPos = self.board:getTilePos(self.coords)
-        sprite:drawWithShadow(logicalPos, nil, self:getState(), self:getFrame(), nil, nil, 0.5)
+        sprite:drawWithShadow(logicalPos, nil, state, frame, nil, nil, 0.5)
     end
+    -- Draw chain connections.
     for i = 1, 4 do
         if self:isVisuallyConnected(i) then
             local data = self.LINK_DATA[i]
-            self.linkSprites[self.color]:drawWithShadow(pos + data.pos, nil, data.state, nil, data.rot)
+            local linkSprite = self.linkSprites[self.color]
+            linkSprite:drawWithShadow(pos + data.pos, nil, data.state, nil, data.rot, nil, nil, nil, shader)
         end
     end
 end

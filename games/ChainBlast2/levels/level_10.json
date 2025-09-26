@@ -1,0 +1,35 @@
+{
+    "$schema": "../../schemas/level.json",
+    "name": "10",
+    "time": 30,
+    "multiplierEnabled": false,
+    "enablePowerups": false,
+    "key": {
+        "X": {
+            "tile": {
+                "type": "ice"
+            }
+        },
+        "#": {
+            "tile": {
+                "type": "ice"
+            },
+            "chain": {
+                "type": "crate",
+                "color": 0,
+                "health": 2
+            }
+        }
+    },
+    "layout": [
+        " #X#X#X#X# ",
+        " XXXXXXXXX ",
+        " #X#X#X#X# ",
+        " XXXXXXXXX ",
+        " #X#X#X#X# ",
+        " XXXXXXXXX ",
+        " #X#X#X#X# ",
+        " XXXXXXXXX ",
+        " #X#X#X#X# "
+    ]
+}

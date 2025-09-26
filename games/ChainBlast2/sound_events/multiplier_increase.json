@@ -1,0 +1,10 @@
+{
+    "$schema": "../../../schemas/sound_event.json",
+    "sounds": [
+        {
+            "sound": "sounds/chime2.wav",
+            "pitch": "${0.9 + [multiplier] * 0.1}",
+            "volume": 1
+        }
+    ]
+}

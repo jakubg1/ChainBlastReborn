@@ -1,0 +1,4 @@
+{
+    "$schema": "../../../schemas/sound_event.json",
+    "sound": "sounds/ui_stats.wav"
+}

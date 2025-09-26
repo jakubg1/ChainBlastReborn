@@ -85,6 +85,12 @@ function Game:init()
 
 	-- Step 7. Create the game
 	self.game = GameMain(self)
+
+	-- test sprite
+	--self.testSprites = {}
+	--for i = 1, 10 do
+	--	self.testSprites[i] = self.resourceManager:getSprite("sprites/chain_blue.json"):split(1, 1)
+	--end
 end
 
 
@@ -113,16 +119,17 @@ end
 ---@param dt number Delta time in seconds.
 function Game:update(dt) -- callback from main.lua
 	self.timer:update(dt)
-	for i = 1, self.timer:getFrameCount() do
-		self:tick(self.timer.FRAME_LENGTH)
+	local frames, delta = self.timer:getFrameCount()
+	for i = 1, frames do
+		self:tick(delta)
 	end
 end
 
 
 
----Updates the game logic. Contrary to `:update()`, this function will always have its delta time given as a multiple of 1/60.
+---Updates the game logic.
 ---@param dt number Delta time in seconds.
-function Game:tick(dt) -- always with 1/60 seconds
+function Game:tick(dt)
 	self.resourceManager:update(dt)
 
 	--self.uiManager:update(dt)
@@ -178,7 +185,7 @@ function Game:draw()
 	if self.renderCanvas then
 		love.graphics.setCanvas()
 		love.graphics.setColor(1, 1, 1)
-		love.graphics.draw(self.renderCanvas, _GetDisplayOffsetX(), 0, 0, _GetResolutionScale())
+		love.graphics.draw(self.renderCanvas, _GetDisplayOffsetX(), _GetDisplayOffsetY(), 0, _GetResolutionScale())
 	end
 
 	-- Borders
@@ -187,6 +194,15 @@ function Game:draw()
 	love.graphics.rectangle("fill", _DisplaySize.x - _GetDisplayOffsetX(), 0, _GetDisplayOffsetX(), _DisplaySize.y)
 
 	-- Test sprite
+	--[[
+	love.graphics.setColor(1, 1, 1)
+	for i, sprite in ipairs(self.testSprites) do
+		for j = 1, sprite:getStateCount() do
+			sprite:draw(Vec2(56 * (j - 1), 56 * (i - 1)), nil, j, 1, nil, nil, nil, Vec2(4))
+		end
+	end
+	]]
+	
 	--love.graphics.setColor(1, 1, 1)
 	--self.resourceManager:getSprite("sprites/game/ball_1.json").config.image:draw(0, 0)
 	_Debug:profDraw2Stop()

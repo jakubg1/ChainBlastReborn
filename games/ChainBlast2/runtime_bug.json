@@ -1,0 +1,672 @@
+{
+	"highscores": {
+		"entries": [
+			{
+				"name": "jkj",
+				"score": 43075300,
+				"level": "14-5"
+			},
+			{
+				"score": 85600,
+				"name": "tet",
+				"level": "1-1"
+			},
+			{
+				"name": "tet",
+				"score": 81000,
+				"level": "1-1"
+			},
+			{
+				"name": "k",
+				"score": 26000,
+				"level": "1-1"
+			},
+			{
+				"name": "k",
+				"score": 26000,
+				"level": "1-1"
+			},
+			{
+				"name": "k",
+				"score": 16200,
+				"level": "1-1"
+			},
+			{
+				"name": "k",
+				"score": 16200,
+				"level": "1-1"
+			},
+			{
+				"name": "AAA",
+				"score": 10000,
+				"level": "1-1"
+			},
+			{
+				"name": "BBB",
+				"score": 9000,
+				"level": "1-1"
+			},
+			{
+				"name": "CCC",
+				"score": 8000,
+				"level": "1-1"
+			}
+		]
+	},
+	"options": {
+		"soundVolume": 0.25,
+		"mute": false,
+		"fullscreen": false,
+		"musicVolume": 0.25
+	},
+	"profiles": {
+		"profiles": {
+			"tet": {
+				"session": {
+					"sublevel": 1,
+					"levelID": 0,
+					"score": 42800,
+					"levelSaveData": {
+						"levelSequenceVars": [],
+						"shotSpheres": [],
+						"combo": 1,
+						"lightningStorms": [],
+						"levelSequenceStep": 1,
+						"netTime": 0,
+						"stats": {
+							"maxCombo": 5,
+							"score": 31500,
+							"maxChain": 2,
+							"successfulShots": 31,
+							"spheresShot": 33,
+							"gems": 1,
+							"sphereChainsSpawned": 3,
+							"coins": 1
+						},
+						"lost": false,
+						"time": 34.883333333333,
+						"destroyedSpheres": 102,
+						"paths": [
+							{
+								"sphereChains": [
+									{
+										"sphereGroups": [
+											{
+												"offset": 3200,
+												"matchCheck": true,
+												"spheres": [
+													1,
+													1
+												],
+												"speed": 400
+											},
+											{
+												"offset": 2900,
+												"matchCheck": true,
+												"spheres": [
+													0
+												],
+												"speed": 200
+											}
+										],
+										"combo": 0,
+										"comboScore": 0,
+										"generationAllowed": false,
+										"generationColor": 4,
+										"speedOverrideBase": 0,
+										"speedOverrideMult": 1,
+										"speedOverrideDecc": 200,
+										"speedOverrideTime": 0
+									},
+									{
+										"sphereGroups": [
+											{
+												"offset": 887.66972021675,
+												"matchCheck": true,
+												"spheres": [
+													0,
+													3,
+													3,
+													7,
+													2,
+													5,
+													5,
+													3,
+													4,
+													6,
+													3,
+													2,
+													3,
+													4,
+													4,
+													2,
+													5,
+													2,
+													7
+												],
+												"speed": 187.00129087272
+											}
+										],
+										"combo": 0,
+										"comboScore": 0,
+										"generationAllowed": false,
+										"generationColor": 5,
+										"speedOverrideBase": 0,
+										"speedOverrideMult": 1,
+										"speedOverrideDecc": 0,
+										"speedOverrideTime": 0
+									}
+								],
+								"sphereEffectGroups": [],
+								"clearOffset": 3276.2915815876,
+								"pathEntities": []
+							}
+						],
+						"collectibles": [],
+						"shooter": {
+							"speedShotSpeed": 0,
+							"nextColor": 1,
+							"multiColorCount": 0,
+							"color": 1,
+							"speedShotTime": 0
+						}
+					},
+					"lives": 1,
+					"coins": 2,
+					"difficulty": "difficulties/expert.json",
+					"sublevel_pool": [],
+					"level": 1
+				},
+				"variables": {
+					"dontShowInstructions": true
+				},
+				"levels": {
+					"0": {
+						"score": 72800,
+						"lost": 9,
+						"won": 4
+					}
+				},
+				"checkpoints": [
+					1
+				]
+			},
+			"jkj": {
+				"session": {
+					"level": 73,
+					"score": 5978800,
+					"levelID": 1204,
+					"lives": 10,
+					"sublevel_pool": [],
+					"sublevel": 1,
+					"difficulty": "difficulties/expert.json",
+					"coins": 2
+				},
+				"variables": [],
+				"levels": {
+					"205": {
+						"score": 142900,
+						"lost": 0,
+						"won": 1
+					},
+					"301": {
+						"score": 228300,
+						"lost": 0,
+						"won": 1
+					},
+					"302": {
+						"score": 194500,
+						"lost": 0,
+						"won": 1
+					},
+					"303": {
+						"score": 225000,
+						"lost": 0,
+						"won": 1
+					},
+					"304": {
+						"score": 221000,
+						"lost": 0,
+						"won": 1
+					},
+					"305": {
+						"score": 201400,
+						"lost": 0,
+						"won": 1
+					},
+					"306": {
+						"score": 213600,
+						"lost": 0,
+						"won": 1
+					},
+					"401": {
+						"score": 269400,
+						"lost": 0,
+						"won": 1
+					},
+					"402": {
+						"score": 242500,
+						"lost": 0,
+						"won": 1
+					},
+					"403": {
+						"score": 247900,
+						"lost": 0,
+						"won": 1
+					},
+					"404": {
+						"score": 296000,
+						"lost": 0,
+						"won": 1
+					},
+					"405": {
+						"score": 238300,
+						"lost": 0,
+						"won": 1
+					},
+					"501": {
+						"score": 301600,
+						"lost": 0,
+						"won": 1
+					},
+					"502": {
+						"score": 298800,
+						"lost": 0,
+						"won": 1
+					},
+					"503": {
+						"score": 336200,
+						"lost": 0,
+						"won": 1
+					},
+					"504": {
+						"score": 346000,
+						"lost": 0,
+						"won": 1
+					},
+					"505": {
+						"score": 375000,
+						"lost": 0,
+						"won": 1
+					},
+					"506": {
+						"score": 301400,
+						"lost": 0,
+						"won": 1
+					},
+					"601": {
+						"score": 390800,
+						"lost": 0,
+						"won": 1
+					},
+					"602": {
+						"score": 361400,
+						"lost": 0,
+						"won": 1
+					},
+					"603": {
+						"score": 371900,
+						"lost": 0,
+						"won": 1
+					},
+					"604": {
+						"score": 394300,
+						"lost": 0,
+						"won": 1
+					},
+					"605": {
+						"score": 374900,
+						"lost": 0,
+						"won": 1
+					},
+					"606": {
+						"score": 331300,
+						"lost": 0,
+						"won": 1
+					},
+					"607": {
+						"score": 339500,
+						"lost": 0,
+						"won": 1
+					},
+					"701": {
+						"lost": 0,
+						"score": 381000,
+						"won": 1
+					},
+					"702": {
+						"lost": 0,
+						"score": 383300,
+						"won": 1
+					},
+					"703": {
+						"lost": 0,
+						"score": 391100,
+						"won": 1
+					},
+					"704": {
+						"lost": 0,
+						"score": 440900,
+						"won": 1
+					},
+					"705": {
+						"lost": 0,
+						"score": 417300,
+						"won": 1
+					},
+					"706": {
+						"lost": 0,
+						"score": 363900,
+						"won": 1
+					},
+					"801": {
+						"lost": 0,
+						"score": 439400,
+						"won": 1
+					},
+					"802": {
+						"lost": 0,
+						"score": 437800,
+						"won": 1
+					},
+					"803": {
+						"lost": 0,
+						"score": 469500,
+						"won": 1
+					},
+					"804": {
+						"lost": 0,
+						"score": 407300,
+						"won": 1
+					},
+					"805": {
+						"lost": 0,
+						"score": 483800,
+						"won": 1
+					},
+					"806": {
+						"lost": 0,
+						"score": 458300,
+						"won": 1
+					},
+					"807": {
+						"lost": 0,
+						"score": 517600,
+						"won": 1
+					},
+					"901": {
+						"lost": 0,
+						"score": 514500,
+						"won": 1
+					},
+					"902": {
+						"lost": 0,
+						"score": 510800,
+						"won": 1
+					},
+					"903": {
+						"lost": 0,
+						"score": 474400,
+						"won": 1
+					},
+					"904": {
+						"lost": 0,
+						"score": 468700,
+						"won": 1
+					},
+					"905": {
+						"lost": 0,
+						"score": 470600,
+						"won": 1
+					},
+					"906": {
+						"lost": 0,
+						"score": 545300,
+						"won": 1
+					},
+					"907": {
+						"lost": 0,
+						"score": 532300,
+						"won": 1
+					},
+					"908": {
+						"lost": 0,
+						"score": 475300,
+						"won": 1
+					},
+					"1001": {
+						"lost": 0,
+						"score": 532200,
+						"won": 1
+					},
+					"1002": {
+						"lost": 0,
+						"score": 493600,
+						"won": 1
+					},
+					"1003": {
+						"lost": 0,
+						"score": 439000,
+						"won": 1
+					},
+					"1004": {
+						"score": 513100,
+						"lost": 0,
+						"won": 1
+					},
+					"1005": {
+						"score": 534800,
+						"lost": 0,
+						"won": 1
+					},
+					"1006": {
+						"score": 519100,
+						"lost": 0,
+						"won": 1
+					},
+					"1007": {
+						"score": 481500,
+						"lost": 0,
+						"won": 1
+					},
+					"1101": {
+						"score": 576800,
+						"lost": 0,
+						"won": 2
+					},
+					"1102": {
+						"score": 570600,
+						"lost": 0,
+						"won": 2
+					},
+					"1103": {
+						"score": 542300,
+						"lost": 0,
+						"won": 2
+					},
+					"1104": {
+						"score": 652500,
+						"lost": 0,
+						"won": 2
+					},
+					"1105": {
+						"score": 626500,
+						"lost": 0,
+						"won": 2
+					},
+					"1106": {
+						"score": 638600,
+						"lost": 0,
+						"won": 2
+					},
+					"1107": {
+						"score": 565900,
+						"lost": 0,
+						"won": 2
+					},
+					"1108": {
+						"score": 563000,
+						"lost": 0,
+						"won": 2
+					},
+					"1201": {
+						"lost": 0,
+						"score": 602300,
+						"won": 2
+					},
+					"1202": {
+						"lost": 0,
+						"score": 627000,
+						"won": 2
+					},
+					"1203": {
+						"lost": 0,
+						"score": 618300,
+						"won": 2
+					},
+					"1204": {
+						"lost": 0,
+						"score": 602800,
+						"won": 1
+					},
+					"1205": {
+						"score": 614400,
+						"lost": 0,
+						"won": 1
+					},
+					"1206": {
+						"score": 579600,
+						"lost": 0,
+						"won": 1
+					},
+					"1207": {
+						"score": 506800,
+						"lost": 0,
+						"won": 1
+					},
+					"1208": {
+						"score": 670100,
+						"lost": 0,
+						"won": 1
+					},
+					"1209": {
+						"score": 575000,
+						"lost": 0,
+						"won": 1
+					},
+					"1301": {
+						"score": 642500,
+						"lost": 0,
+						"won": 1
+					},
+					"1302": {
+						"score": 556100,
+						"lost": 0,
+						"won": 1
+					},
+					"1303": {
+						"score": 548500,
+						"lost": 0,
+						"won": 1
+					},
+					"1304": {
+						"score": 589800,
+						"lost": 0,
+						"won": 1
+					},
+					"1305": {
+						"score": 628200,
+						"lost": 0,
+						"won": 1
+					},
+					"1401": {
+						"lost": 0,
+						"score": 608600,
+						"won": 2
+					},
+					"1402": {
+						"lost": 0,
+						"score": 599800,
+						"won": 2
+					},
+					"1403": {
+						"lost": 0,
+						"score": 607500,
+						"won": 1
+					},
+					"1404": {
+						"lost": 0,
+						"score": 671000,
+						"won": 1
+					},
+					"1405": {
+						"lost": 0,
+						"score": 6429200,
+						"won": 1
+					},
+					"101": {
+						"score": 65500,
+						"lost": 0,
+						"won": 1
+					},
+					"204": {
+						"score": 126000,
+						"lost": 0,
+						"won": 1
+					},
+					"203": {
+						"score": 115700,
+						"lost": 0,
+						"won": 1
+					},
+					"202": {
+						"score": 139900,
+						"lost": 0,
+						"won": 1
+					},
+					"201": {
+						"score": 108400,
+						"lost": 0,
+						"won": 1
+					},
+					"104": {
+						"score": 134700,
+						"lost": 0,
+						"won": 1
+					},
+					"103": {
+						"score": 97500,
+						"lost": 0,
+						"won": 1
+					},
+					"102": {
+						"score": 83800,
+						"lost": 0,
+						"won": 1
+					}
+				},
+				"checkpoints": [
+					1,
+					2,
+					3,
+					4,
+					5,
+					6,
+					7,
+					8,
+					9,
+					10,
+					11,
+					12,
+					13,
+					14
+				]
+			}
+		},
+		"order": [
+			"jkj",
+			"tet"
+		],
+		"selected": "tet"
+	}
+}

@@ -164,6 +164,20 @@ end
 
 
 
+---Opens a shader file and constructs `love.Shader` from it. Returns `nil` if file not found.
+---@param path string The path to the file.
+---@return love.Shader?
+function utils.loadShader(path)
+	local data = utils.loadFile(path)
+	if not data then
+		return nil
+	end
+	local shader = love.graphics.newShader(data)
+	return shader
+end
+
+
+
 ---Returns a list of directories and/or files in a given path.
 ---@param path string The path to the folder of which contents should be checked.
 ---@param filter string? `"dir"` will only list directories, `"file"` will only list files, `"all"` (default) will list both.

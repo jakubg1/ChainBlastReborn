@@ -134,6 +134,7 @@ function Board:new(level)
 
     self.hoverSprite = _Game.resourceManager:getSprite("sprites/hover.json")
     self.hintSprite = _Game.resourceManager:getSprite("sprites/hint.json")
+    self.hintPalette = _Game.resourceManager:getColorPalette("color_palettes/hint.json")
     self.backgroundSprite = _Game.resourceManager:getSprite("sprites/board_background.json")
     self.background = nil
 
@@ -449,8 +450,13 @@ function Board:initializeContents()
                 if cellData and cellData.tile then
                     local chainType = cellData.chain and cellData.chain.type or "chain"
                     self.chains[i][j] = Chain(self, coords, chainType)
-                    if cellData.chain and cellData.chain.color then
-                        self.chains[i][j].color = cellData.chain.color
+                    if cellData.chain then
+                        if cellData.chain.color then
+                            self.chains[i][j].color = cellData.chain.color
+                        end
+                        if cellData.chain.health then
+                            self.chains[i][j].health = cellData.chain.health
+                        end
                     end
                 end
             end
@@ -471,6 +477,14 @@ function Board:initializeContents()
 
     -- Play a sound.
     _Game:playSound("sound_events/board_start.json")
+end
+
+
+
+---Returns `true` if the player is currently selecting some chains.
+---@return boolean
+function Board:isSelectionActive()
+    return self.selecting
 end
 
 
@@ -584,24 +598,37 @@ function Board:finishSelection(abort)
         tile:unselectSides()
     end
 	-- Deploy a powerup if applicable. The powerup will always appear at the cursor position.
-	local powerupCoords = self.selectedCoords[#self.selectedCoords]
-	if powerupCoords then
-		local powerupChain = self:getChain(powerupCoords)
-        if powerupChain then
-            local powerupChainGroup = powerupChain:getGroup()
-            local powerup = self:getPowerupFromColors(self:countGroupColors(powerupChainGroup))
-            if powerup then
-                powerupChain:setPowerup(powerup)
+    if self.level.data.enablePowerups then
+        local powerupCoords = self.selectedCoords[#self.selectedCoords]
+        if powerupCoords then
+            local powerupChain = self:getChain(powerupCoords)
+            if powerupChain then
+                local powerupChainGroup = powerupChain:getGroup()
+                local powerup = self:getPowerupFromColors(self:countGroupColors(powerupChainGroup))
+                if powerup then
+                    powerupChain:setPowerup(powerup)
+                end
             end
         end
-	end
-    -- Unselect everything, handle matches, etc.
+    end
+    -- Handle matches.
+    if not abort then
+        local result = self:handleMatches()
+        if not result then
+            -- The selection didn't work. Play a sound and shake the chains.
+            _Game:playSound("sound_events/no.json")
+            for i, coords in ipairs(self.selectedCoords) do
+                local chain = self:getChain(coords)
+                if chain then
+                    chain:shake(0.05)
+                end
+            end
+        end
+    end
+    -- Unselect all chains and exit the selection mode.
     self.selecting = false
     self.selectedCoords = {}
     self.selectedDirections = {}
-    if not abort then
-        self:handleMatches()
-    end
     -- Unrotate all chains.
     for i = 1, self.size.x do
         for j = 1, self.size.y do
@@ -630,9 +657,21 @@ function Board:updateSelectionHighlights()
         end
     end
 
+    -- Exit if no chains are selected.
 	if #self.selectedCoords == 0 then
 		return
 	end
+    -- Flash the chains if a valid match is selected.
+    if #self.selectedCoords >= 3 then
+        for i, chainCoords in ipairs(self.selectedCoords) do
+            self:getChain(chainCoords):flash(0.05, (i - 1) * 0.03)
+        end
+    end
+    -- Exit here if powerups are disabled.
+    if not self.level.data.enablePowerups then
+        return
+    end
+
 	local powerupCoords = self.selectedCoords[#self.selectedCoords]
 	local powerupChain = self:getChain(powerupCoords)
     if not powerupChain then
@@ -823,9 +862,23 @@ end
 
 
 ---Checks for all groups of 3 chains or more on the board and destroys them, granting points, increasing combo, etc.
+---Returns `true` if a match has been found, `false` otherwise.
+---@return boolean
 function Board:handleMatches()
-    local matchCount = 0
-    for i, match in ipairs(self:getMatchGroups()) do
+    local matchGroups = self:getMatchGroups()
+    if #matchGroups == 0 then
+        return false
+    end
+
+    self.level:addCombo()
+    _Vars:set("combo", self.level.combo)
+    _Vars:set("multiplier", self.level.multiplier)
+    _Game:playSound("sound_events/combo.json")
+    self.hintCoords = nil
+    self.hintTime = 0
+    self.level:startTimer()
+
+    for i, match in ipairs(matchGroups) do
         local nonGoldTileIncluded = false
 		local colors = self:countGroupColors(match)
         local modifiedMatch = self:rearrangeMatchGroup(match, self.lastSelectStart, true)
@@ -835,10 +888,14 @@ function Board:handleMatches()
                 local chain = self:getChain(coords)
                 assert(tile, string.format("Tried selecting a nonexistent tile on %s", coords))
                 assert(chain, string.format("Tried selecting a nonexistent chain on %s", coords))
-                chain:destroy((k - 1) * 0.05)
-                if tile.gold then
-                    self.level:addToBombMeter(1)
-                end
+                local delay = 0 --0.05
+                chain:destroy((k - 1) * delay)
+                -- Old bomb meter stuff
+                --if tile.gold then
+                --    self.level:addToBombMeter(1)
+                --end
+                -- New (power meter)
+                self.level:addToPowerMeter(1, chain.color)
                 if not tile.gold then
                     nonGoldTileIncluded = true
                 end
@@ -847,14 +904,12 @@ function Board:handleMatches()
                 for l = 1, 4 do
                     local adjChain = chain:getNeighborChain(l)
                     if adjChain and adjChain:canBeBrokenByNearbyMatch(chain.color) then
-                        adjChain:destroy()
+                        adjChain:damage()
                     end
                 end
             end
         end
         self.lastSelectStart = nil
-        matchCount = matchCount + 1
-        self.level:addCombo()
         self.level:addToMultiplier(#match * 0.05)
         local multiplier = (self.level.combo * (self.level.combo + 1)) / 2 * self.level.multiplier
         self.level:addScore((#match - 2) * 100 * multiplier)
@@ -862,22 +917,16 @@ function Board:handleMatches()
             self.level:addTime(#match - 3)
         end
         self.level.largestGroup = math.max(self.level.largestGroup, #match)
-        _Vars:set("combo", self.level.combo)
-        _Vars:set("multiplier", self.level.multiplier)
         _Game:playSound("sound_events/match.json")
-        _Vars:unset("combo")
-        _Vars:unset("multiplier")
         if nonGoldTileIncluded then
             --_Game:playSound("sound_events/tile_gold.json")
         end
+        -- Shake the screen on combos.
+        _Game.game:shakeScreen(self.level.combo * 1, nil, 20, 0.15)
 
-        self.level:startTimer()
-        self.hintCoords = nil
-        self.hintTime = 0
-        
 		-- Add a powerup only if it's not us who have matched these chains (combo).
         -- Powerups on user-made matches are dispatched in `:finishSelection()`.
-		if self.level.combo > 1 then
+		if self.level.data.enablePowerups and self.level.combo > 1 then
             local powerup = self:getPowerupFromColors(colors)
 			local powerupChain = self:getChain(modifiedMatch[#modifiedMatch][#modifiedMatch[#modifiedMatch]])
             if powerup and powerupChain then
@@ -886,9 +935,13 @@ function Board:handleMatches()
 		end
     end
 
-    if matchCount > 1 then
-        print(string.format("Multi-Match x%s!", matchCount))
+    if #matchGroups > 1 then
+        print(string.format("Multi-Match x%s!", #matchGroups))
     end
+    _Vars:unset("combo")
+    _Vars:unset("multiplier")
+
+    return true
 end
 
 
@@ -994,7 +1047,7 @@ function Board:explodeBomb(coords)
         end
     end
     _Game:playSound("sound_events/explosion2.json")
-    _Game.game:shakeScreen(7, nil, 10, 0.2)
+    _Game.game:shakeScreen(7, nil, 25, 0.15)
 end
 
 
@@ -1005,7 +1058,7 @@ function Board:explodeLightningHorizontal(coords)
     for i = 1, self.size.x do
         self:explodeChain(Vec2(i, coords.y))
     end
-    _Game.game:shakeScreen(7, nil, 10, 0.2)
+    _Game.game:shakeScreen(7, nil, 25, 0.15)
 end
 
 
@@ -1016,7 +1069,7 @@ function Board:explodeLightningVertical(coords)
     for i = 1, self.size.y do
         self:explodeChain(Vec2(coords.x, i))
     end
-    _Game.game:shakeScreen(7, nil, 10, 0.2)
+    _Game.game:shakeScreen(7, nil, 25, 0.15)
 end
 
 
@@ -1232,7 +1285,7 @@ function Board:draw()
     end
 
     -- Board grid
-	local lineColor = Color(0.7, 0.7, 0.7)
+	local lineColor = Color(0.5, 0.5, 0.7)
     local lineShadowColor = Color(0, 0, 0)
 
     if self.startAnimation then
@@ -1293,12 +1346,17 @@ function Board:draw()
 
     -- Hint sprite
     if self.hintCoords then
-        self.hintSprite:draw(self:getTilePos(self.hintCoords) - 2 + offset, nil, 1, math.floor((_TotalTime * 15) % 10) + 1, nil, _Utils.getRainbowColor(_TotalTime / 2))
+        local pos = self:getTilePos(self.hintCoords) - 2 + offset
+        local frame = math.floor((_TotalTime * 15) % 10) + 1
+        local color = self.hintPalette:getColor(_TotalTime * 60)
+        self.hintSprite:draw(pos, nil, 1, frame, nil, color)
     end
 
     -- Hover sprite
     if self.visualHoverCoords then
-        self.hoverSprite:draw(self:getTilePos(self.visualHoverCoords) - 5 + offset, nil, 1, math.floor(math.sin(_TotalTime * 3) * 2 + 2) + 1)
+        local pos = self:getTilePos(self.visualHoverCoords) - 5 + offset
+        local frame = math.floor(math.sin(_TotalTime * 3) * 2 + 2) + 1
+        self.hoverSprite:draw(pos, nil, 1, frame)
     end
 
     -- Debug

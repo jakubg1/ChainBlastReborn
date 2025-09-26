@@ -1,0 +1,30 @@
+{
+    "$schema": "../../schemas/level.json",
+    "name": "2",
+    "time": 60,
+    "multiplierEnabled": true,
+    "enablePowerups": false,
+    "key": {
+        "X": {
+            "tile": {
+                "type": "normal"
+            }
+        },
+        "#": {
+            "tile": {
+                "type": "flip"
+            }
+        }
+    },
+    "layout": [
+        "XXXXXXXXXXX",
+        "  XXXXXXX  ",
+        "XXX#X#X#XXX",
+        "  XXX XXX  ",
+        "XXX#   #XXX",
+        "  XXX XXX  ",
+        "XXX#X#X#XXX",
+        "  XXXXXXX  ",
+        "XXXXXXXXXXX"
+    ]
+}

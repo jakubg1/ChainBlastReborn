@@ -123,6 +123,10 @@ end
 
 ---@return Image
 function utils.parseImage(data, path, field)
+	-- HACK to make generated images work when calling `Sprite:split()`.
+	if type(data) ~= "string" then
+		return data
+	end
 	assert(data, string.format("%s: field %s is missing (Image expected)", path, field))
 	return _Game.resourceManager:getImage(data)
 end

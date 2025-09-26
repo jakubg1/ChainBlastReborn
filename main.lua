@@ -171,6 +171,9 @@ function love.update(dt)
 	-- rainbow effect for the shooter and console cursor blink; to be phased out soon
 	_TotalTime = _TotalTime + dt
 
+	-- Temporary HACK because Linux: Update window size every frame
+	love.resize(love.window.getMode())
+
 	_Debug:profUpdateStop()
 	_Profiler.netFlush()
 end
@@ -269,16 +272,20 @@ function _GetDisplayOffsetX()
 	return (_DisplaySize.x - _Game:getNativeResolution().x * _GetResolutionScale()) / 2
 end
 
+function _GetDisplayOffsetY()
+	return (_DisplaySize.y - _Game:getNativeResolution().y * _GetResolutionScale()) / 2
+end
+
 function _GetResolutionScale()
-	return _DisplaySize.y / _Game:getNativeResolution().y
+	return math.max(math.floor(_DisplaySize.y / _Game:getNativeResolution().y), 1)
 end
 
 function _PosOnScreen(pos)
-	return pos * _GetResolutionScale() + Vec2(_GetDisplayOffsetX(), 0)
+	return pos * _GetResolutionScale() + Vec2(_GetDisplayOffsetX(), _GetDisplayOffsetY())
 end
 
 function _PosFromScreen(pos)
-	return (pos - Vec2(_GetDisplayOffsetX(), 0)) / _GetResolutionScale()
+	return (pos - Vec2(_GetDisplayOffsetX(), _GetDisplayOffsetY())) / _GetResolutionScale()
 end
 
 

@@ -1,0 +1,63 @@
+{
+    "$schema": "../../../schemas/sound_event.json",
+    "sounds": [
+        {
+            "sound": "sounds/combo.wav",
+            "pitch": "${0.65 + ([combo] - 2) * 0.1}",
+            "conditions": [
+                "${[combo] > 1}",
+                "${false}"
+            ]
+        },
+        {
+            "sound": "sounds/combo.wav",
+            "pitch": "${1 + [multiplier] * 0.1}",
+            "volume": 0.5,
+            "conditions": [
+                "${[multiplier] >= 2}"
+            ]
+        },
+        {
+            "sound": "sounds/combo1.wav",
+            "conditions": [
+                "${[combo] == 2}"
+            ]
+        },
+        {
+            "sound": "sounds/combo2.wav",
+            "conditions": [
+                "${[combo] == 3}"
+            ]
+        },
+        {
+            "sound": "sounds/combo3.wav",
+            "conditions": [
+                "${[combo] == 4}"
+            ]
+        },
+        {
+            "sound": "sounds/combo4.wav",
+            "conditions": [
+                "${[combo] == 5}"
+            ]
+        },
+        {
+            "sound": "sounds/combo5.wav",
+            "conditions": [
+                "${[combo] == 6}"
+            ]
+        },
+        {
+            "sound": "sounds/combo6.wav",
+            "conditions": [
+                "${[combo] == 7}"
+            ]
+        },
+        {
+            "sound": "sounds/combo7.wav",
+            "conditions": [
+                "${[combo] >= 8}"
+            ]
+        }
+    ]
+}

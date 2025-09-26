@@ -12,6 +12,7 @@ local SoundEvent = require("src.Essentials.SoundEvent")
 local Music = require("src.Essentials.Music")
 local Font = require("src.Essentials.Font")
 local ColorPalette = require("src.Essentials.ColorPalette")
+local Shader = require("src.Essentials.Shader")
 
 local ScoreEventConfig = require("src.Configs.ScoreEvent")
 local PathEntityConfig = require("src.Configs.PathEntity")
@@ -54,6 +55,7 @@ function ResourceManager:new()
 		font = {extension = "json", constructor = Font, paramSet = 2},
 		fontFile = {extension = "ttf"},
 		colorPalette = {extension = "json", constructor = ColorPalette, paramSet = 2},
+		shader = {extension = "glsl", constructor = Shader, paramSet = 2},
 		sphere = {extension = "json"},
 		sphereEffect = {extension = "json"},
 		collectible = {extension = "json"},
@@ -100,7 +102,8 @@ function ResourceManager:new()
 		ogg = "sound",
 		mp3 = "sound",
 		wav = "sound",
-		ttf = "fontFile"
+		ttf = "fontFile",
+		glsl = "shader"
 	}
 
 	-- Load counters allow tracking the progress of loading a chosen set of resources.
@@ -189,6 +192,13 @@ end
 ---@return ColorPalette
 function ResourceManager:getColorPalette(path)
 	return self:getAsset(path, "color palette")
+end
+
+---Retrieves a Shader by a given path.
+---@param path string The resource path.
+---@return Shader
+function ResourceManager:getShader(path)
+	return self:getAsset(path, "shader")
 end
 
 ---Retrieves a Score Event Config by a given path.

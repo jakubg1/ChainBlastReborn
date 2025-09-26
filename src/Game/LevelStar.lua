@@ -36,7 +36,7 @@ end
 ---Updates the Level Star. Its position is updated, and `delQueue` set to `true` if the star has exited the screen.
 ---@param dt number Time delta in seconds.
 function LevelStar:update(dt)
-    self.pos = self.pos + Vec2(-10 / self.depth * dt, 0)
+    --self.pos = self.pos + Vec2(-10 / self.depth * dt, 0)
     if self.pos.x < 0 then
         self.delQueue = true
     end

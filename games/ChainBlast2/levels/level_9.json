@@ -1,0 +1,30 @@
+{
+    "$schema": "../../schemas/level.json",
+    "name": "9",
+    "time": 35,
+    "multiplierEnabled": false,
+    "enablePowerups": false,
+    "key": {
+        "X": {
+            "tile": {
+                "type": "normal"
+            }
+        },
+        "#": {
+            "tile": {
+                "type": "ice"
+            }
+        }
+    },
+    "layout": [
+        " ######### ",
+        " ######### ",
+        " ######### ",
+        "           ",
+        "  X  X  X  ",
+        "           ",
+        "  X  X  X  ",
+        "           ",
+        "  X  X  X  "
+    ]
+}

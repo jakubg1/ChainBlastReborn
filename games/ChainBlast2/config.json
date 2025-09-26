@@ -1,0 +1,13 @@
+{
+    "$schema": "../../schemas/config.json",
+    "name": "Chain Blast 2",
+    "engineVersion": "v0.48.0",
+    "nativeResolution": {
+        "x": 320,
+        "y": 180
+    },
+    "renderOnCanvas": true,
+    "richPresence": {
+        "enabled": true
+    }
+}

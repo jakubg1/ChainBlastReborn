@@ -17,6 +17,7 @@ function LevelConfig:new(data, path)
     self.name = u.parseString(data.name, path, "name")
     self.time = u.parseNumber(data.time, path, "time")
     self.multiplierEnabled = u.parseBoolean(data.multiplierEnabled, path, "multiplierEnabled")
+    self.enablePowerups = u.parseBoolean(data.enablePowerups, path, "enablePowerups")
 
     self.key = {}
     for n, _ in pairs(data.key) do
@@ -31,6 +32,7 @@ function LevelConfig:new(data, path)
             self.key[n].chain = {}
             self.key[n].chain.type = u.parseString(data.key[n].chain.type, path, "key." .. tostring(n) .. ".chain.type")
             self.key[n].chain.color = u.parseIntegerOpt(data.key[n].chain.color, path, "key." .. tostring(n) .. ".chain.color")
+            self.key[n].chain.health = u.parseIntegerOpt(data.key[n].chain.health, path, "key." .. tostring(n) .. ".chain.health")
         end
     end
 

@@ -78,6 +78,14 @@ end
 
 
 
+---Returns the global coordinates of this Tile.
+---@return Vector2
+function Tile:getPos()
+    return self.board:getTilePos(self.coords)
+end
+
+
+
 ---Impacts this Tile by making it gold or removing one level of ice.
 function Tile:impact()
     if self.type == "normal" then
@@ -166,7 +174,9 @@ function Tile:breakIceLevel()
         self.type = "normal"
     end
     self.iceBreakSound:play()
-    -- TODO: Particles
+    local pos = self:getPos() + Vec2(7)
+    -- 7 is the ice tile, 2 is the full ice stage.
+    _Game.game:spawnParticleFragments(pos, "", self.sprite, 7, 2, 4)
 end
 
 
@@ -298,20 +308,20 @@ end
 ---Draws this Tile on the screen.
 ---@param offset Vector2? If set, the offset from the actual draw position in pixels. Used for screen shake.
 function Tile:draw(offset)
-    local pos = self.board:getTilePos(self.coords)
+    local pos = self:getPos()
     if offset then
         pos = pos + offset
     end
     self.sprite:draw(pos, nil, self:getState(), self:getFrame(), nil, nil, self.alpha)
     if self.selected or self.selectedAsPowerupVictim then
-        _DrawFillRect(pos, Vec2(14, 14), Color(0, 1, 0), 0.7)
+        _DrawFillRect(pos, Vec2(14, 14), Color(0.5, 1, 0.5), 0.5)
     end
 
     -- Some fancy gold animation
     if _Game.game.settings.goldTileAnimation and self.goldAnimation2 then
         _DrawFillRect(pos, Vec2(14, 14), Color(1, 1, 1), _Utils.mapValue(self.goldAnimation2, 0, 0.3, 1, 0))
-        local x = _Utils.mapValue(self.goldAnimation2, 0, 0.5, 0, 40)
-        _DrawRect(pos - Vec2(x), Vec2(14, 14) + Vec2(x * 2), Color(1, 1, 1), _Utils.mapValue(self.goldAnimation2, 0.4, 0.5, 1, 0))
+        local x = _Utils.mapValue(self.goldAnimation2, 0, 0.2, 0, 20)
+        _DrawRect(pos - Vec2(x), Vec2(14, 14) + Vec2(x * 2), Color(1, 1, 1), _Utils.mapValue(self.goldAnimation2, 0.15, 0.2, 1, 0))
     end
 end
 

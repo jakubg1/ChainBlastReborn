@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-global, undefined-field
 local ffi = require "ffi"
-local discordRPClib = ffi.load("dll/discord-rpc")
+local discordRPClib = ffi.load("dll/discord-rpc.so")
 
 ffi.cdef[[
 typedef struct DiscordRichPresence {
