@@ -24,7 +24,8 @@ function Debug:new()
 		exprt = {description = "Breaks down an Expression and shows the list of RPN steps.", parameters = {{name = "expression", type = "string", optional = false, greedy = true}}},
 		ex = {description = "Debugs an Expression: shows detailed tokenization and list of RPN steps.", parameters = {{name = "expression", type = "string", optional = false, greedy = true}}},
 		help = {description = "Displays this list.", parameters = {}},
-		o = {description = "Sets a parameter for this game. Displays a list if executed without parameters.", parameters = {{name = "option", type = "string", optional = true}, {name = "value", type = "number", optional = true}}}
+		o = {description = "Sets a parameter for this game. Displays a list if executed without parameters.", parameters = {{name = "option", type = "string", optional = true}, {name = "value", type = "number", optional = true}}},
+		win = {description = "Wins the current level on the next move.", parameters = {}}
 	}
 	self.commandNames = {}
 	for commandName, commandData in pairs(self.commands) do
@@ -584,6 +585,8 @@ function Debug:runCommand(command)
 			self.console:print("")
 			self.console:print({_COLORS.green, "Or for the fuck's sake, just press F10, F11 or F12!"})
 		end
+	elseif command == "win" then
+		_Game.game.scene.forcedWin = true
 	else
 		self.console:print({_COLORS.red, "Unrecognized command"})
 	end

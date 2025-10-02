@@ -1137,9 +1137,12 @@ end
 
 
 
----Returns `true` if all tiles on the board are gold.
+---Returns `true` if all tiles on the board are gold (or if `forcedWin` on the level is set).
 ---@return boolean
 function Board:isTargetReached()
+    if self.level.forcedWin then
+        return true
+    end
     for i = 1, self.size.x do
         for j = 1, self.size.y do
             local coords = Vec2(i, j)

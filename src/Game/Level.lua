@@ -67,6 +67,7 @@ function Level:new(game)
     self.hudExtraTimeValue = 0
     self.clockAlarm = nil
     self.dangerMusicFlag = false
+    self.forcedWin = false
     self.POWER_METER_COLORS = {
         [0] = Color(1, 1, 1),
         Color(0.9, 0.1, 0.3),
@@ -102,53 +103,9 @@ function Level:update(dt)
     else
         if self.board then
             self.board:update(dt)
-
-            -- Tick the time.
-            if self:isTimerTicking() then
-                self.time = self.time - dt
-                if self.time < 10 and math.floor(self.time) ~= math.floor(self.time + dt) then
-                    _Game:playSound("sound_events/clock.json")
-                end
-                if self.time <= 0 then
-                    self.time = 0
-                    if not self.bombMeterTime then
-                        self:lose()
-                    end
-                end
-            end
-
-            -- Count IGT (In-Game Time).
-            if not self.board.startAnimation and not self.board.endAnimation then
-                self.timeElapsed = self.timeElapsed + dt
-            end
-
-            -- Pause the game after 3 seconds of inactivity.
-            if self.lastMousePos == _MousePos and self:isTimerTicking() and not self.board:isSelectionActive() then
-                self.mouseIdleTime = self.mouseIdleTime + dt
-                if not self.pause and self.mouseIdleTime > 3 then
-                    self:togglePause()
-                    self.mouseIdleTime = 0
-                end
-            else
-                self.mouseIdleTime = 0
-            end
-            self.lastMousePos = _MousePos
-
-            -- Multiplier
-            if self.data.multiplierEnabled then
-                -- Decrease the value of the bar naturally.
-                if self.board.playerControl then
-                    self.multiplierProgress = self.multiplierProgress - 0.05 * dt * self.multiplier
-                end
-                if self.multiplierProgress <= 0 then
-                    -- Decrease the multiplier if the bar is empty.
-                    self.multiplierProgress = 0
-                    if self.multiplier > 1 then
-                        self.multiplier = self.multiplier - 1
-                        self.multiplierProgress = 1
-                    end
-                end
-            end
+            self:updateTime(dt)
+            self:updateInactivityPause(dt)
+            self:updateMultiplier(dt)
 
             -- Delete the board if it is dead and start the results animation.
             if self.board.delQueue then
@@ -159,50 +116,108 @@ function Level:update(dt)
             end
         end
 
-        -- Bombs
-        if self.bombMeterTime and self.board.shufflingChainCount == 0 then
-            local n = math.floor(self.bombMeterTime / 0.5)
-            self.bombMeterTime = self.bombMeterTime + dt
-            if n ~= math.floor(self.bombMeterTime / 0.5) and n < 3 then
-                local tile = self.board:getRandomNonGoldTile(self.bombMeterCoords)
-                if tile then
-                    self.board:spawnBomb(tile.coords)
-                    table.insert(self.bombMeterCoords, tile.coords)
-                end
-            end
-            if self.bombMeterTime >= 1.5 and #self.board.bombs == 0 then
-                self.bombMeterTime = nil
-                self.bombMeterCoords = {}
-            end
+        self:updateBombs(dt)
+    end
+
+    self:updateSounds(dt)
+    self:updateMusic(dt)
+    self:updateUI(dt)
+    self:updateBackground(dt)
+end
+
+---Updates timing on this level. Trips the loss flag if the timer reaches zero.
+---This same function is also counting IGT up to show on various stat screens.
+---@param dt number Time delta in seconds.
+function Level:updateTime(dt)
+    -- Tick the time.
+    if self:isTimerTicking() then
+        self.time = self.time - dt
+        if self.time < 10 and math.floor(self.time) ~= math.floor(self.time + dt) then
+            _Game:playSound("sound_events/clock.json")
         end
-
-        -- Score animation
-        if self.scoreDisplay < self.game.player.score then
-            self.scoreDisplay = self.scoreDisplay + math.ceil((self.game.player.score - self.scoreDisplay) / 8)
-        end
-
-        -- Multiplier animation
-        self.multiplierProgressDisplay = self.multiplierProgressDisplay * 0.9 + self.multiplierProgress * 0.1
-
-        -- Combo visualization
-        if self.combo >= 2 then
-            self.hudComboAlpha = 1
-            self.hudComboValue = self.combo
-        else
-            self.hudComboAlpha = math.max(self.hudComboAlpha - dt, 0)
-        end
-
-        -- Extra time visualization
-        if self.hudExtraTimeAlpha > 0 then
-            self.hudExtraTimeAlpha = self.hudExtraTimeAlpha - dt
-            if self.hudExtraTimeAlpha <= 0 then
-                self.hudExtraTimeAlpha = 0
-                self.hudExtraTimeValue = 0
+        if self.time <= 0 then
+            self.time = 0
+            if not self.bombMeterTime then
+                self:lose()
             end
         end
     end
 
-    -- Clock alarm (repeated beeps)
+    -- Count IGT (In-Game Time).
+    if not self.board.startAnimation and not self.board.endAnimation then
+        self.timeElapsed = self.timeElapsed + dt
+    end
+end
+
+---Updates the inactivity pause mechanism.
+---@param dt number Time delta in seconds.
+function Level:updateInactivityPause(dt)
+    -- Halt the inactivity pausing when the timer is not ticking yet (level not started or a long combo)
+    -- or when the player is currently dragging through chains.
+    if not self:isTimerTicking() or self.board:isSelectionActive() then
+        return
+    end
+    -- Pause the game when 3 seconds from any mouse movement have passed.
+    -- TODO: This might be annoying and should be able to be turned off from the settings menu.
+    if self.lastMousePos == _MousePos then
+        self.mouseIdleTime = self.mouseIdleTime + dt
+        if not self.pause and self.mouseIdleTime > 3 then
+            self:togglePause()
+            self.mouseIdleTime = 0
+        end
+    else
+        self.mouseIdleTime = 0
+    end
+    self.lastMousePos = _MousePos
+end
+
+---Updates the score multiplier (currently unused).
+---@param dt number Time delta in seconds.
+function Level:updateMultiplier(dt)
+    if not self.data.multiplierEnabled then
+        return
+    end
+    -- Decrease the value of the bar naturally.
+    if self.board.playerControl then
+        self.multiplierProgress = self.multiplierProgress - 0.05 * dt * self.multiplier
+    end
+    if self.multiplierProgress <= 0 then
+        -- Decrease the multiplier if the bar is empty.
+        self.multiplierProgress = 0
+        if self.multiplier > 1 then
+            self.multiplier = self.multiplier - 1
+            self.multiplierProgress = 1
+        end
+    end
+end
+
+---Updates the bombs (currently unused).
+---@param dt number Time delta in seconds.
+function Level:updateBombs(dt)
+    -- No bomb spawning happens when the bomb meter is not engaged or when a shuffle is in progress.
+    if not self.bombMeterTime or self.board.shufflingChainCount > 0 then
+        return
+    end
+    -- Every 0.5 seconds, spawn a bomb (check if we moved into another interval).
+    local n = math.floor(self.bombMeterTime / 0.5)
+    self.bombMeterTime = self.bombMeterTime + dt
+    if n ~= math.floor(self.bombMeterTime / 0.5) and n < 3 then
+        local tile = self.board:getRandomNonGoldTile(self.bombMeterCoords)
+        if tile then
+            self.board:spawnBomb(tile.coords)
+            table.insert(self.bombMeterCoords, tile.coords)
+        end
+    end
+    -- When all three intervals are finished, end the spawning process.
+    if self.bombMeterTime >= 1.5 and #self.board.bombs == 0 then
+        self.bombMeterTime = nil
+        self.bombMeterCoords = {}
+    end
+end
+
+---Updates the level sounds (alarm clock).
+---@param dt number Time delta in seconds.
+function Level:updateSounds(dt)
     if not self.clockAlarm and self.time < 5 and self:isTimerTicking() then
         self.clockAlarm = _Game:playSound("sound_events/clock_alarm.json")
     end
@@ -211,8 +226,11 @@ function Level:update(dt)
         self.clockAlarm:stop()
         self.clockAlarm = nil
     end
+end
 
-    -- Danger music
+---Updates the level music (fade between level and danger music).
+---@param dt number Time delta in seconds.
+function Level:updateMusic(dt)
     if not self.dangerMusicFlag and self.time < 10 and self:isTimerTicking() then
         self.dangerMusicFlag = true
         self.levelMusic:play(0, 0.5)
@@ -223,6 +241,35 @@ function Level:update(dt)
         self.dangerMusicFlag = false
         self.levelMusic:play(1, 2)
         self.dangerMusic:stop(1)
+    end
+end
+
+---Updates the level UI.
+---@param dt number Time delta in seconds.
+function Level:updateUI(dt)
+    -- Score animation
+    if self.scoreDisplay < self.game.player.score then
+        self.scoreDisplay = self.scoreDisplay + math.ceil((self.game.player.score - self.scoreDisplay) / 8)
+    end
+
+    -- Multiplier animation
+    self.multiplierProgressDisplay = self.multiplierProgressDisplay * 0.9 + self.multiplierProgress * 0.1
+
+    -- Combo visualization
+    if self.combo >= 2 then
+        self.hudComboAlpha = 1
+        self.hudComboValue = self.combo
+    else
+        self.hudComboAlpha = math.max(self.hudComboAlpha - dt, 0)
+    end
+
+    -- Extra time visualization
+    if self.hudExtraTimeAlpha > 0 then
+        self.hudExtraTimeAlpha = self.hudExtraTimeAlpha - dt
+        if self.hudExtraTimeAlpha <= 0 then
+            self.hudExtraTimeAlpha = 0
+            self.hudExtraTimeValue = 0
+        end
     end
 
     -- Level start animation
@@ -309,8 +356,11 @@ function Level:update(dt)
             self.gameResultsAnimationSoundStep = self.gameResultsAnimationSoundStep + 1
         end
     end
+end
 
-    -- Stars in the background
+---Updates the level background.
+---@param dt number Time delta in seconds.
+function Level:updateBackground(dt)
     for i, star in ipairs(self.stars) do
         star:update(dt)
         if star.delQueue then
@@ -322,7 +372,6 @@ end
 
 
 ---Adds score to this level.
----TODO: Score Events?
 ---@param amount integer The amount of score to be added.
 function Level:addScore(amount)
     self.score = self.score + amount
@@ -482,17 +531,28 @@ end
 
 ---Draws the Level.
 function Level:draw()
-    local natRes = _Game:getNativeResolution()
+    self:drawBackground()
+    self:drawBoard()
+    self:drawUI()
+end
 
-    -- Stars in the background
+---Draws the level background.
+function Level:drawBackground()
     for i, star in ipairs(self.stars) do
         star:draw()
     end
+end
 
-    -- Board
+---Draws the level board.
+function Level:drawBoard()
     if self.board then
         self.board:draw()
     end
+end
+
+---Draws the level UI (level intro, pause screen, HUD, win/lose screens, game win/game over screens, game results).
+function Level:drawUI()
+    local natRes = _Game:getNativeResolution()
 
     -- Pause screen
     if self.pauseAnimation > 0 then
@@ -618,52 +678,55 @@ function Level:draw()
 
     -- Level results
     if self.resultsAnimation then
+        local xLeft = 60
+        local xMid = 160
+        local xRight = 260
         local alpha = math.min(math.max((self.resultsAnimation - 0.5) * 2, 0), 1)
-        self.game.font:draw(string.format("Level %s", self.data.name), Vec2(100, 10), Vec2(0.5), nil, alpha)
+        self.game.font:draw(string.format("Level %s", self.data.name), Vec2(xMid, 15), Vec2(0.5), nil, alpha)
         if self.lost then
-            self.game.font:draw("Failed!", Vec2(100, 20), Vec2(0.5), Color(1, 0, 0), alpha)
+            self.game.font:draw("Failed!", Vec2(xMid, 25), Vec2(0.5), Color(1, 0, 0), alpha)
         else
-            self.game.font:draw("Complete!", Vec2(100, 20), Vec2(0.5), Color(0, 1, 0), alpha)
+            self.game.font:draw("Complete!", Vec2(xMid, 25), Vec2(0.5), Color(0, 1, 0), alpha)
         end
         if self.resultsAnimation > 1.2 then
-            self.game.font:draw("Time Elapsed:", Vec2(20, 40), Vec2(0, 0.5))
+            self.game.font:draw("Time Elapsed:", Vec2(xLeft, 50), Vec2(0, 0.5))
         end
         if self.resultsAnimation > 1.3 then
-            self.game.font:draw(string.format("%.1d:%.2d", self.timeElapsed / 60, self.timeElapsed % 60), Vec2(180, 40), Vec2(1, 0.5), Color(1, 1, 0))
+            self.game.font:draw(string.format("%.1d:%.2d", self.timeElapsed / 60, self.timeElapsed % 60), Vec2(xRight, 50), Vec2(1, 0.5), Color(1, 1, 0))
         end
         if self.resultsAnimation > 1.6 then
-            self.game.font:draw("Max Combo:", Vec2(20, 50), Vec2(0, 0.5))
+            self.game.font:draw("Max Combo:", Vec2(xLeft, 60), Vec2(0, 0.5))
         end
         if self.resultsAnimation > 1.7 then
-            self.game.font:draw(tostring(self.maxCombo), Vec2(180, 50), Vec2(1, 0.5), Color(1, 1, 0))
+            self.game.font:draw(tostring(self.maxCombo), Vec2(xRight, 60), Vec2(1, 0.5), Color(1, 1, 0))
         end
         if self.resultsAnimation > 2 then
-            self.game.font:draw("Largest Link:", Vec2(20, 60), Vec2(0, 0.5))
+            self.game.font:draw("Largest Link:", Vec2(xLeft, 70), Vec2(0, 0.5))
         end
         if self.resultsAnimation > 2.1 then
-            self.game.font:draw(tostring(self.largestGroup), Vec2(180, 60), Vec2(1, 0.5), Color(1, 1, 0))
+            self.game.font:draw(tostring(self.largestGroup), Vec2(xRight, 70), Vec2(1, 0.5), Color(1, 1, 0))
         end
         if self.resultsAnimation > 2.4 then
-            self.game.font:draw("Time Bonus:", Vec2(20, 70), Vec2(0, 0.5))
+            self.game.font:draw("Time Bonus:", Vec2(xLeft, 80), Vec2(0, 0.5))
         end
         if self.resultsAnimation > 2.5 then
             local text = "No Bonus!"
             if not self.lost then
                 text = string.format("%.1fs = %s", self.time, self:getTimeBonus())
             end
-            self.game.font:draw(text, Vec2(180, 70), Vec2(1, 0.5), Color(1, 1, 0))
+            self.game.font:draw(text, Vec2(xRight, 80), Vec2(1, 0.5), Color(1, 1, 0))
         end
         if self.resultsAnimation > 2.8 then
-            self.game.font:draw("Level Score:", Vec2(20, 80), Vec2(0, 0.5))
+            self.game.font:draw("Level Score:", Vec2(xLeft, 90), Vec2(0, 0.5))
         end
         if self.resultsAnimation > 2.9 then
-            self.game.font:draw(tostring(self.score), Vec2(180, 80), Vec2(1, 0.5), Color(1, 1, 0))
+            self.game.font:draw(tostring(self.score), Vec2(xRight, 90), Vec2(1, 0.5), Color(1, 1, 0))
         end
         if self.resultsAnimation > 3.4 then
-            self.game.font:draw("Total Score:", Vec2(20, 100), Vec2(0, 0.5))
+            self.game.font:draw("Total Score:", Vec2(xLeft, 120), Vec2(0, 0.5))
         end
         if self.resultsAnimation > 3.8 then
-            self.game.font:draw(tostring(self.game.player.score), Vec2(180, 100), Vec2(1, 0.5), Color(1, 1, 0))
+            self.game.font:draw(tostring(self.game.player.score), Vec2(xRight, 120), Vec2(1, 0.5), Color(1, 1, 0))
         end
         if self.resultsAnimation > 4.5 then
             local text = "Click anywhere to start next level!"
@@ -683,7 +746,7 @@ function Level:draw()
             if self.resultsAnimation % 2 > 1 then
                 alpha = 1 + (1 - self.resultsAnimation % 2) * 0.5
             end
-            self.game.font:draw(text, Vec2(100, 130), Vec2(0.5), nil, alpha)
+            self.game.font:draw(text, Vec2(xMid, 160), Vec2(0.5), nil, alpha)
         end
     end
 
