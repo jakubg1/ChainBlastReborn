@@ -1,0 +1,21 @@
+{
+    "$schema": "../../../schemas/sprite.json",
+    "path": "images/hud_timer.png",
+    "frameSize": {
+        "x": 33,
+        "y": 129
+    },
+    "states": [
+        {
+            "pos": {
+                "x": 0,
+                "y": 0
+            },
+            "frames": {
+                "x": 1,
+                "y": 1
+            }
+        }
+    ],
+    "batched": false
+}

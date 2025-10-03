@@ -314,7 +314,7 @@ function Tile:draw(offset)
     end
     self.sprite:draw(pos, nil, self:getState(), self:getFrame(), nil, nil, self.alpha)
     if self.selected or self.selectedAsPowerupVictim then
-        _DrawFillRect(pos, Vec2(14, 14), Color(0.5, 1, 0.5), 0.5)
+        _DrawFillRect(pos, Vec2(14, 14), Color(0.5, 1, 0.5), 0.7)
     end
 
     -- Some fancy gold animation
@@ -323,6 +323,16 @@ function Tile:draw(offset)
         local x = _Utils.mapValue(self.goldAnimation2, 0, 0.2, 0, 20)
         _DrawRect(pos - Vec2(x), Vec2(14, 14) + Vec2(x * 2), Color(1, 1, 1), _Utils.mapValue(self.goldAnimation2, 0.15, 0.2, 1, 0))
     end
+end
+
+---Draws this Tile's highlight on the screen. Used to highlight tiles which will be affected when a powerup is deployed from a power.
+---@param offset Vector2? If set, the offset from the actual draw position in pixels. Used for screen shake.
+function Tile:drawHighlight(offset)
+    local pos = self:getPos()
+    if offset then
+        pos = pos + offset
+    end
+    _DrawFillRect(pos, Vec2(14, 14), Color(1, 1, 1), 0.7)
 end
 
 

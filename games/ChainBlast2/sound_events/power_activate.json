@@ -1,0 +1,5 @@
+{
+    "$schema": "../../../schemas/sound_event.json",
+    "sound": "sounds/hint.wav",
+    "pitch": 0.5
+}

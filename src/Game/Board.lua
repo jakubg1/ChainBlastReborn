@@ -115,6 +115,7 @@ function Board:new(level)
     self.over = false
     self.hoverCoords = nil
     self.visualHoverCoords = nil
+    self.mode = "select" -- `"select"` is the usual one, but can be `"bomb"` or `"lightning"` when a power is active.
     self.selecting = false
     self.selectedCoords = {}
     self.selectedDirections = {}
@@ -358,7 +359,7 @@ end
 
 
 
----Returns the Chain located at the given coordinates.
+---Returns the Chain (or any board item, including boxes, etc.) located at the given coordinates.
 ---@param coords Vector2 The tile coordinates.
 ---@return Chain?
 function Board:getChain(coords)
@@ -1054,21 +1055,20 @@ end
 
 ---Creates a lightning which destroys objects in a horizontal row centered around the given coordinates.
 ---@param coords Vector2 The coordinates of the lightning center.
-function Board:explodeLightningHorizontal(coords)
-    for i = 1, self.size.x do
-        self:explodeChain(Vec2(i, coords.y))
+---@param horizontal boolean Whether the lightning should strike horizontally.
+---@param vertical boolean Whether the lightning should strike vertically.
+function Board:explodeLightning(coords, horizontal, vertical)
+    if horizontal then
+        for i = 1, self.size.x do
+            self:explodeChain(Vec2(i, coords.y))
+        end
     end
-    _Game.game:shakeScreen(7, nil, 25, 0.15)
-end
-
-
-
----Creates a lightning which destroys objects in a vertical row centered around the given coordinates.
----@param coords Vector2 The coordinates of the lightning center.
-function Board:explodeLightningVertical(coords)
-    for i = 1, self.size.y do
-        self:explodeChain(Vec2(coords.x, i))
+    if vertical then
+        for i = 1, self.size.y do
+            self:explodeChain(Vec2(coords.x, i))
+        end
     end
+    _Game:playSound("sound_events/powerup_lightning.json")
     _Game.game:shakeScreen(7, nil, 25, 0.15)
 end
 
@@ -1347,6 +1347,27 @@ function Board:draw()
         end
     end
 
+    -- Tile highlight (power modes)
+    for i = 1, self.size.x do
+        for j = 1, self.size.y do
+            local highlighted = false
+            if self.hoverCoords then
+                if self.mode == "bomb" then
+                    highlighted = math.abs(self.hoverCoords.x - i) <= 1 and math.abs(self.hoverCoords.y - j) <= 1
+                elseif self.mode == "lightning" then
+                    highlighted = i == self.hoverCoords.x or j == self.hoverCoords.y
+                end
+            end
+            if highlighted then
+                local coords = Vec2(i, j)
+                local tile = self:getTile(coords)
+                if tile then
+                    tile:drawHighlight(offset)
+                end
+            end
+        end
+    end
+
     -- Hint sprite
     if self.hintCoords then
         local pos = self:getTilePos(self.hintCoords) - 2 + offset
@@ -1405,12 +1426,32 @@ end
 function Board:mousepressed(x, y, button)
     if button == 1 then
         if self.hoverCoords and self:getChain(self.hoverCoords) then
-            self.selecting = true
-			self.lastSelectStart = self.hoverCoords
+            if self.mode == "select" then
+                self.selecting = true
+                self.lastSelectStart = self.hoverCoords
+            elseif self.mode == "bomb" then
+                self:explodeBomb(self.hoverCoords)
+                self.mode = "select"
+                self.level:clearPowerMeter()
+            elseif self.mode == "lightning" then
+                self:explodeLightning(self.hoverCoords, true, true)
+                self.mode = "select"
+                self.level:clearPowerMeter()
+            end
         end
     elseif button == 2 then
         if self.selecting then
             self:finishSelection(true)
+        elseif self.mode == "select" then
+            -- If a power can be activated, set the mode to that power.
+            local powerMode = self.level:getPowerMode()
+            if powerMode then
+                self.mode = powerMode
+                _Game:playSound("sound_events/power_activate.json")
+            end
+        else
+            -- Cancel the power if we were in a power mode.
+            self.mode = "select"
         end
     end
 end

@@ -45,6 +45,8 @@ function LevelUI:new(level)
         --{1, 0.4, 0},
         --{0.9, 0.1, 0.3}
     }
+
+    self.timerSprite = _Game.resourceManager:getSprite("sprites/hud_timer.json")
 end
 
 ---Notifies the UI that extra time has been added to the timer.
@@ -345,19 +347,18 @@ function LevelUI:drawHUD()
     -- Timer
     if not self.game.player.disableTimeLimit then
         self.game.font:draw("Time", Vec2(35, 20), Vec2(0.5, 0), nil, self.hudAlpha)
+        -- Bar
+        local t = math.min(self.level.time / self.level.maxTime, 1)
+        _DrawFillRect(Vec2(33, 40 + 108 * (1 - t)), Vec2(5, 110 * t), Color(0.1, 0.4, 0.9), self.hudAlpha)
+        -- Timer box
+        self.timerSprite:draw(Vec2(19, 34), nil, nil, nil, nil, nil, self.hudAlpha)
+        -- Text display
         if self.level.time < 9.9 then
             if self.level.time > 5 or not self.level:isTimerTicking() or _TotalTime % 0.25 < 0.125 then
                 self.game.font:draw(string.format("%.2f", self.level.time), Vec2(36, 150), Vec2(0.5, 0), Color(1, 0, 0), self.hudAlpha)
             end
         else
             self.game.font:draw(string.format("%.1d:%.2d", self.level.time / 60, self.level.time % 60), Vec2(36, 150), Vec2(0.5, 0), nil, self.hudAlpha)
-        end
-        _DrawRect(Vec2(32, 34), Vec2(7, 112), Color(0.7, 0.5, 0.3), self.hudAlpha)
-        _DrawFillRect(Vec2(33, 35), Vec2(5, 110), Color(0.1, 0.1, 0.1), self.hudAlpha)
-        local t = math.min(self.level.time / self.level.maxTime, 1)
-        _DrawFillRect(Vec2(33, 35 + 110 * (1 - t)), Vec2(5, 110 * t), Color(1, 0.7, 0.1), self.hudAlpha)
-        if self.hudExtraTimeAlpha > 0 then
-            --self.game.font:draw(string.format("+%s", self.hudExtraTimeValue), Vec2(78, 75), Vec2(1, 0), nil, self.hudAlpha * self.hudExtraTimeAlpha)
         end
     end
 
@@ -505,7 +506,7 @@ function LevelUI:drawLevelResults()
         if self.resultsAnimation % 2 > 1 then
             alpha = 1 + (1 - self.resultsAnimation % 2) * 0.5
         end
-        self.game.font:draw(text, Vec2(xMid, 160), Vec2(0.5), nil, alpha)
+        self.game.font:draw(text, Vec2(xMid, 150), Vec2(0.5), nil, alpha)
     end
 end
 

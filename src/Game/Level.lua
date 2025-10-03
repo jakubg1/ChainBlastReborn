@@ -311,7 +311,34 @@ function Level:addToPowerMeter(amount, color)
     if self.powerColor == 0 then
         self.powerColor = color
     end
+    local oldMeter = self.powerMeter
     self.powerMeter = self.powerMeter + amount
+    -- Play a sound if enough power has been charged to do something with it.
+    if oldMeter < 25 and self.powerMeter >= 25 then
+        _Game:playSound("sound_events/power_ready.json")
+    end
+end
+
+---Sets the power level to zero and resets the power color.
+function Level:clearPowerMeter()
+    self.powerColor = 0
+    self.powerMeter = 0
+end
+
+---Returns a string depicting a board selection mode if a power can be activated.
+---Returns `nil` if the power cannot be activated.
+---@return "bomb"|"lightning"?
+function Level:getPowerMode()
+    -- Must have at least 25 power points charged.
+    if self.powerMeter < 25 then
+        return
+    end
+    -- 2 = blue
+    if self.powerColor == 2 then
+        return "lightning"
+    else
+        return "bomb"
+    end
 end
 
 ---Adds the given amount to the multiplier progress. 1 is the full bar.

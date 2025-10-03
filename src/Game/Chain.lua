@@ -530,13 +530,7 @@ function Chain:destroy(delay)
     if self.powerup == "bomb" then
         self.board:explodeBomb(self.coords)
     elseif self.powerup == "lightning" then
-        if self.shape == 2 or self.rotation == 1 then
-            self.board:explodeLightningHorizontal(self.coords)
-        end
-        if self.shape == 2 or self.rotation == 2 then
-            self.board:explodeLightningVertical(self.coords)
-        end
-        _Game:playSound("sound_events/powerup_lightning.json")
+        self.board:explodeLightning(self.coords, self.shape == 2 or self.rotation == 1, self.shape == 2 or self.rotation == 2)
     elseif self.powerup == "missile" then
         self.board:spawnMissile(self.coords)
         _Game:playSound("sound_events/powerup_missile.json")
