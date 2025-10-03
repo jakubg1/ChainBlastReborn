@@ -204,7 +204,7 @@ function LevelUI:updateLevelLost(dt)
     self.loseAnimation = self.loseAnimation + dt
     if self.loseAnimation >= 1 and not self.loseAnimationBoardNuked then
         self.loseAnimationBoardNuked = true
-        self.board:nukeEverything()
+        self.level:nukeBoard()
         if self.game.player.lives == 0 then
             self.loseAnimation = nil
             self.board = nil
@@ -214,7 +214,7 @@ function LevelUI:updateLevelLost(dt)
         end
     elseif self.loseAnimation >= 12.5 then
         self.loseAnimation = nil
-        self.board:startEndAnimation()
+        self.level:finishBoard()
     end
 end
 

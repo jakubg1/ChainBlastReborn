@@ -214,6 +214,11 @@ function Level:startBoard()
     self.board = Board(self)
 end
 
+---Nukes all chains on the board for this level.
+function Level:nukeBoard()
+    self.board:nukeEverything()
+end
+
 ---Starts a fadeout animation for this level's Board.
 function Level:finishBoard()
     self.board:startEndAnimation()
