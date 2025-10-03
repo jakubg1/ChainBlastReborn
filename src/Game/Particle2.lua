@@ -1,7 +1,7 @@
 local class = require "com.class"
 
 ---@class Particle2
----@overload fun(game, pos, type, color):Particle2
+---@overload fun(game, pos, type, color, pos2):Particle2
 local Particle2 = class:derive("Particle2")
 
 -- Place your imports here
@@ -15,7 +15,8 @@ local Color = require("src.Essentials.Color")
 ---@param pos Vector2 The initial position of the Particle.
 ---@param type string The type of the Particle. TODO: Replace with data.
 ---@param color Color? The starting color of the Particle. TODO: Replace with data.
-function Particle2:new(game, pos, type, color)
+---@param pos2 Vector2? The second position of the Particle. If `type` is `"lightning"`, this is the second lightning position (`pos` -> `pos2`). If `type` is `"power_spark"`, this is the position the particle will gravitate towards. TODO: Replace with data.
+function Particle2:new(game, pos, type, color, pos2)
     self.game = game
     self.pos = pos
     self.type = type
@@ -43,11 +44,13 @@ function Particle2:new(game, pos, type, color)
         self.acceleration = Vec2()
         self.color = color
         self.alpha = 1
+        self.alphaFadeDuration = 0.3
         self.sprite = _Game.resourceManager:getSprite("sprites/spark.json")
     elseif self.type == "flare" then
         self.speed = Vec2()
         self.acceleration = Vec2()
         self.alpha = 1
+        self.alphaFadeDuration = 0.15
         self.sprite = _Game.resourceManager:getSprite("sprites/flare.json")
     elseif self.type == "chain_explosion" then
         self.speed = Vec2()
@@ -55,13 +58,26 @@ function Particle2:new(game, pos, type, color)
         self.alpha = 1
         self.sprite = _Game.resourceManager:getSprite("sprites/chain_explosion.json")
         self.spriteAnimationSpeed = 20
+        self.lifetime = 0.45
     elseif self.type == "chip" then
         self.speed = Vec2(love.math.randomNormal(40, 100), 0):rotate(love.math.random() * math.pi * 2)
         self.acceleration = Vec2(0, 200)
-        self.color = Color(love.math.randomNormal(0.1, 0.6), love.math.randomNormal(0.05, 0.3), love.math.randomNormal(0.05, 0.1))
+        self.color = Color(love.math.randomNormal(0.04, 0.6), love.math.randomNormal(0.02, 0.3), love.math.randomNormal(0.02, 0.1))
         self.darkColor = self.color * 0.75
         self.size = math.max(love.math.randomNormal(2, 3), 1)
         self.angle = love.math.random() * math.pi * 2
+    elseif self.type == "lightning" then
+        self.time = math.min(love.math.randomNormal(0.15, -0.1), 0)
+        self.speed = Vec2()
+        self.acceleration = Vec2()
+        self.alpha = 1
+        self.alphaFadeDuration = math.max(love.math.randomNormal(0.1, 0.3), 0.1)
+        self.color = Color(love.math.randomNormal(0.5, 0.5), 1, 1)
+        self.pos2 = pos2
+        self.sectionLength = 20
+        self.points = nil
+        self.pointRegenTime = 0
+        self.pointRegenInterval = 0
     end
 
 
@@ -74,6 +90,10 @@ end
 ---@param dt number Time delta, in seconds.
 function Particle2:update(dt)
     self.time = self.time + dt
+    if self.time < 0 then
+        -- The projectile didn't spawn yet.
+        return
+    end
 
     self.speed = self.speed + self.acceleration * dt
     self.pos = self.pos + self.speed * dt
@@ -81,22 +101,38 @@ function Particle2:update(dt)
     if self.pos.y > _Game:getNativeResolution().y then
         self.delQueue = true
     end
+    if self.lifetime and self.time >= self.lifetime then
+        self.delQueue = true
+    end
+    if self.alphaFadeDuration then
+        self.alpha = self.alpha - dt / self.alphaFadeDuration
+        if self.alpha <= 0 then
+            self.delQueue = true
+        end
+    end
 
     if self.type == "spark" then
         self.game:spawnParticle(self.pos, "spark_trail", self:getColor())
-    elseif self.type == "spark_trail" then
-        self.alpha = self.alpha - dt / 0.3
-        if self.alpha <= 0 then
-            self.delQueue = true
-        end
-    elseif self.type == "flare" then
-        self.alpha = self.alpha - dt / 0.15
-        if self.alpha <= 0 then
-            self.delQueue = true
-        end
-    elseif self.type == "chain_explosion" then
-        if self.time >= 0.45 then
-            self.delQueue = true
+    elseif self.type == "lightning" then
+        self.pointRegenTime = self.pointRegenTime + dt
+        if self.pointRegenTime >= self.pointRegenInterval then
+            self.pointRegenTime = self.pointRegenTime - self.pointRegenInterval
+            self.pointRegenInterval = 0.02 + math.random() * 0.05
+            -- (Re)generate points for this lightning particle.
+            self.points = {}
+            -- Make a list of positions, by dividing a line into sections.
+            local sections = math.ceil((self.pos - self.pos2):len() / self.sectionLength)
+            for i = 0, sections do
+                table.insert(self.points, _Utils.lerp(self.pos, self.pos2, i / sections))
+            end
+            -- Randomly offset each node to give variety.
+            for i, point in ipairs(self.points) do
+                -- `roam` is 0.2, 0.6, 1, ..., 1, 0.6, 0.2. This helps concentrate the lightning on the endpoints.
+                local roamN = 2
+                local roamFall = 0.4
+                local roam = 1 - (math.max(roamN + 1 - i, 0) + math.max(roamN + i - #self.points, 0)) * roamFall
+                self.points[i] = point + Vec2(love.math.randomNormal(self.sectionLength / 8, self.sectionLength / 4) * roam, 0):rotate(math.random() * math.pi * 2)
+            end
         end
     end
 end
@@ -139,15 +175,30 @@ end
 
 ---Draws the Particle 2 on the screen.
 function Particle2:draw()
+    if self.time < 0 then
+        -- The projectile didn't spawn yet.
+        return
+    end
     if self.sprite then
         self.sprite:draw(self.pos, Vec2(0.5), 1, self:getAnimationFrame(), nil, self:getColor(), self.alpha)
-    else
+    elseif self.type == "chip" then
         local pd = Vec2(self.size, 0):rotate(self.angle)
         local p1 = self.pos - pd
         local p2 = self.pos + pd
         _DrawLine(p1, p2, self.color, nil, 2)
         local colorVector = Vec2(0, 0.5):rotate(self.angle)
         _DrawLine(p1 + colorVector, p2 + colorVector, self.darkColor, nil)
+    elseif self.type == "lightning" then
+        -- Draw the lines.
+        if self.points then
+            for i = 1, 5 do
+                local alpha = (i * 0.2) ^ 4
+                local width = (7 - i) * (6 - i) / 2
+                love.graphics.setColor(self.color.r, self.color.g, self.color.b, self.alpha * alpha)
+                love.graphics.setLineWidth(width)
+                love.graphics.line(_Utils.vectorsToValueList(self.points))
+            end
+        end
     end
 end
 

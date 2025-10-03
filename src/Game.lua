@@ -238,6 +238,7 @@ end
 ---@param key string The pressed key code.
 function Game:keypressed(key)
 	--self.uiManager:keypressed(key)
+	self.game:keypresed(key)
 end
 
 

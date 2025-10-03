@@ -269,6 +269,16 @@ function utils.clamp(n, a, b)
 	return math.min(math.max(n, a or 0), b or 1)
 end
 
+---Interpolates a number from `a` to `b` based on time `t`.
+---When `t = 0`, `a` is returned, and when `t = 1`, `b` is returned.
+---@param a number The value for `t = 0`.
+---@param b number The value for `t = 1`.
+---@param t number The time parameter.
+---@return number
+function utils.lerp(a, b, t)
+	return a * (1 - t) + b * t
+end
+
 
 
 ---Maps the value `a` from the range `a1..a2` to the range `b1..b2`.
@@ -519,6 +529,25 @@ function utils.removeDeadObjects(t)
 			table.remove(t, i)
 		end
 	end
+end
+
+
+
+---Converts a list of Vector2's to a list of returned values, for example to use in `love.graphics.line()`.
+---@param t Vector2[] A list of vectors to be converted.
+---@return number|nil, number|nil, ...|nil
+function utils.vectorsToValueList(t)
+	---Helper function
+	---@param tbl Vector2[] List of vectors.
+	---@param i integer Index to unpack.
+	---@return number|nil, number|nil, ...|nil
+	local function f(tbl, i)
+		if not tbl[i] then
+			return
+		end
+		return tbl[i].x, tbl[i].y, f(tbl, i + 1)
+	end
+	return f(t, 1)
 end
 
 

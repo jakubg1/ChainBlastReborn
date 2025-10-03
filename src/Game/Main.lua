@@ -114,8 +114,9 @@ end
 ---@param pos Vector2 The initial position of the Particle.
 ---@param type string The type of the Particle. TODO: Replace with data.
 ---@param color Color? The starting color of the Particle. TODO: Replace with data.
-function GameMain:spawnParticle(pos, type, color)
-	table.insert(self.particles, Particle2(self, pos, type, color))
+---@param pos2 Vector2? The second position of the Particle. If `type` is `"lightning"`, this is the second lightning position (`pos` -> `pos2`). If `type` is `"power_spark"`, this is the position the particle will gravitate towards. TODO: Replace with data.
+function GameMain:spawnParticle(pos, type, color, pos2)
+	table.insert(self.particles, Particle2(self, pos, type, color, pos2))
 end
 
 
@@ -176,8 +177,6 @@ function GameMain:mousepressed(x, y, button)
 	self.scene:mousepressed(x, y, button)
 end
 
-
-
 ---Callback from `main.lua`.
 ---@param x integer The X coordinate of mouse position.
 ---@param y integer The Y coordinate of mouse position.
@@ -186,6 +185,10 @@ function GameMain:mousereleased(x, y, button)
 	self.scene:mousereleased(x, y, button)
 end
 
-
+---Callback from `main.lua`.
+---@param key string The pressed key code.
+function GameMain:keypresed(key)
+	self.scene:keypressed(key)
+end
 
 return GameMain

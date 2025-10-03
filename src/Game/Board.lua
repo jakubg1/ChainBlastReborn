@@ -897,6 +897,9 @@ function Board:handleMatches()
                 --end
                 -- New (power meter)
                 self.level:addToPowerMeter(1, chain.color)
+                if self.level.powerColor == chain.color then
+                    -- TODO: Spawn some power particles
+                end
                 if not tile.gold then
                     nonGoldTileIncluded = true
                 end
@@ -1062,14 +1065,25 @@ function Board:explodeLightning(coords, horizontal, vertical)
         for i = 1, self.size.x do
             self:explodeChain(Vec2(i, coords.y))
         end
+        local p1 = self:getTilePos(Vec2(0, coords.y) + 0.5)
+        local p2 = self:getTilePos(Vec2(self.size.x + 1, coords.y) + 0.5)
+        for i = 1, 7 do
+            _Game.game:spawnParticle(p1, "lightning", nil, p2)
+        end
     end
     if vertical then
         for i = 1, self.size.y do
             self:explodeChain(Vec2(coords.x, i))
         end
+        local p1 = self:getTilePos(Vec2(coords.x, 0) + 0.5)
+        local p2 = self:getTilePos(Vec2(coords.x, self.size.y + 1) + 0.5)
+        for i = 1, 7 do
+            _Game.game:spawnParticle(p1, "lightning", nil, p2)
+        end
     end
     _Game:playSound("sound_events/powerup_lightning.json")
-    _Game.game:shakeScreen(7, nil, 25, 0.15)
+    _Game.game:shakeScreen(9, nil, 25, 0.15)
+    self.level.background:flash(0.5, 0.35)
 end
 
 

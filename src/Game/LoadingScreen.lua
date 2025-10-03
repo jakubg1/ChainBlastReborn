@@ -4,11 +4,8 @@ local class = require "com.class"
 ---@overload fun(game):LoadingScreen
 local LoadingScreen = class:derive("LoadingScreen")
 
--- Place your imports here
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
-
-
 
 ---Constructs the Loading Screen.
 ---@param game GameMain The main game class this Player belongs to.
@@ -19,12 +16,10 @@ function LoadingScreen:new(game)
 	self.spriteTime = 0
 	self.endTime = nil
     self.ending = false
-	
+
 	-- Play the music.
 	_Game.resourceManager:getMusic("music_tracks/menu_music.json"):play(1, 1)
 end
-
-
 
 ---Updates the Loading Screen.
 ---@param dt number Time delta in seconds.
@@ -44,8 +39,6 @@ function LoadingScreen:update(dt)
 	end
 end
 
-
-
 ---Draws the Loading Screen.
 function LoadingScreen:draw()
 	local spriteTime = 0.075
@@ -57,16 +50,12 @@ function LoadingScreen:draw()
 	self.game.font:drawWithShadow("Loading...", Vec2(150, 90), Vec2(0, 0.5), nil, alpha)
 end
 
-
-
 ---Callback from `main.lua`.
 ---@param x integer The X coordinate of mouse position.
 ---@param y integer The Y coordinate of mouse position.
 ---@param button integer The mouse button which was pressed.
 function LoadingScreen:mousepressed(x, y, button)
 end
-
-
 
 ---Callback from `main.lua`.
 ---@param x integer The X coordinate of mouse position.
@@ -75,6 +64,9 @@ end
 function LoadingScreen:mousereleased(x, y, button)
 end
 
-
+---Callback from `main.lua`.
+---@param key string The pressed key code.
+function LoadingScreen:keypressed(key)
+end
 
 return LoadingScreen

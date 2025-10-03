@@ -6,7 +6,7 @@ local Level = class:derive("Level")
 
 local Board = require("src.Game.Board")
 local LevelUI = require("src.Game.LevelUI")
-local LevelStar = require("src.Game.LevelStar")
+local LevelBackground = require("src.Game.LevelBackground")
 
 ---Constructs a Level.
 ---@param game GameMain The main game class instance this Level belongs to.
@@ -16,6 +16,7 @@ function Level:new(game)
 
     self.board = nil
     self.ui = LevelUI(self)
+    self.background = LevelBackground(self)
 
     self.score = 0
     self.maxTime = self.data.time
@@ -47,11 +48,6 @@ function Level:new(game)
 
     _Game:playSound("sound_events/level_start.json")
     self.levelMusic:play()
-
-    self.stars = {}
-    for i = 1, 1500 do
-        --self.stars[i] = LevelStar(true)
-    end
 end
 
 ---Updates the Level.
@@ -76,7 +72,7 @@ function Level:update(dt)
     self:updateSounds(dt)
     self:updateMusic(dt)
     self.ui:update(dt)
-    self:updateBackground(dt)
+    self.background:update(dt)
 end
 
 ---Updates timing on this level. Trips the loss flag if the timer reaches zero.
@@ -195,17 +191,6 @@ function Level:updateMusic(dt)
         self.dangerMusicFlag = false
         self.levelMusic:play(1, 2)
         self.dangerMusic:stop(1)
-    end
-end
-
----Updates the level background.
----@param dt number Time delta in seconds.
-function Level:updateBackground(dt)
-    for i, star in ipairs(self.stars) do
-        star:update(dt)
-        if star.delQueue then
-            self.stars[i] = LevelStar()
-        end
     end
 end
 
@@ -387,16 +372,9 @@ end
 
 ---Draws the Level.
 function Level:draw()
-    self:drawBackground()
+    self.background:draw()
     self:drawBoard()
     self.ui:draw()
-end
-
----Draws the level background.
-function Level:drawBackground()
-    for i, star in ipairs(self.stars) do
-        star:draw()
-    end
 end
 
 ---Draws the level board.
@@ -452,6 +430,14 @@ end
 function Level:mousereleased(x, y, button)
     if self.board then
     	self.board:mousereleased(x, y, button)
+    end
+end
+
+---Callback from `main.lua`.
+---@param key string The pressed key code.
+function Level:keypressed(key)
+    if key == "space" then
+        self:togglePause()
     end
 end
 
