@@ -284,28 +284,29 @@ function Level:addToBombMeter(amount)
     end
 end
 
----Adds the given amount of power points to the power gauge.
+---Adds the given amount of power points (x3 if the color matches) to the power gauge.
 ---If the current power color is 0 (any), the power gauge takes on that color.
----If the given color is different to the current power color, the power points are discarded.
----@param amount integer The amount of the power points.
+---If the given color is different to the current power color, the power points are added (1 per chain).
+---@param amount integer The amount of the chains destroyed.
 ---@param color integer Color of the power.
 function Level:addToPowerMeter(amount, color)
+    local multiplier = 3
     if self.powerColor ~= 0 and self.powerColor ~= color then
-        return
+        multiplier = 1
     end
     if self.powerColor == 0 then
         self.powerColor = color
     end
     local oldMeter = self.powerMeter
-    self.powerMeter = self.powerMeter + amount
+    self.powerMeter = self.powerMeter + amount * multiplier
     -- Play a sound if enough power has been charged to do something with it.
-    if oldMeter < 25 and self.powerMeter >= 25 then
+    if oldMeter < 75 and self.powerMeter >= 75 then
         _Game:playSound("sound_events/power_ready.json")
     end
 end
 
 ---Sets the power level to zero and resets the power color.
-function Level:clearPowerMeter()
+function Level:resetPowerMeter()
     self.powerColor = 0
     self.powerMeter = 0
 end
@@ -314,8 +315,8 @@ end
 ---Returns `nil` if the power cannot be activated.
 ---@return "bomb"|"lightning"?
 function Level:getPowerMode()
-    -- Must have at least 25 power points charged.
-    if self.powerMeter < 25 then
+    -- Must have at least 75 power points charged.
+    if self.powerMeter < 75 then
         return
     end
     -- 2 = blue

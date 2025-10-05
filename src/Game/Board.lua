@@ -9,6 +9,7 @@ local Chain = require("src.Game.Chain")
 local Bomb = require("src.Game.Bomb")
 local Missile = require("src.Game.Missile")
 local ConjoinedSprite = require("src.Game.ConjoinedSprite")
+local BoardSelection = require("src.Game.BoardSelection")
 
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
@@ -116,11 +117,7 @@ function Board:new(level)
     self.hoverCoords = nil
     self.visualHoverCoords = nil
     self.mode = "select" -- `"select"` is the usual one, but can be `"bomb"` or `"lightning"` when a power is active.
-    self.selecting = false
-    self.selectedCoords = {}
-    self.selectedDirections = {}
-    -- It might be the case that we cross an already selected tile. In such case, this will not necessarily be the last entry in the selectedCoords table.
-    self.selectingDirection = nil
+    self.selection = nil
 	self.lastSelectStart = nil
     self.hintTime = 0
     self.hintCoords = nil
@@ -169,6 +166,10 @@ function Board:update(dt)
     -- Game control
     if self.fallingObjectCount > 0 or self.shufflingChainCount > 0 or self.primedObjectCount > 0 or self.over then
         self.playerControl = false
+        if self:isSelectionActive() then
+            self.selection:finish(true)
+            self.selection = nil
+        end
     end
 
     if not self.playerControl and self.fallingObjectCount == 0 and self.shufflingChainCount == 0 and self.rotatingChainCount == 0 and self.primedObjectCount == 0 and not self.over then
@@ -218,8 +219,8 @@ function Board:update(dt)
     end
 
     -- Tile selection
-    if self.selecting then
-        local lastSelectedCoords = self.selectedCoords[#self.selectedCoords]
+    if self:isSelectionActive() then
+        local lastSelectedCoords = self.selection:getLastCoords()
         if lastSelectedCoords then
             -- We are not using `self.hoverCoords` here to allow fast sweeping beyond the board boundaries. Quality of life! Yay!
             local selectionVector = self:getTileCoords(_MousePos) - lastSelectedCoords
@@ -243,21 +244,21 @@ function Board:update(dt)
                     length = selectionVector.x
                 end
             end
-            -- If any of the above checks have passed, we can continue on.
+            -- If any of the above checks have passed, we can continue.
             if direction then
-                if self.hoverCoords and self.hoverCoords == self.selectedCoords[#self.selectedCoords - length] then
+                if self.hoverCoords and self.hoverCoords == self.selection:getLastCoords(length) then
                     -- We are going backwards!
                     for i = 1, length do
-                        self:shrinkSelection()
+                        self.selection:shrink()
                     end
                 else
                     for i = 1, length do
-                        self:expandSelection(direction)
+                        self.selection:expand(direction)
                     end
                 end
             end
         else
-            self:startSelection()
+            self.selection:start(self.hoverCoords)
         end
     end
 
@@ -348,6 +349,7 @@ end
 
 
 ---Returns the Tile located at the given coordinates.
+---If the tile is not found there, returns `nil`.
 ---@param coords Vector2 The tile coordinates.
 ---@return Tile?
 function Board:getTile(coords)
@@ -355,6 +357,14 @@ function Board:getTile(coords)
         return
     end
     return self.tiles[coords.x][coords.y]
+end
+
+---Returns the Tile located at the given coordinates.
+---If the tile is not found there, throws an error.
+---@param coords Vector2 Tile coordinates.
+---@return Tile
+function Board:assertGetTile(coords)
+    return assert(self:getTile(coords), string.format("Attempt to get a tile at %s, but no tile was found :(", coords))
 end
 
 
@@ -367,6 +377,13 @@ function Board:getChain(coords)
         return
     end
     return self.chains[coords.x][coords.y]
+end
+
+---Returns the Chain (or any board item, including boxes, etc.) located at the given coordinates.
+---@param coords Vector2 Tile coordinates.
+---@return Chain
+function Board:assertGetChain(coords)
+    return assert(self:getChain(coords), string.format("Attempt to get a chain at %s, but no chain was found :(", coords))
 end
 
 
@@ -485,239 +502,7 @@ end
 ---Returns `true` if the player is currently selecting some chains.
 ---@return boolean
 function Board:isSelectionActive()
-    return self.selecting
-end
-
-
-
----Begins the tile selection process by selecting the currently hovered tile.
-function Board:startSelection()
-    local tile = self:getTile(self.hoverCoords)
-    local chain = self:getChain(self.hoverCoords)
-    if tile and chain and chain:canBeSelected() then
-        tile:select()
-        table.insert(self.selectedCoords, self.hoverCoords)
-    end
-end
-
-
-
----Expands the tile selection by a neighbour in the specified direction.
----@param direction integer The direction to expand the selection to. 1 is up, then clockwise.
-function Board:expandSelection(direction)
-    local oppositeDirection = (direction + 1) % 4 + 1
-
-    local newCoords = self.selectedCoords[#self.selectedCoords] + self.DIRECTIONS[direction]
-    local tile = self:getTile(newCoords)
-    local chain = self:getChain(newCoords)
-    local prevTile = self:getTile(self.selectedCoords[#self.selectedCoords])
-    local prevChain = self:getChain(self.selectedCoords[#self.selectedCoords])
-
-    -- Back out if we can't select in this direction, or if somehow the previous tiles do not exist.
-    if not tile or not chain or not prevTile or not prevChain then
-        return
-    end
-    -- Back out if we cannot select that chain.
-    if not chain:canBeSelected() then
-        return
-    end
-    -- Back out also if we've already selected this tile from the other side.
-    if tile:isSideSelected(oppositeDirection) then
-        return
-    end
-    -- Also if we're trying to impossibly rotate the chains (for instance, straight pieces in L shape).
-    if #self.selectedCoords > 1 and prevChain.rotation % 2 ~= direction % 2 and prevChain.shape == 1 then
-        return
-    end
-    -- And finally if the color doesn't match.
-    if not prevChain:matchesWithColor(chain.color) then
-        return
-    end
-
-    -- If all of the above conditions are satisfied, we can go on.
-    tile:select()
-    tile:selectSide(oppositeDirection)
-    chain:rotate(oppositeDirection, true)
-    prevTile:selectSide(direction, true)
-    if #self.selectedCoords == 1 then
-        -- If we are selecting the second tile, the first one gets rotated as well!
-        prevChain:rotate(oppositeDirection, true)
-    end
-    table.insert(self.selectedCoords, newCoords)
-    table.insert(self.selectedDirections, direction)
-	
-	self:updateSelectionHighlights()
-end
-
-
-
----Shrinks the selection by one tile.
-function Board:shrinkSelection()
-    local oppositeDirection = self.selectedDirections[#self.selectedDirections]
-    local direction = (oppositeDirection + 1) % 4 + 1
-
-    local newCoords = self.selectedCoords[#self.selectedCoords] + self.DIRECTIONS[direction]
-    local tile = self:getTile(newCoords)
-    local chain = self:getChain(newCoords)
-    local prevTile = self:getTile(self.selectedCoords[#self.selectedCoords])   -- This tile will be unselected.
-    local prevChain = self:getChain(self.selectedCoords[#self.selectedCoords])
-
-    -- Back out if we can't unselect in this direction, or if somehow the previous tiles do not exist.
-    if not tile or not chain or not prevTile or not prevChain then
-        return
-    end
-
-    -- If all of the above conditions are satisfied, we can go on.
-    prevTile:unselectSide(direction)
-    if not prevTile:areSidesSelected() then
-        prevTile:unselect()
-        prevChain:unrotate()
-        if #self.selectedCoords == 2 then
-            -- If we are unselecting the second-to-last tile, the last one gets unrotated as well!
-            chain:unrotate()
-        end
-    end
-    if tile and chain then
-        tile:unselectSide(oppositeDirection)
-    end
-    table.remove(self.selectedCoords)
-    table.remove(self.selectedDirections)
-	
-	self:updateSelectionHighlights()
-end
-
-
-
----Ends the selection process. Processes the matches and then restores the previous chain configuration.
----@param abort boolean? If set to `true`, the selection will be aborted and no match checks will happen.
-function Board:finishSelection(abort)
-    -- Unselect all tiles.
-    for i, coords in ipairs(self.selectedCoords) do
-        local tile = self:getTile(coords)
-        assert(tile, string.format("Tried selecting a nonexistent tile on %s", coords))
-        tile:unselect()
-        tile:unselectSides()
-    end
-	-- Deploy a powerup if applicable. The powerup will always appear at the cursor position.
-    if self.level.data.enablePowerups then
-        local powerupCoords = self.selectedCoords[#self.selectedCoords]
-        if powerupCoords then
-            local powerupChain = self:getChain(powerupCoords)
-            if powerupChain then
-                local powerupChainGroup = powerupChain:getGroup()
-                local powerup = self:getPowerupFromColors(self:countGroupColors(powerupChainGroup))
-                if powerup then
-                    powerupChain:setPowerup(powerup)
-                end
-            end
-        end
-    end
-    -- Handle matches.
-    if not abort then
-        local result = self:handleMatches()
-        if not result then
-            -- The selection didn't work. Play a sound and shake the chains.
-            _Game:playSound("sound_events/no.json")
-            for i, coords in ipairs(self.selectedCoords) do
-                local chain = self:getChain(coords)
-                if chain then
-                    chain:shake(0.05)
-                end
-            end
-        end
-    end
-    -- Unselect all chains and exit the selection mode.
-    self.selecting = false
-    self.selectedCoords = {}
-    self.selectedDirections = {}
-    -- Unrotate all chains.
-    for i = 1, self.size.x do
-        for j = 1, self.size.y do
-            local coords = Vec2(i, j)
-            local chain = self:getChain(coords)
-            if chain and not chain:isPrimed() then
-                chain:unrotate()
-            end
-        end
-    end
-	
-	self:updateSelectionHighlights()
-end
-
-
-
-function Board:updateSelectionHighlights()
-	-- Unselect everything.
-    for i = 1, self.size.x do
-        for j = 1, self.size.y do
-            local coords = Vec2(i, j)
-            local tile = self:getTile(coords)
-            if tile then
-				tile:unselectAsPowerupVictim()
-            end
-        end
-    end
-
-    -- Exit if no chains are selected.
-	if #self.selectedCoords == 0 then
-		return
-	end
-    -- Flash the chains if a valid match is selected.
-    if #self.selectedCoords >= 3 then
-        for i, chainCoords in ipairs(self.selectedCoords) do
-            self:getChain(chainCoords):flash(0.05, (i - 1) * 0.03)
-        end
-    end
-    -- Exit here if powerups are disabled.
-    if not self.level.data.enablePowerups then
-        return
-    end
-
-	local powerupCoords = self.selectedCoords[#self.selectedCoords]
-	local powerupChain = self:getChain(powerupCoords)
-    if not powerupChain then
-        return
-    end
-	local powerupChainGroup = powerupChain:getGroup()
-	local powerup = self:getPowerupFromColors(self:countGroupColors(powerupChainGroup))
-
-    for i = 1, self.size.x do
-        for j = 1, self.size.y do
-            local coords = Vec2(i, j)
-            local tile = self:getTile(coords)
-            if tile then
-				if powerup == "bomb" then
-					if math.abs(powerupCoords.x - coords.x) <= 1 and math.abs(powerupCoords.y - coords.y) <= 1 then
-						tile:selectAsPowerupVictim()
-					end
-                elseif powerup == "lightning" then
-                    if (powerupChain.shape == 2 or powerupChain.rotation == 2) and powerupCoords.x == coords.x then
-                        tile:selectAsPowerupVictim()
-                    elseif (powerupChain.shape == 2 or powerupChain.rotation == 1) and powerupCoords.y == coords.y then
-                        tile:selectAsPowerupVictim()
-                    end
-				elseif powerup == "bomb_lightning" then
-					if (powerupChain.shape == 2 or powerupChain.rotation == 2) and math.abs(powerupCoords.x - coords.x) <= 1 then
-						tile:selectAsPowerupVictim()
-					elseif (powerupChain.shape == 2 or powerupChain.rotation == 1) and math.abs(powerupCoords.y - coords.y) <= 1 then
-						tile:selectAsPowerupVictim()
-					end
-				end
-            end
-        end
-    end
-	-- Select all chains in the group.
-	for i, coords in ipairs(powerupChainGroup) do
-		self:getTile(coords):selectAsPowerupVictim()
-	end
-end
-
-
-
----Returns a table of currently selected chains' colors as a total of each color.
----@return table
-function Board:countSelectionColors()
-	return self:countGroupColors(self.selectedCoords)
+    return self.selection ~= nil
 end
 
 
@@ -836,12 +621,7 @@ function Board:rearrangeMatchGroup(group, startFrom, noSplitToSubgroups)
 
 	local result = {{startFrom}}
 	while #remaining > 0 do
-		local subgroup
-		if noSplitToSubgroups then
-			subgroup = result[1]
-		else
-			subgroup = {}
-		end
+		local subgroup = noSplitToSubgroups and result[1] or {}
 		-- We're checking the last subgroup for neighbors.
 		for i, coords in ipairs(result[#result]) do
 			for j = #remaining, 1, -1 do
@@ -885,10 +665,8 @@ function Board:handleMatches()
         local modifiedMatch = self:rearrangeMatchGroup(match, self.lastSelectStart, true)
         for j, group in ipairs(modifiedMatch) do
             for k, coords in ipairs(group) do
-                local tile = self:getTile(coords)
-                local chain = self:getChain(coords)
-                assert(tile, string.format("Tried selecting a nonexistent tile on %s", coords))
-                assert(chain, string.format("Tried selecting a nonexistent chain on %s", coords))
+                local tile = self:assertGetTile(coords)
+                local chain = self:assertGetChain(coords)
                 local delay = 0 --0.05
                 chain:destroy((k - 1) * delay)
                 -- Old bomb meter stuff
@@ -898,7 +676,7 @@ function Board:handleMatches()
                 -- New (power meter)
                 self.level:addToPowerMeter(1, chain.color)
                 if self.level.powerColor == chain.color then
-                    -- TODO: Spawn some power particles
+                    chain:spawnPowerParticles()
                 end
                 if not tile.gold then
                     nonGoldTileIncluded = true
@@ -1176,13 +954,11 @@ end
 ---@param excludedCoords table? A list of excluded coordinates (Vector2's) which are guaranteed to not be returned by this function.
 ---@return Tile?
 function Board:getRandomNonGoldTile(excludedCoords)
-    excludedCoords = excludedCoords or {}
-
     local tiles = {}
     for i = 1, self.size.x do
         for j = 1, self.size.y do
             local coords = Vec2(i, j)
-            if not _Utils.isValueInTable(excludedCoords, coords) then
+            if not excludedCoords or not _Utils.isValueInTable(excludedCoords, coords) then
                 local tile = self:getTile(coords)
                 if tile and not tile.gold then
                     table.insert(tiles, tile)
@@ -1441,27 +1217,30 @@ function Board:mousepressed(x, y, button)
     if button == 1 then
         if self.hoverCoords and self:getChain(self.hoverCoords) then
             if self.mode == "select" then
-                self.selecting = true
+                self.selection = BoardSelection(self)
                 self.lastSelectStart = self.hoverCoords
             elseif self.mode == "bomb" then
                 self:explodeBomb(self.hoverCoords)
                 self.mode = "select"
-                self.level:clearPowerMeter()
+                self.level:resetPowerMeter()
             elseif self.mode == "lightning" then
                 self:explodeLightning(self.hoverCoords, true, true)
                 self.mode = "select"
-                self.level:clearPowerMeter()
+                self.level:resetPowerMeter()
             end
         end
     elseif button == 2 then
-        if self.selecting then
-            self:finishSelection(true)
+        if self:isSelectionActive() then
+            self.selection:finish(true)
+            self.selection = nil
         elseif self.mode == "select" then
             -- If a power can be activated, set the mode to that power.
             local powerMode = self.level:getPowerMode()
             if powerMode then
                 self.mode = powerMode
                 _Game:playSound("sound_events/power_activate.json")
+            else
+                _Game:playSound("sound_events/no.json")
             end
         else
             -- Cancel the power if we were in a power mode.
@@ -1478,8 +1257,9 @@ end
 ---@param button integer The mouse button which was released.
 function Board:mousereleased(x, y, button)
 	if button == 1 then
-        if self.selecting then
-            self:finishSelection()
+        if self:isSelectionActive() then
+            self.selection:finish()
+            self.selection = nil
         end
     end
 end

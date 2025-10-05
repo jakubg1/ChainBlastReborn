@@ -25,6 +25,7 @@ function GameMain:new(game)
     self.game = game
 
     self.font = self.game.resourceManager:getFont("fonts/standard.json")
+	self.smallFont = self.game.resourceManager:getFont("fonts/small.json")
 
 	self.settings = Settings()
 	self.player = Player(self)
@@ -157,14 +158,15 @@ end
 ---Draws the game.
 function GameMain:draw()
 	_DrawFillRect(Vec2(0, 0), Vec2(320, 180), Color(0, 0, 0))
-	--_DrawRect(Vec2(0, 0), Vec2(320, 180), Color(0, 1, 0))
-	--_DrawFillRect(Vec2(10, 10), Vec2(10, 10), Color(1, 0, 0))
 
 	self.scene:draw()
 	for i, particle in ipairs(self.particles) do
 		particle:draw()
 	end
 	self.transition:draw()
+
+	-- Debug
+	self.smallFont:draw("mouse: " .. _MousePos.x .. "," .. _MousePos.y, Vec2(), Vec2())
 end
 
 

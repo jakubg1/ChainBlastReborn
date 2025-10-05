@@ -1,0 +1,6 @@
+{
+    "$schema": "../../../schemas/font.json",
+    "type": "imageLove",
+    "image": "images/fonts/small.png",
+    "characters": " abcdefghijklmnopqrstuvwxyząćęłńóśźżABCDEFGHIJKLMNOPQRSTUVWXYZĄĆĘŁŃÓŚŹŻ0123456789<>-+()[]_.,:;'!?@#$€%^&*\"/|\\"
+}

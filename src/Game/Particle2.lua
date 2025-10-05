@@ -78,6 +78,14 @@ function Particle2:new(game, pos, type, color, pos2)
         self.points = nil
         self.pointRegenTime = 0
         self.pointRegenInterval = 0
+    elseif self.type == "power_spark" then
+        self.speed = Vec2()
+        self.acceleration = Vec2()
+        self.alpha = 1
+        self.alphaFadeDuration = 4
+        self.sprite = _Game.resourceManager:getSprite("sprites/spark2.json")
+        self.color = color
+        self.targetPos = pos2
     end
 
 
@@ -93,6 +101,10 @@ function Particle2:update(dt)
     if self.time < 0 then
         -- The projectile didn't spawn yet.
         return
+    end
+
+    if self.targetPos then
+        self.acceleration = Vec2(300, 0):rotate((self.targetPos - self.pos):angle())
     end
 
     self.speed = self.speed + self.acceleration * dt

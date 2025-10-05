@@ -4,10 +4,8 @@ local class = require "com.class"
 ---@overload fun(board, coords, type):Chain
 local Chain = class:derive("Chain")
 
--- Place your imports here
 local Vec2 = require("src.Essentials.Vector2")
-
-
+local Color = require("src.Essentials.Color")
 
 ---Constructs a new Chain. Chains can be chains or can be any other object that occupies a chain space in the game, such as a crate, a rock, etc.
 ---@param board Board The board this Chain belongs to.
@@ -494,6 +492,22 @@ function Chain:flash(duration, delay)
         return
     end
     self.flashTime = duration
+end
+
+---Spawns some power particles which go to the power meter.
+function Chain:spawnPowerParticles()
+    for i = 1, 9 do
+        local pos = self:getPos() + 7 + Vec2(love.math.randomNormal(4, 0), love.math.randomNormal(4, 0))
+        local color = Color()
+        if self.color == 1 then
+            color = Color(1, 0, 0)
+        elseif self.color == 2 then
+            color = Color(0, 0, 1)
+        elseif self.color == 3 then
+            color = Color(1, 1, 0)
+        end
+        _Game.game:spawnParticle(pos, "power_spark", color, Vec2(284, 34))
+    end
 end
 
 

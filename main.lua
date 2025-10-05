@@ -158,7 +158,7 @@ end
 function love.update(dt)
 	_Debug:profUpdateStart()
 
-	_MousePos = _PosFromScreen(Vec2(love.mouse.getPosition()))
+	_MousePos = _PosFromScreen(Vec2(love.mouse.getPosition())):floor()
 	if _Game then
 		_Game:update(dt * _TimeScale)
 	end
