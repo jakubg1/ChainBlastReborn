@@ -1,6 +1,6 @@
 {
     "$schema": "../../../schemas/sprite.json",
-    "path": "images/hud_timer.png",
+    "path": "images/hud_power.png",
     "frameSize": {
         "x": 33,
         "y": 130

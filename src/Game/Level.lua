@@ -371,6 +371,13 @@ function Level:getTimeBonus()
     return math.ceil(self.time * 10) * 30
 end
 
+---Submits the level statistics to the Player, and upates the game records and statistics.
+function Level:submitLevelStats()
+    self.game.player:submitLargestGroup(self.largestGroup)
+    self.game.player:submitMaxCombo(self.maxCombo)
+    self.game.player:submitTimeElapsed(self.timeElapsed)
+end
+
 ---Draws the Level.
 function Level:draw()
     self.background:draw()
@@ -393,35 +400,7 @@ function Level:mousepressed(x, y, button)
     if self.board and not self.pause then
     	self.board:mousepressed(x, y, button)
     end
-
-    -- Dialog confirmations
-    if button == 1 then
-        if self.pause then
-            self:togglePause()
-        end
-        if self.ui:isResultsAnimationFinished() then
-            self.game.player:submitLargestGroup(self.largestGroup)
-            self.game.player:submitMaxCombo(self.maxCombo)
-            self.game.player:submitTimeElapsed(self.timeElapsed)
-            if self.game.player.lives == 0 then
-                self.ui:notifyGameResults()
-            elseif not self.lost and self.game.player.level == 10 then
-                self.ui:notifyGameWin()
-            else
-                if not self.lost then
-                    self.game.player:advanceLevel()
-                end
-                self.game:changeScene("level", true, true)
-            end
-            _Game:playSound("sound_events/ui_select.json")
-        elseif self.ui:isGameWinAnimationFinished() then
-            self.ui:notifyGameResults()
-        elseif self.ui:isGameResultsAnimationFinished() then
-            --_Game:endGame()
-            self.game:changeScene("menu")
-            _Game:playSound("sound_events/ui_select.json")
-        end
-    end
+    self.ui:mousepressed(x, y, button)
 end
 
 ---Callback from `main.lua`.

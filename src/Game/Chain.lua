@@ -473,7 +473,7 @@ function Chain:damage()
         if self.type == "crate" then
             self:flash(0.1)
             for i = 1, 5 do
-                _Game.game:spawnParticle(self:getPos() + 7 + Vec2(love.math.randomNormal(2, 0), love.math.randomNormal(2, 0)), "chip")
+                _Game.game:spawnParticle(self:getCenterPos() + Vec2(love.math.randomNormal(2, 0), love.math.randomNormal(2, 0)), "chip")
             end
             self.crateDestroySound:play()
             _Game.game:shakeScreen(1, nil, 20, 0.15)
@@ -495,18 +495,13 @@ function Chain:flash(duration, delay)
 end
 
 ---Spawns some power particles which go to the power meter.
-function Chain:spawnPowerParticles()
-    for i = 1, 9 do
-        local pos = self:getPos() + 7 + Vec2(love.math.randomNormal(4, 0), love.math.randomNormal(4, 0))
-        local color = Color()
-        if self.color == 1 then
-            color = Color(1, 0, 0)
-        elseif self.color == 2 then
-            color = Color(0, 0, 1)
-        elseif self.color == 3 then
-            color = Color(1, 1, 0)
-        end
-        _Game.game:spawnParticle(pos, "power_spark", color, Vec2(284, 34))
+---@param amount integer Amount of particles to be spawned.
+function Chain:spawnPowerParticles(amount)
+    for i = 1, amount do
+        local pos = self:getCenterPos() + Vec2(love.math.randomNormal(4, 0), love.math.randomNormal(4, 0))
+        -- TODO: Better way to store power colors?
+        local color = self.board.level.ui.POWER_METER_COLORS[self.color]
+        _Game.game:spawnParticle(pos, "power_spark", color, Vec2(284, 45))
     end
 end
 
@@ -551,7 +546,7 @@ function Chain:destroy(delay)
     end
 
     -- Spawn some particles.
-    local pos = self:getPos() + 7
+    local pos = self:getCenterPos()
     if self.type == "chain" then
         for i = 1, 8 do
             --_Game.game:spawnParticle(pos + Vec2(math.random() * 5):rotate(math.random() * math.pi * 2), "spark")
@@ -602,6 +597,12 @@ function Chain:getPos()
         return self.releasePos
     end
     return self.board:getTilePos(self.visualCoords) + self.panicOffset + self.shakeOffset
+end
+
+---Returns the center position of this Chain.
+---@return Vector2
+function Chain:getCenterPos()
+    return self:getPos() + 7
 end
 
 

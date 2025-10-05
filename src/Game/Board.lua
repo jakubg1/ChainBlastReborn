@@ -196,7 +196,7 @@ function Board:update(dt)
         if self:getTile(hoverCoords) then
             self.hoverCoords = hoverCoords
         end
-        if not self.hintCoords then
+        if not self.hintCoords and self.mode == "select" then
             self.hintTime = self.hintTime + dt
             if self.hintTime >= 3 then
                 self.hintCoords = self:getRandomMatchableChain().coords
@@ -676,7 +676,9 @@ function Board:handleMatches()
                 -- New (power meter)
                 self.level:addToPowerMeter(1, chain.color)
                 if self.level.powerColor == chain.color then
-                    chain:spawnPowerParticles()
+                    chain:spawnPowerParticles(9)
+                else
+                    chain:spawnPowerParticles(3)
                 end
                 if not tile.gold then
                     nonGoldTileIncluded = true
@@ -829,7 +831,8 @@ function Board:explodeBomb(coords)
         end
     end
     _Game:playSound("sound_events/explosion2.json")
-    _Game.game:shakeScreen(7, nil, 25, 0.15)
+    _Game.game:shakeScreen(9, nil, 100, 0.35)
+    self.level.background:flash(0.5, 0.35)
 end
 
 
@@ -860,7 +863,7 @@ function Board:explodeLightning(coords, horizontal, vertical)
         end
     end
     _Game:playSound("sound_events/powerup_lightning.json")
-    _Game.game:shakeScreen(9, nil, 25, 0.15)
+    _Game.game:shakeScreen(9, nil, 15, 0.25)
     self.level.background:flash(0.5, 0.35)
 end
 

@@ -13,6 +13,7 @@ function LevelUI:new(level)
     self.game = level.game
 
     self.scoreDisplay = self.game.player.score
+    self.powerMeterDisplay = 0
     self.multiplierProgressDisplay = 0
     self.pauseAnimation = 0
     self.startAnimation = 0
@@ -36,10 +37,10 @@ function LevelUI:new(level)
     self.hudExtraTimeAlpha = 0
     self.hudExtraTimeValue = 0
     self.POWER_METER_COLORS = {
-        [0] = Color(1, 1, 1),
-        Color(0.9, 0.1, 0.3),
-        Color(0.1, 0.4, 0.9),
-        Color(1, 0.4, 0),
+        [0] = Color(0.8, 0.8, 0.8),
+        Color(1, 0.1, 0.3),
+        Color(0.1, 0.4, 1),
+        Color(1, 0.5, 0.1),
         --[0] = {1, 1, 1},
         --{0.1, 0.4, 0.9},
         --{1, 0.4, 0},
@@ -47,6 +48,7 @@ function LevelUI:new(level)
     }
 
     self.timerSprite = _Game.resourceManager:getSprite("sprites/hud_timer.json")
+    self.powerSprite = _Game.resourceManager:getSprite("sprites/hud_power.json")
 end
 
 ---Notifies the UI that extra time has been added to the timer.
@@ -102,6 +104,19 @@ function LevelUI:isResultsAnimationFinished()
     return self.resultsAnimation and self.resultsAnimation > 4.5
 end
 
+---Returns `true` if the results animation is currently playing.
+---@return boolean
+function LevelUI:isResultsAnimationPlaying()
+    return self.resultsAnimation and not self:isResultsAnimationFinished()
+end
+
+---Skips the level results animation.
+function LevelUI:skipResultsAnimation()
+    self.resultsAnimation = 5
+    self.resultsAnimationSoundStep = #self.RESULTS_ANIMATION_SOUND_STEPS
+    _Game:playSound("sound_events/ui_select.json")
+end
+
 ---Returns `true` if the game win animation has finished (is ready to click to go to game results).
 ---@return boolean
 function LevelUI:isGameWinAnimationFinished()
@@ -144,6 +159,13 @@ function LevelUI:updateHUD(dt)
     -- Score animation
     if self.scoreDisplay < self.game.player.score then
         self.scoreDisplay = self.scoreDisplay + math.ceil((self.game.player.score - self.scoreDisplay) / 8)
+    end
+
+    -- Power meter
+    if self.powerMeterDisplay < self.level.powerMeter then
+        self.powerMeterDisplay = math.min(self.powerMeterDisplay + 50 * dt, self.level.powerMeter)
+    elseif self.powerMeterDisplay > self.level.powerMeter then
+        self.powerMeterDisplay = math.max(self.powerMeterDisplay - 400 * dt, self.level.powerMeter)
     end
 
     -- Multiplier animation
@@ -350,8 +372,9 @@ function LevelUI:drawHUD()
         -- Bar
         local t = math.min(self.level.time / self.level.maxTime, 1)
         _DrawFillRect(Vec2(33, 40 + 108 * (1 - t)), Vec2(5, 110 * t), Color(0.1, 0.4, 0.9), self.hudAlpha)
+        _DrawFillRect(Vec2(33, 40 + 108 * (1 - t)), Vec2(5, 1), Color(0.85, 0.95, 1), self.hudAlpha)
         -- Timer box
-        self.timerSprite:draw(Vec2(19, 34), nil, nil, nil, nil, nil, self.hudAlpha)
+        self.timerSprite:draw(Vec2(19, 33), nil, nil, nil, nil, nil, self.hudAlpha)
         -- Text display
         if self.level.time < 9.9 then
             if self.level.time > 5 or not self.level:isTimerTicking() or _TotalTime % 0.25 < 0.125 then
@@ -381,12 +404,14 @@ function LevelUI:drawHUD()
 
     -- New power meter
     self.game.font:draw("Power", Vec2(285, 20), Vec2(0.5, 0), nil, self.hudAlpha)
-    _DrawRect(Vec2(281, 34), Vec2(7, 112), Color(0.7, 0.5, 0.3), self.hudAlpha)
-    local color = (self.level.powerMeter > 90 and _TotalTime % 0.3 < 0.15) and Color(1, 1, 1) or self.POWER_METER_COLORS[self.level.powerColor]
-    local t = math.min(self.level.powerMeter / 100, 1)
-    _DrawFillRect(Vec2(282, 35 + 110 * (1 - t)), Vec2(5, 110 * t), color, self.hudAlpha)
-    self.game.font:draw(tostring(self.level.powerMeter), Vec2(286, 150), Vec2(1, 0), nil, self.hudAlpha)
+    -- Bar
+    local color = (self.powerMeterDisplay >= 75 and _TotalTime % 0.3 < 0.15) and Color(1, 1, 1) or self.POWER_METER_COLORS[self.level.powerColor]
+    local t = math.min(self.powerMeterDisplay / 75, 1)
+    _DrawFillRect(Vec2(282, 65 + 80 * (1 - t)), Vec2(5, 80 * t), color, self.hudAlpha)
+    -- Power box
+    self.powerSprite:draw(Vec2(268, 33), nil, nil, nil, nil, nil, self.hudAlpha)
 
+    -- Multiplier
     if self.level.data.multiplierEnabled then
         self.game.font:draw("Multiplier", Vec2(50, 165), Vec2(1, 0), nil, self.hudAlpha)
         _DrawFillRect(Vec2(55, 168), Vec2(150, 7), Color(0.3, 0.3, 0.3), self.hudAlpha)
@@ -618,6 +643,40 @@ function LevelUI:drawGameResults()
             alpha = 1 + (1 - self.gameResultsAnimation % 2) * 0.5
         end
         self.game.font:draw(text, Vec2(100, 130), Vec2(0.5), nil, alpha)
+    end
+end
+
+---Callback from `main.lua`.
+---@param x integer The X coordinate of mouse position.
+---@param y integer The Y coordinate of mouse position.
+---@param button integer The mouse button which was pressed.
+function LevelUI:mousepressed(x, y, button)
+    if button == 1 then
+        if self.level.pause then
+            self.level:togglePause()
+        end
+        if self:isResultsAnimationFinished() then
+            self.level:submitLevelStats()
+            if self.game.player.lives == 0 then
+                self:notifyGameResults()
+            elseif not self.level.lost and self.game.player.level == 10 then
+                self:notifyGameWin()
+            else
+                if not self.level.lost then
+                    self.game.player:advanceLevel()
+                end
+                self.game:changeScene("level", true, true)
+            end
+            _Game:playSound("sound_events/ui_select.json")
+        elseif self:isResultsAnimationPlaying() then
+            self:skipResultsAnimation()
+        elseif self:isGameWinAnimationFinished() then
+            self:notifyGameResults()
+        elseif self:isGameResultsAnimationFinished() then
+            --_Game:endGame()
+            self.game:changeScene("menu")
+            _Game:playSound("sound_events/ui_select.json")
+        end
     end
 end
 
