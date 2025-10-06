@@ -499,9 +499,9 @@ end
 function Chain:spawnPowerParticles(amount)
     for i = 1, amount do
         local pos = self:getCenterPos() + Vec2(love.math.randomNormal(4, 0), love.math.randomNormal(4, 0))
-        -- TODO: Better way to store power colors?
+        -- TODO: Better way to store power colors and crystal position?
         local color = self.board.level.ui.POWER_METER_COLORS[self.color]
-        _Game.game:spawnParticle(pos, "power_spark", color, Vec2(284, 45))
+        _Game.game:spawnParticle(pos, "power_spark", color, self.board.level.ui.POWER_CRYSTAL_CENTER_POS)
     end
 end
 
@@ -580,12 +580,16 @@ function Chain:destroy(delay)
     end
 end
 
-
-
 ---Returns whether this Chain is primed, which means that it is scheduled for destruction.
 ---@return boolean
 function Chain:isPrimed()
     return self.destroyDelay ~= nil
+end
+
+---Returns whether this Chain is dead, i.e. destroyed.
+---@return boolean
+function Chain:isDead()
+    return self.delQueue
 end
 
 

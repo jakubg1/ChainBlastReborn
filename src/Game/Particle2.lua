@@ -64,13 +64,21 @@ function Particle2:new(game, pos, type, color, pos2)
         self.darkColor = self.color * 0.75
         self.size = math.max(love.math.randomNormal(2, 3), 1)
         self.angle = love.math.random() * math.pi * 2
-    elseif self.type == "lightning" then
-        self.time = math.min(love.math.randomNormal(0.15, -0.1), 0)
+    elseif self.type == "lightning" or self.type == "laser" then
+        if self.type == "lightning" then
+            self.time = math.min(love.math.randomNormal(0.15, -0.1), 0)
+        end
         self.speed = Vec2()
         self.acceleration = Vec2()
         self.alpha = 1
         self.alphaFadeDuration = math.max(love.math.randomNormal(0.1, 0.3), 0.1)
-        self.color = Color(love.math.randomNormal(0.5, 0.5), 1, 1)
+        if self.type == "lightning" then
+            local shade = love.math.randomNormal(0.5, 0.5)
+            self.color = Color(shade, shade * 0.2 + 0.8, 1)
+        elseif self.type == "laser" then
+            local shade = love.math.randomNormal(0.3, 0.5)
+            self.color = Color(1, shade * 0.7 + 0.3, shade)
+        end
         self.pos2 = pos2
         self.sectionLength = 20
         self.points = nil
@@ -102,6 +110,7 @@ function Particle2:new(game, pos, type, color, pos2)
         self.targetPos = pos2
         self.targetAcceleration = 700
         self.catchRadius = 5
+        self.specialFlashPowerCrystal = true
     end
 
     self.delQueue = false
@@ -148,12 +157,15 @@ function Particle2:update(dt)
     if self.catchRadius then
         if (self.targetPos - self.pos):len() <= self.catchRadius then
             self.delQueue = true
+            if self.specialFlashPowerCrystal then
+                _Game.game.scene.ui:flashPowerCrystal()
+            end
         end
     end
 
     if self.type == "spark" then
         self.game:spawnParticle(self.pos, "spark_trail", self:getColor())
-    elseif self.type == "lightning" then
+    elseif self.type == "lightning" or self.type == "laser" then
         self.pointRegenTime = self.pointRegenTime + dt
         if self.pointRegenTime >= self.pointRegenInterval then
             self.pointRegenTime = self.pointRegenTime - self.pointRegenInterval
@@ -228,7 +240,7 @@ function Particle2:draw()
         _DrawLine(p1, p2, self.color, nil, 2)
         local colorVector = Vec2(0, 0.5):rotate(self.angle)
         _DrawLine(p1 + colorVector, p2 + colorVector, self.darkColor, nil)
-    elseif self.type == "lightning" then
+    elseif self.type == "lightning" or self.type == "laser" then
         -- Draw the lines.
         if self.points then
             for i = 1, 5 do

@@ -259,6 +259,7 @@ function Board:update(dt)
             end
         else
             self.selection:start(self.hoverCoords)
+            self.lastSelectStart = self.hoverCoords
         end
     end
 
@@ -384,6 +385,19 @@ end
 ---@return Chain
 function Board:assertGetChain(coords)
     return assert(self:getChain(coords), string.format("Attempt to get a chain at %s, but no chain was found :(", coords))
+end
+
+
+
+---Impacts the tile/object at the provided coordinates, for example by damaging a crate or destroying a chain (and creating gold under it).
+---@param coords Vector2 Tile coordinates.
+function Board:impactTile(coords)
+    local tile = self:assertGetTile(coords)
+    local chain = self:assertGetChain(coords)
+    chain:damage()
+    if chain:isDead() then
+        tile:impact()
+    end
 end
 
 
@@ -874,7 +888,7 @@ end
 ---@param targetCoords Vector2? The target coordinates the Missile will go towards. If not specified, the tile will be selected automatically.
 function Board:spawnMissile(coords, targetCoords)
     if not targetCoords then
-        targetCoords = self:getRandomNonGoldTile().coords
+        targetCoords = self:getRandomNonGoldTileCoords()
     end
     table.insert(self.bombs, Missile(self, coords, targetCoords))
 end
@@ -952,11 +966,11 @@ end
 
 
 
----Returns a random tile on the board that is not gold.
+---Returns coordinates of a random tile on the board that is not gold.
 ---If all tiles are gold, returns `nil`.
 ---@param excludedCoords table? A list of excluded coordinates (Vector2's) which are guaranteed to not be returned by this function.
----@return Tile?
-function Board:getRandomNonGoldTile(excludedCoords)
+---@return Vector2?
+function Board:getRandomNonGoldTileCoords(excludedCoords)
     local tiles = {}
     for i = 1, self.size.x do
         for j = 1, self.size.y do
@@ -964,7 +978,7 @@ function Board:getRandomNonGoldTile(excludedCoords)
             if not excludedCoords or not _Utils.isValueInTable(excludedCoords, coords) then
                 local tile = self:getTile(coords)
                 if tile and not tile.gold then
-                    table.insert(tiles, tile)
+                    table.insert(tiles, coords)
                 end
             end
         end
@@ -1221,7 +1235,6 @@ function Board:mousepressed(x, y, button)
         if self.hoverCoords and self:getChain(self.hoverCoords) then
             if self.mode == "select" then
                 self.selection = BoardSelection(self)
-                self.lastSelectStart = self.hoverCoords
             elseif self.mode == "bomb" then
                 self:explodeBomb(self.hoverCoords)
                 self.mode = "select"
@@ -1240,7 +1253,12 @@ function Board:mousepressed(x, y, button)
             -- If a power can be activated, set the mode to that power.
             local powerMode = self.level:getPowerMode()
             if powerMode then
-                self.mode = powerMode
+                if powerMode == "laser" then
+                    self.level:spawnLasers(6)
+                    self.level:resetPowerMeter()
+                else
+                    self.mode = powerMode
+                end
                 _Game:playSound("sound_events/power_activate.json")
             else
                 _Game:playSound("sound_events/no.json")

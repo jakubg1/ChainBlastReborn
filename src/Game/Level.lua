@@ -35,6 +35,9 @@ function Level:new(game)
     self.powerMeter = 0
     self.powerColor = 0
 
+    self.laserPowerShots = 0
+    self.laserPowerTime = nil
+
     self.timeElapsed = 0
     self.maxCombo = 0
     self.largestGroup = 0
@@ -59,6 +62,7 @@ function Level:update(dt)
         self:updateInactivityPause(dt)
         self:updateMultiplier(dt)
         self:updateBombs(dt)
+        self:updateLasers(dt)
 
         -- Delete the board if it is dead and start the results animation.
         if self.board.delQueue then
@@ -152,16 +156,41 @@ function Level:updateBombs(dt)
     local n = math.floor(self.bombMeterTime / 0.5)
     self.bombMeterTime = self.bombMeterTime + dt
     if n ~= math.floor(self.bombMeterTime / 0.5) and n < 3 then
-        local tile = self.board:getRandomNonGoldTile(self.bombMeterCoords)
-        if tile then
-            self.board:spawnBomb(tile.coords)
-            table.insert(self.bombMeterCoords, tile.coords)
+        local coords = self.board:getRandomNonGoldTileCoords(self.bombMeterCoords)
+        if coords then
+            self.board:spawnBomb(coords)
+            table.insert(self.bombMeterCoords, coords)
         end
     end
     -- When all three intervals are finished, end the spawning process.
     if self.bombMeterTime >= 1.5 and #self.board.bombs == 0 then
         self.bombMeterTime = nil
         self.bombMeterCoords = {}
+    end
+end
+
+---Updates lasers which strike from the power crystal.
+---@param dt number Time delta in seconds.
+function Level:updateLasers(dt)
+    if not self.laserPowerTime then
+        return
+    end
+    self.laserPowerTime = self.laserPowerTime - dt
+    if self.laserPowerTime <= 0 then
+        local targetCoords = self.board:getRandomNonGoldTileCoords()
+        if targetCoords then
+            self.board:impactTile(targetCoords)
+            _Game:playSound("sound_events/laser_shot.json")
+            _Game:playSound("sound_events/missile_explosion.json")
+            self.game:spawnParticle(self.board:getTilePos(targetCoords) + 7, "laser", nil, self.ui.POWER_CRYSTAL_CENTER_POS)
+            self.ui:flashPowerCrystal()
+        end
+        self.laserPowerShots = self.laserPowerShots - 1
+        if self.laserPowerShots > 0 then
+            self.laserPowerTime = self.laserPowerTime + 0.14
+        else
+            self.laserPowerTime = nil
+        end
     end
 end
 
@@ -313,18 +342,27 @@ end
 
 ---Returns a string depicting a board selection mode if a power can be activated.
 ---Returns `nil` if the power cannot be activated.
----@return "bomb"|"lightning"?
+---@return "bomb"|"lightning"|"laser"?
 function Level:getPowerMode()
     -- Must have at least 75 power points charged.
     if self.powerMeter < 75 then
         return
     end
     -- 2 = blue
-    if self.powerColor == 2 then
-        return "lightning"
-    else
+    if self.powerColor == 1 then
         return "bomb"
+    elseif self.powerColor == 2 then
+        return "lightning"
+    elseif self.powerColor == 3 then
+        return "laser"
     end
+end
+
+---Schedules some lasers which will strike non-gold tiles in quick succession.
+---@param shots integer The total amount of laser shots to be spawned.
+function Level:spawnLasers(shots)
+    self.laserPowerShots = shots
+    self.laserPowerTime = 0
 end
 
 ---Adds the given amount to the multiplier progress. 1 is the full bar.

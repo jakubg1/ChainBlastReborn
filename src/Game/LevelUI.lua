@@ -46,9 +46,14 @@ function LevelUI:new(level)
         --{1, 0.4, 0},
         --{0.9, 0.1, 0.3}
     }
+    self.POWER_CRYSTAL_CENTER_POS = Vec2(284, 45)
 
     self.timerSprite = _Game.resourceManager:getSprite("sprites/hud_timer.json")
     self.powerSprite = _Game.resourceManager:getSprite("sprites/hud_power.json")
+    self.powerCrystalSprite = _Game.resourceManager:getSprite("sprites/hud_power_crystal.json")
+    self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
+    self.powerCrystalFlashTime = nil
+    self.powerChargeSound = nil
 end
 
 ---Notifies the UI that extra time has been added to the timer.
@@ -56,6 +61,11 @@ end
 function LevelUI:notifyExtraTime(time)
     self.hudExtraTimeAlpha = 2
     self.hudExtraTimeValue = self.hudExtraTimeValue + time
+end
+
+---Flashes the power crystal.
+function LevelUI:flashPowerCrystal()
+    self.powerCrystalFlashTime = 0.05
 end
 
 ---Notifies the UI that the current level has been complted.
@@ -161,11 +171,34 @@ function LevelUI:updateHUD(dt)
         self.scoreDisplay = self.scoreDisplay + math.ceil((self.game.player.score - self.scoreDisplay) / 8)
     end
 
-    -- Power meter
+    -- Power meter gradual increase
     if self.powerMeterDisplay < self.level.powerMeter then
         self.powerMeterDisplay = math.min(self.powerMeterDisplay + 50 * dt, self.level.powerMeter)
     elseif self.powerMeterDisplay > self.level.powerMeter then
         self.powerMeterDisplay = math.max(self.powerMeterDisplay - 400 * dt, self.level.powerMeter)
+    end
+    -- Power meter charge sound
+    if self.powerMeterDisplay < self.level.powerMeter then
+        if not self.powerChargeSound then
+            self.powerChargeSound = _Game:playSound("sound_events/power_charge.json")
+        end
+        local progress = math.min((self.powerMeterDisplay / 75) ^ 2, 1)
+        self.powerChargeSound:setPitch(0.6 + progress * 1.1)
+    else
+        if self.powerChargeSound then
+            self.powerChargeSound:setVolume(self.powerChargeSound.sounds[1].volume - dt / 0.5)
+            if self.powerChargeSound.sounds[1].volume <= 0 then
+                self.powerChargeSound:stop()
+                self.powerChargeSound = nil
+            end
+        end
+    end
+    -- Power crystal flash animation
+    if self.powerCrystalFlashTime then
+        self.powerCrystalFlashTime = self.powerCrystalFlashTime - dt
+        if self.powerCrystalFlashTime <= 0 then
+            self.powerCrystalFlashTime = nil
+        end
     end
 
     -- Multiplier animation
@@ -410,6 +443,10 @@ function LevelUI:drawHUD()
     _DrawFillRect(Vec2(282, 65 + 80 * (1 - t)), Vec2(5, 80 * t), color, self.hudAlpha)
     -- Power box
     self.powerSprite:draw(Vec2(268, 33), nil, nil, nil, nil, nil, self.hudAlpha)
+    -- Power crystal
+    local oy = math.sin(_TotalTime * 2)
+    local shader = self.powerCrystalFlashTime and self.flashShader
+    self.powerCrystalSprite:draw(Vec2(278, 39 + oy), nil, nil, nil, nil, nil, self.hudAlpha, nil, shader)
 
     -- Multiplier
     if self.level.data.multiplierEnabled then
