@@ -114,10 +114,19 @@ end
 ---Spawns a new Particle.
 ---@param pos Vector2 The initial position of the Particle.
 ---@param type string The type of the Particle. TODO: Replace with data.
+---@param amount integer? The amount of Particles of this type to spawn.
+---@param rangeMean number? If specified, the particles will spawn around `pos` in this range.
+---@param rangeDev number? If specified, uses standard deviation to determine the spawning position. Use with `rangeMean`.
 ---@param color Color? The starting color of the Particle. TODO: Replace with data.
 ---@param pos2 Vector2? The second position of the Particle. If `type` is `"lightning"`, this is the second lightning position (`pos` -> `pos2`). If `type` is `"power_spark"`, this is the position the particle will gravitate towards. TODO: Replace with data.
-function GameMain:spawnParticle(pos, type, color, pos2)
-	table.insert(self.particles, Particle2(self, pos, type, color, pos2))
+function GameMain:spawnParticle(pos, type, amount, rangeMean, rangeDev, color, pos2)
+	for i = 1, amount or 1 do
+		local spawnPos = pos
+		if rangeMean and rangeDev then
+			spawnPos = spawnPos + Vec2(love.math.randomNormal(rangeDev, rangeMean), love.math.randomNormal(rangeDev, rangeMean))
+		end
+		table.insert(self.particles, Particle2(self, spawnPos, type, color, pos2))
+	end
 end
 
 
@@ -128,7 +137,7 @@ end
 ---@param sprite Sprite The split sprite. A new particle will be created for each state.
 ---@param state integer The state ID to pick a frame from.
 ---@param frame integer The frame ID to be picked. This will determine a single frame which will be split.
----@param maxParticles integer? Maximum number of fragments which should spawn.
+---@param maxParticles integer? Maximum number of fragments that can spawn.
 function GameMain:spawnParticleFragments(pos, type, sprite, state, frame, maxParticles)
 	local splitSprite = sprite:split(state, frame)
 	for i = 1, math.min(splitSprite:getStateCount(), maxParticles or math.huge) do
@@ -141,12 +150,18 @@ end
 ---Shakes the screen. A few screen shakes can be active at once.
 ---The offset is calculated once per frame and is stored in the `screenShakeTotal` field.
 ---@param power number The power of the shake, in pixels.
----@param direction number? The direction of the shake, in radians. 0 is left. If omitted, a random angle will be chosen for this shake.
+---@param direction number? The direction of the shake, in radians. 0 is left. If omitted, a random angle will be chosen for this shake, but horizontal direction will be preferred.
 ---@param frequency number The frequency of the shake, in 1/s.
 ---@param duration number How long will the shake persist until it is removed, in seconds.
 function GameMain:shakeScreen(power, direction, frequency, duration)
+	if not direction then
+		-- Prefer horizontal shake because it is said that people tolerate it better
+		-- (bias towards 0 or math.pi)
+		direction = math.random() < 0.5 and 0 or math.pi
+		direction = direction + love.math.randomNormal(math.pi / 8, 0)
+	end
 	table.insert(self.screenShakes, {
-		vector = Vec2(power, 0):rotate(direction or math.random() * math.pi * 2),
+		vector = Vec2(power, 0):rotate(direction),
 		frequency = frequency,
 		maxTime = duration,
 		time = 0

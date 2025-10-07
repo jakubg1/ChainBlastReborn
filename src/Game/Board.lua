@@ -328,6 +328,13 @@ function Board:getTilePos(coords)
 	return self:getTileGridPos(coords) + 1
 end
 
+---Returns the center position of a given tile.
+---@param coords Vector2 The tile coordinates, starting from `(1, 1)`.
+---@return Vector2
+function Board:getTileCenterPos(coords)
+    return self:getTilePos(coords) + 7
+end
+
 
 
 ---Returns the 1-based coordinates of the tile laying on the given screen position.
@@ -844,8 +851,10 @@ function Board:explodeBomb(coords)
             self:explodeChain(coords + Vec2(i, j))
         end
     end
+    local pos = self:getTileCenterPos(coords)
+    _Game.game:spawnParticle(pos, "explosion", 5, 0, 10)
     _Game:playSound("sound_events/explosion2.json")
-    _Game.game:shakeScreen(9, nil, 100, 0.35)
+    _Game.game:shakeScreen(11, nil, 35, 0.35)
     self.level.background:flash(0.5, 0.35)
 end
 
@@ -860,21 +869,17 @@ function Board:explodeLightning(coords, horizontal, vertical)
         for i = 1, self.size.x do
             self:explodeChain(Vec2(i, coords.y))
         end
-        local p1 = self:getTilePos(Vec2(0, coords.y) + 0.5)
-        local p2 = self:getTilePos(Vec2(self.size.x + 1, coords.y) + 0.5)
-        for i = 1, 7 do
-            _Game.game:spawnParticle(p1, "lightning", nil, p2)
-        end
+        local p1 = self:getTileCenterPos(Vec2(0, coords.y))
+        local p2 = self:getTileCenterPos(Vec2(self.size.x + 1, coords.y))
+        _Game.game:spawnParticle(p1, "lightning", 7, nil, nil, nil, p2)
     end
     if vertical then
         for i = 1, self.size.y do
             self:explodeChain(Vec2(coords.x, i))
         end
-        local p1 = self:getTilePos(Vec2(coords.x, 0) + 0.5)
-        local p2 = self:getTilePos(Vec2(coords.x, self.size.y + 1) + 0.5)
-        for i = 1, 7 do
-            _Game.game:spawnParticle(p1, "lightning", nil, p2)
-        end
+        local p1 = self:getTileCenterPos(Vec2(coords.x, 0))
+        local p2 = self:getTileCenterPos(Vec2(coords.x, self.size.y + 1))
+        _Game.game:spawnParticle(p1, "lightning", 7, nil, nil, nil, p2)
     end
     _Game:playSound("sound_events/powerup_lightning.json")
     _Game.game:shakeScreen(9, nil, 15, 0.25)
@@ -1237,12 +1242,14 @@ function Board:mousepressed(x, y, button)
                 self.selection = BoardSelection(self)
             elseif self.mode == "bomb" then
                 self:explodeBomb(self.hoverCoords)
-                self.mode = "select"
+                self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
                 self.level:resetPowerMeter()
+                self.mode = "select"
             elseif self.mode == "lightning" then
                 self:explodeLightning(self.hoverCoords, true, true)
-                self.mode = "select"
+                self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
                 self.level:resetPowerMeter()
+                self.mode = "select"
             end
         end
     elseif button == 2 then
@@ -1258,8 +1265,8 @@ function Board:mousepressed(x, y, button)
                     self.level:resetPowerMeter()
                 else
                     self.mode = powerMode
+                    _Game:playSound("sound_events/power_activate.json")
                 end
-                _Game:playSound("sound_events/power_activate.json")
             else
                 _Game:playSound("sound_events/no.json")
             end

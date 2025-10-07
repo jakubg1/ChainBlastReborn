@@ -180,10 +180,10 @@ function Level:updateLasers(dt)
         local targetCoords = self.board:getRandomNonGoldTileCoords()
         if targetCoords then
             self.board:impactTile(targetCoords)
-            _Game:playSound("sound_events/laser_shot.json")
             _Game:playSound("sound_events/missile_explosion.json")
-            self.game:spawnParticle(self.board:getTilePos(targetCoords) + 7, "laser", nil, self.ui.POWER_CRYSTAL_CENTER_POS)
-            self.ui:flashPowerCrystal()
+            _Game:playSound("sound_events/laser_shot.json")
+            _Game.game:shakeScreen(3, nil, 10, 0.25)
+            self.ui:shootLaserFromPowerCrystal(self.board:getTileCenterPos(targetCoords))
         end
         self.laserPowerShots = self.laserPowerShots - 1
         if self.laserPowerShots > 0 then

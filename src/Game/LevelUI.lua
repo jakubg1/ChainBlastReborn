@@ -53,6 +53,7 @@ function LevelUI:new(level)
     self.powerCrystalSprite = _Game.resourceManager:getSprite("sprites/hud_power_crystal.json")
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
     self.powerCrystalFlashTime = nil
+    self.powerCrystalBopProgress = 0 -- Counts from 0 to 1
     self.powerChargeSound = nil
 end
 
@@ -66,6 +67,19 @@ end
 ---Flashes the power crystal.
 function LevelUI:flashPowerCrystal()
     self.powerCrystalFlashTime = 0.05
+end
+
+---Resets the power crystal's bopping animation.
+function LevelUI:centerPowerCrystal()
+    self.powerCrystalBopProgress = 0
+end
+
+---Shoots a laser from the power crystal at the given position. Does NOT play a laser sound.
+---This is a purely visual effect and should be used in conjunction with actual logic.
+---@param pos Vector2 The global onscreen position which is the laser target.
+function LevelUI:shootLaserFromPowerCrystal(pos)
+    self.game:spawnParticle(pos, "laser", nil, nil, nil, nil, self.POWER_CRYSTAL_CENTER_POS)
+    self:flashPowerCrystal()
 end
 
 ---Notifies the UI that the current level has been complted.
@@ -176,13 +190,14 @@ function LevelUI:updateHUD(dt)
         self.powerMeterDisplay = math.min(self.powerMeterDisplay + 50 * dt, self.level.powerMeter)
     elseif self.powerMeterDisplay > self.level.powerMeter then
         self.powerMeterDisplay = math.max(self.powerMeterDisplay - 400 * dt, self.level.powerMeter)
+        self:centerPowerCrystal()
     end
     -- Power meter charge sound
+    local progress = math.min((self.powerMeterDisplay / 75) ^ 2, 1)
     if self.powerMeterDisplay < self.level.powerMeter then
         if not self.powerChargeSound then
             self.powerChargeSound = _Game:playSound("sound_events/power_charge.json")
         end
-        local progress = math.min((self.powerMeterDisplay / 75) ^ 2, 1)
         self.powerChargeSound:setPitch(0.6 + progress * 1.1)
     else
         if self.powerChargeSound then
@@ -193,6 +208,8 @@ function LevelUI:updateHUD(dt)
             end
         end
     end
+    -- Power crystal bop animation
+    self.powerCrystalBopProgress = (self.powerCrystalBopProgress + dt * progress) % 1
     -- Power crystal flash animation
     if self.powerCrystalFlashTime then
         self.powerCrystalFlashTime = self.powerCrystalFlashTime - dt
@@ -439,14 +456,20 @@ function LevelUI:drawHUD()
     self.game.font:draw("Power", Vec2(285, 20), Vec2(0.5, 0), nil, self.hudAlpha)
     -- Bar
     local color = (self.powerMeterDisplay >= 75 and _TotalTime % 0.3 < 0.15) and Color(1, 1, 1) or self.POWER_METER_COLORS[self.level.powerColor]
-    local t = math.min(self.powerMeterDisplay / 75, 1)
-    _DrawFillRect(Vec2(282, 65 + 80 * (1 - t)), Vec2(5, 80 * t), color, self.hudAlpha)
+    local progress = math.min(self.powerMeterDisplay / 75, 1)
+    _DrawFillRect(Vec2(282, 65 + 80 * (1 - progress)), Vec2(5, 80 * progress), color, self.hudAlpha)
     -- Power box
     self.powerSprite:draw(Vec2(268, 33), nil, nil, nil, nil, nil, self.hudAlpha)
     -- Power crystal
-    local oy = math.sin(_TotalTime * 2)
+    local offset = math.sin(self.powerCrystalBopProgress * math.pi * 2)
     local shader = self.powerCrystalFlashTime and self.flashShader
-    self.powerCrystalSprite:draw(Vec2(278, 39 + oy), nil, nil, nil, nil, nil, self.hudAlpha, nil, shader)
+    local frame = 1
+    if self.powerMeterDisplay >= 60 then
+        frame = 3
+    elseif self.powerMeterDisplay >= 30 then
+        frame = 2
+    end
+    self.powerCrystalSprite:draw(Vec2(278, 39 + offset), nil, nil, frame, nil, nil, self.hudAlpha, nil, shader)
 
     -- Multiplier
     if self.level.data.multiplierEnabled then

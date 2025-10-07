@@ -74,9 +74,9 @@ function Particle2:new(game, pos, type, color, pos2)
         self.alphaFadeDuration = math.max(love.math.randomNormal(0.1, 0.3), 0.1)
         if self.type == "lightning" then
             local shade = love.math.randomNormal(0.5, 0.5)
-            self.color = Color(shade, shade * 0.2 + 0.8, 1)
+            self.color = Color(shade, shade * 0.1 + 0.9, 1)
         elseif self.type == "laser" then
-            local shade = love.math.randomNormal(0.3, 0.5)
+            local shade = love.math.randomNormal(0.3, 0.8)
             self.color = Color(1, shade * 0.7 + 0.3, shade)
         end
         self.pos2 = pos2
@@ -84,6 +84,13 @@ function Particle2:new(game, pos, type, color, pos2)
         self.points = nil
         self.pointRegenTime = 0
         self.pointRegenInterval = 0
+    elseif self.type == "explosion" then
+        self.speed = Vec2()
+        self.acceleration = Vec2()
+        self.alpha = 1
+        self.sprite = _Game.resourceManager:getSprite("sprites/chain_explosion.json")
+        self.spriteAnimationSpeed = 20
+        self.lifetime = 0.45
     elseif self.type == "power_spark" then
         self.speed = Vec2(love.math.randomNormal(30, 100), 0):rotate(math.random() * math.pi * 2)
         self.acceleration = Vec2()
@@ -164,7 +171,7 @@ function Particle2:update(dt)
     end
 
     if self.type == "spark" then
-        self.game:spawnParticle(self.pos, "spark_trail", self:getColor())
+        self.game:spawnParticle(self.pos, "spark_trail", nil, nil, nil, self:getColor())
     elseif self.type == "lightning" or self.type == "laser" then
         self.pointRegenTime = self.pointRegenTime + dt
         if self.pointRegenTime >= self.pointRegenInterval then
@@ -246,6 +253,9 @@ function Particle2:draw()
             for i = 1, 5 do
                 local alpha = (i * 0.2) ^ 4
                 local width = (7 - i) * (6 - i) / 2
+                if self.type == "laser" then
+                    width = width + 1
+                end
                 love.graphics.setColor(self.color.r, self.color.g, self.color.b, self.alpha * alpha)
                 love.graphics.setLineWidth(width)
                 love.graphics.line(_Utils.vectorsToValueList(self.points))

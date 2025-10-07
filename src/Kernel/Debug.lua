@@ -25,7 +25,8 @@ function Debug:new()
 		ex = {description = "Debugs an Expression: shows detailed tokenization and list of RPN steps.", parameters = {{name = "expression", type = "string", optional = false, greedy = true}}},
 		help = {description = "Displays this list.", parameters = {}},
 		o = {description = "Sets a parameter for this game. Displays a list if executed without parameters.", parameters = {{name = "option", type = "string", optional = true}, {name = "value", type = "number", optional = true}}},
-		win = {description = "Wins the current level on the next move.", parameters = {}}
+		win = {description = "Wins the current level on the next move.", parameters = {}},
+		power = {description = "Immediately charges a power ready for use.", parameters = {{name = "color", type = "integer", optional = false}}}
 	}
 	self.commandNames = {}
 	for commandName, commandData in pairs(self.commands) do
@@ -587,6 +588,12 @@ function Debug:runCommand(command)
 		end
 	elseif command == "win" then
 		_Game.game.scene.forcedWin = true
+		self.console:print("Just one more move and you're done!")
+	elseif command == "power" then
+		local level = _Game.game.scene
+		level.powerColor = parameters[1]
+		level.powerMeter = 75
+		self.console:print("Charged!")
 	else
 		self.console:print({_COLORS.red, "Unrecognized command"})
 	end

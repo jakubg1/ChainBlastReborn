@@ -472,9 +472,7 @@ function Chain:damage()
     else
         if self.type == "crate" then
             self:flash(0.1)
-            for i = 1, 5 do
-                _Game.game:spawnParticle(self:getCenterPos() + Vec2(love.math.randomNormal(2, 0), love.math.randomNormal(2, 0)), "chip")
-            end
+            _Game.game:spawnParticle(self:getCenterPos(), "chip", 5, 2, 0)
             self.crateDestroySound:play()
             _Game.game:shakeScreen(1, nil, 20, 0.15)
         end
@@ -497,12 +495,9 @@ end
 ---Spawns some power particles which go to the power meter.
 ---@param amount integer Amount of particles to be spawned.
 function Chain:spawnPowerParticles(amount)
-    for i = 1, amount do
-        local pos = self:getCenterPos() + Vec2(love.math.randomNormal(4, 0), love.math.randomNormal(4, 0))
-        -- TODO: Better way to store power colors and crystal position?
-        local color = self.board.level.ui.POWER_METER_COLORS[self.color]
-        _Game.game:spawnParticle(pos, "power_spark", color, self.board.level.ui.POWER_CRYSTAL_CENTER_POS)
-    end
+    -- TODO: Better way to store power colors and crystal position?
+    local color = self.board.level.ui.POWER_METER_COLORS[self.color]
+    _Game.game:spawnParticle(self:getCenterPos(), "power_spark", amount, 4, 0, color, self.board.level.ui.POWER_CRYSTAL_CENTER_POS)
 end
 
 
@@ -558,9 +553,7 @@ function Chain:destroy(delay)
             _Game.game:spawnParticle(pos, "flare")
         end
     elseif self.type == "crate" then
-        for i = 1, 20 do
-            _Game.game:spawnParticle(pos + Vec2(love.math.randomNormal(2, 0), love.math.randomNormal(2, 0)), "chip")
-        end
+        _Game.game:spawnParticle(pos, "chip", 20, 2, 0)
         _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame(), 4)
         for i = 1, 4 do
             --_Game.game:spawnParticle(pos + Vec2(math.random() * 5):rotate(math.random() * math.pi * 2), "spark")
