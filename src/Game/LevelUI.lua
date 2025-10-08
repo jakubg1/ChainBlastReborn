@@ -201,7 +201,7 @@ function LevelUI:updateHUD(dt)
         self.powerChargeSound:setPitch(0.6 + progress * 1.1)
     else
         if self.powerChargeSound then
-            self.powerChargeSound:setVolume(self.powerChargeSound.sounds[1].volume - dt / 0.5)
+            self.powerChargeSound:setVolume(self.powerChargeSound.sounds[1].volume - dt / 0.25 * 0.3)
             if self.powerChargeSound.sounds[1].volume <= 0 then
                 self.powerChargeSound:stop()
                 self.powerChargeSound = nil

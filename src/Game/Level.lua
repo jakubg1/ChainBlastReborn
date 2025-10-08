@@ -182,7 +182,7 @@ function Level:updateLasers(dt)
             self.board:impactTile(targetCoords)
             _Game:playSound("sound_events/missile_explosion.json")
             _Game:playSound("sound_events/laser_shot.json")
-            _Game.game:shakeScreen(3, nil, 10, 0.25)
+            _Game.game:shakeScreen(2.5, nil, 20, 0.15)
             self.ui:shootLaserFromPowerCrystal(self.board:getTileCenterPos(targetCoords))
         end
         self.laserPowerShots = self.laserPowerShots - 1

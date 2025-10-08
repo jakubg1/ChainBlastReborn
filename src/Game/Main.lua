@@ -17,14 +17,12 @@ local ChainFragment = require("src.Game.ChainFragment")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
 
-
-
 ---Constructs the actual game class.
 ---@param game Game The base game instance.
 function GameMain:new(game)
-    self.game = game
+	self.game = game
 
-    self.font = self.game.resourceManager:getFont("fonts/standard.json")
+	self.font = self.game.resourceManager:getFont("fonts/standard.json")
 	self.smallFont = self.game.resourceManager:getFont("fonts/small.json")
 
 	self.settings = Settings()
@@ -44,8 +42,6 @@ function GameMain:new(game)
 		level = Level
 	}
 end
-
-
 
 ---Updates the game.
 ---@param dt number Time delta in seconds.
@@ -75,7 +71,10 @@ function GameMain:update(dt)
 	self.screenShakeTotal = Vec2()
 	for i, shake in ipairs(self.screenShakes) do
 		-- Count shake power.
-		local t = math.sin((shake.time * shake.frequency) * math.pi * 2) * _Utils.mapValue(shake.time, 0, shake.maxTime, 1, 0)
+		local decayFactor = _Utils.mapValue(shake.time, 0, shake.maxTime, 1, 0)
+		-- The following is a quadratic falloff, personally I feel like it is much more headache-inducing
+		--local decayFactor = 1 - _Utils.mapValue(shake.time, 0, shake.maxTime, 0, 1) ^ 2
+		local t = math.sin((shake.time * shake.frequency) * math.pi * 2) * decayFactor
 		self.screenShakeTotal = self.screenShakeTotal + shake.vector * t
 		-- Count time.
 		shake.time = shake.time + dt
@@ -88,8 +87,6 @@ function GameMain:update(dt)
 	-- Round the screen shake value.
 	self.screenShakeTotal = (self.screenShakeTotal + 0.5):floor()
 end
-
-
 
 ---Changes the scene with a transition animation.
 ---@param scene string The scene name to transition to. Available values are `"loading"`, `"menu"` and `"level"`.
@@ -109,8 +106,6 @@ function GameMain:changeScene(scene, skipFadeIn, skipFadeOut)
 	end
 end
 
-
-
 ---Spawns a new Particle.
 ---@param pos Vector2 The initial position of the Particle.
 ---@param type string The type of the Particle. TODO: Replace with data.
@@ -129,8 +124,6 @@ function GameMain:spawnParticle(pos, type, amount, rangeMean, rangeDev, color, p
 	end
 end
 
-
-
 ---Spawns a bunch of new Particle Fragments.
 ---@param pos Vector2 The initial position of the Particle.
 ---@param type string The type of the Particle. TODO: Replace with data.
@@ -144,8 +137,6 @@ function GameMain:spawnParticleFragments(pos, type, sprite, state, frame, maxPar
 		table.insert(self.particles, ChainFragment(self, pos, type, splitSprite, i))
 	end
 end
-
-
 
 ---Shakes the screen. A few screen shakes can be active at once.
 ---The offset is calculated once per frame and is stored in the `screenShakeTotal` field.
@@ -168,8 +159,6 @@ function GameMain:shakeScreen(power, direction, frequency, duration)
 	})
 end
 
-
-
 ---Draws the game.
 function GameMain:draw()
 	_DrawFillRect(Vec2(0, 0), Vec2(320, 180), Color(0, 0, 0))
@@ -183,8 +172,6 @@ function GameMain:draw()
 	-- Debug
 	self.smallFont:draw("mouse: " .. _MousePos.x .. "," .. _MousePos.y, Vec2(), Vec2())
 end
-
-
 
 ---Callback from `main.lua`.
 ---@param x integer The X coordinate of mouse position.
@@ -206,6 +193,9 @@ end
 ---@param key string The pressed key code.
 function GameMain:keypresed(key)
 	self.scene:keypressed(key)
+	if key == "p" then
+		_Game.game:spawnParticle(Vec2(200, 100), "lavalamp", 15, 0, 4)
+	end
 end
 
 return GameMain

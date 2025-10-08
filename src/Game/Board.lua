@@ -852,7 +852,7 @@ function Board:explodeBomb(coords)
         end
     end
     local pos = self:getTileCenterPos(coords)
-    _Game.game:spawnParticle(pos, "explosion", 5, 0, 10)
+	_Game.game:spawnParticle(pos, "lavalamp", 15, 0, 4)
     _Game:playSound("sound_events/explosion2.json")
     _Game.game:shakeScreen(11, nil, 35, 0.35)
     self.level.background:flash(0.5, 0.35)

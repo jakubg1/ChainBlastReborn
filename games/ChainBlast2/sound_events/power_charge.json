@@ -1,6 +1,6 @@
 {
     "$schema": "../../../schemas/sound_event.json",
     "sound": "sounds/wave2_long.wav",
-    "volume": 0.5,
+    "volume": 0.3,
     "loop": true
 }

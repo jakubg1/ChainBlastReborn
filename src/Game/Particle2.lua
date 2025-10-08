@@ -22,6 +22,7 @@ function Particle2:new(game, pos, type, color, pos2)
     self.type = type
 
     self.time = 0
+    self.alpha = 1
 
     if self.type == "spark" then
         self.speed = Vec2(love.math.randomNormal(20, 70), 0):rotate(math.random() * math.pi * 2)
@@ -35,25 +36,21 @@ function Particle2:new(game, pos, type, color, pos2)
         }
         self.colorTimeOffset = math.random() * 0.3
         self.colorTimeMultiplier = 1 + math.random() * 0.5
-        self.alpha = 1
         self.sprite = _Game.resourceManager:getSprite("sprites/spark.json")
     elseif self.type == "spark_trail" then
         self.speed = Vec2()
         self.acceleration = Vec2()
         self.color = color
-        self.alpha = 1
         self.alphaFadeDuration = 0.3
         self.sprite = _Game.resourceManager:getSprite("sprites/spark.json")
     elseif self.type == "flare" then
         self.speed = Vec2()
         self.acceleration = Vec2()
-        self.alpha = 1
         self.alphaFadeDuration = 0.15
         self.sprite = _Game.resourceManager:getSprite("sprites/flare.json")
     elseif self.type == "chain_explosion" then
         self.speed = Vec2()
         self.acceleration = Vec2()
-        self.alpha = 1
         self.sprite = _Game.resourceManager:getSprite("sprites/chain_explosion.json")
         self.spriteAnimationSpeed = 20
         self.lifetime = 0.45
@@ -70,7 +67,6 @@ function Particle2:new(game, pos, type, color, pos2)
         end
         self.speed = Vec2()
         self.acceleration = Vec2()
-        self.alpha = 1
         self.alphaFadeDuration = math.max(love.math.randomNormal(0.1, 0.3), 0.1)
         if self.type == "lightning" then
             local shade = love.math.randomNormal(0.5, 0.5)
@@ -84,19 +80,19 @@ function Particle2:new(game, pos, type, color, pos2)
         self.points = nil
         self.pointRegenTime = 0
         self.pointRegenInterval = 0
-    elseif self.type == "explosion" then
-        self.speed = Vec2()
-        self.acceleration = Vec2()
-        self.alpha = 1
-        self.sprite = _Game.resourceManager:getSprite("sprites/chain_explosion.json")
-        self.spriteAnimationSpeed = 20
-        self.lifetime = 0.45
+    elseif self.type == "lavalamp" then
+        -- Failed explosion particle; could be used for lava spraying upwards though?
+        self.speed = Vec2(love.math.randomNormal(30, 100), 0):rotate(math.random() * math.pi * 2)
+        self.acceleration = Vec2(0, -200)
+        self.deccelerationH = 200
+        local shade = love.math.randomNormal(0.2, 0.4)
+        self.color = Color(1, shade, 0)
+        self.radius = love.math.randomNormal(0.6, 4)
+        self.radiusDecay = 1.5
     elseif self.type == "power_spark" then
         self.speed = Vec2(love.math.randomNormal(30, 100), 0):rotate(math.random() * math.pi * 2)
         self.acceleration = Vec2()
-        self.decceleration = 8
-        self.alpha = 1
-        self.alphaFadeDuration = 400
+        self.decceleration = 480
         self.sprite = _Game.resourceManager:getSprite("sprites/spark2.json")
         self.colorGrading = {
             {t = 0, color = Color(1.0, 1.0, 1.0)},
@@ -141,10 +137,17 @@ function Particle2:update(dt)
     self.speed = self.speed + self.acceleration * dt
     if self.decceleration then
         local linearSpeed = self.speed:len()
-        if linearSpeed > self.decceleration then
-            self.speed = self.speed - Vec2(self.decceleration, 0):rotate(self.speed:angle())
+        if linearSpeed > self.decceleration * dt then
+            self.speed = self.speed - Vec2(self.decceleration * dt, 0):rotate(self.speed:angle())
         else
             self.speed = Vec2()
+        end
+    end
+    if self.deccelerationH then
+        if self.speed.x > 0 then
+            self.speed = self.speed - Vec2(math.min(self.deccelerationH * dt, self.speed.x), 0)
+        elseif self.speed.x < 0 then
+            self.speed = self.speed + Vec2(math.max(self.deccelerationH * dt, self.speed.x), 0)
         end
     end
     self.pos = self.pos + self.speed * dt
@@ -158,6 +161,12 @@ function Particle2:update(dt)
     if self.alphaFadeDuration then
         self.alpha = self.alpha - dt / self.alphaFadeDuration
         if self.alpha <= 0 then
+            self.delQueue = true
+        end
+    end
+    if self.radiusDecay then
+        self.radius = self.radius - dt * self.radiusDecay
+        if self.radius <= 0 then
             self.delQueue = true
         end
     end
@@ -247,6 +256,9 @@ function Particle2:draw()
         _DrawLine(p1, p2, self.color, nil, 2)
         local colorVector = Vec2(0, 0.5):rotate(self.angle)
         _DrawLine(p1 + colorVector, p2 + colorVector, self.darkColor, nil)
+    elseif self.type == "explosion" or self.type == "lavalamp" then
+        love.graphics.setColor(self.color.r, self.color.g, self.color.b, self.alpha)
+        love.graphics.circle("fill", self.pos.x, self.pos.y, self.radius)
     elseif self.type == "lightning" or self.type == "laser" then
         -- Draw the lines.
         if self.points then
