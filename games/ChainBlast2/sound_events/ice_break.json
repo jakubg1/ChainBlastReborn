@@ -1,4 +1,5 @@
 {
     "$schema": "../../../schemas/sound_event.json",
-    "sound": "sounds/ice_break.wav"
+    "sound": "sounds/ice_break.wav",
+    "playsPerFrame": 2
 }

@@ -1,4 +1,5 @@
 {
     "$schema": "../../../schemas/sound_event.json",
-    "sound": "sounds/crate_destroy.wav"
+    "sound": "sounds/crate_destroy.wav",
+    "playsPerFrame": 3
 }
