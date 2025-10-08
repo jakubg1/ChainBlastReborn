@@ -4,6 +4,7 @@ local class = require "com.class"
 ---@overload fun(game):Level
 local Level = class:derive("Level")
 
+local Vec2 = require("src.Essentials.Vector2")
 local Board = require("src.Game.Board")
 local LevelUI = require("src.Game.LevelUI")
 local LevelBackground = require("src.Game.LevelBackground")
@@ -50,6 +51,7 @@ function Level:new(game)
     self.dangerMusic = _Game.resourceManager:getMusic("music_tracks/danger_music.json")
 
     _Game:playSound("sound_events/level_start.json")
+    self.levelMusic:stop()
     self.levelMusic:play()
 end
 
@@ -177,14 +179,18 @@ function Level:updateLasers(dt)
     end
     self.laserPowerTime = self.laserPowerTime - dt
     if self.laserPowerTime <= 0 then
-        local targetCoords = self.board:getRandomNonGoldTileCoords()
-        if targetCoords then
-            self.board:impactTile(targetCoords)
-            _Game:playSound("sound_events/missile_explosion.json")
-            _Game:playSound("sound_events/laser_shot.json")
-            _Game.game:shakeScreen(2.5, nil, 20, 0.15)
-            self.ui:shootLaserFromPowerCrystal(self.board:getTileCenterPos(targetCoords))
+        local targetCoords = self.board:getRandomNonGoldTileCoords() or self.board:getRandomTileCoords()
+        self.board:impactTile(targetCoords)
+        local sideTargets = {targetCoords + Vec2(0, 1), targetCoords + Vec2(0, -1), targetCoords + Vec2(1, 0), targetCoords + Vec2(-1, 0)}
+        for i, sideTarget in ipairs(sideTargets) do
+            if self.board:tileExists(sideTarget) then
+                self.board:impactTile(sideTarget)
+            end
         end
+        _Game:playSound("sound_events/missile_explosion.json")
+        _Game:playSound("sound_events/laser_shot.json")
+        _Game.game:shakeScreen(2.5, nil, 20, 0.15)
+        self.ui:shootLaserFromPowerCrystal(self.board:getTileCenterPos(targetCoords))
         self.laserPowerShots = self.laserPowerShots - 1
         if self.laserPowerShots > 0 then
             self.laserPowerTime = self.laserPowerTime + 0.14
@@ -318,12 +324,13 @@ end
 ---If the given color is different to the current power color, the power points are added (1 per chain).
 ---@param amount integer The amount of the chains destroyed.
 ---@param color integer Color of the power.
-function Level:addToPowerMeter(amount, color)
+---@param playerMatch boolean Whether the match has been made by the player. If not and the power charge is colorless, it stays colorless and a x3 charge multiplier is applied regardless.
+function Level:addToPowerMeter(amount, color, playerMatch)
     local multiplier = 3
     if self.powerColor ~= 0 and self.powerColor ~= color then
         multiplier = 1
     end
-    if self.powerColor == 0 then
+    if self.powerColor == 0 and playerMatch then
         self.powerColor = color
     end
     local oldMeter = self.powerMeter
@@ -338,6 +345,13 @@ end
 function Level:resetPowerMeter()
     self.powerColor = 0
     self.powerMeter = 0
+end
+
+---Fully charges the power crystal allowing for instant usage.
+---@param color integer Color of the power.
+function Level:chargeMaxPower(color)
+    self.powerColor = color
+    self.powerMeter = 75
 end
 
 ---Returns a string depicting a board selection mode if a power can be activated.

@@ -591,8 +591,7 @@ function Debug:runCommand(command)
 		self.console:print("Just one more move and you're done!")
 	elseif command == "power" then
 		local level = _Game.game.scene
-		level.powerColor = parameters[1]
-		level.powerMeter = 75
+		level:chargeMaxPower(parameters[1])
 		self.console:print("Charged!")
 	else
 		self.console:print({_COLORS.red, "Unrecognized command"})

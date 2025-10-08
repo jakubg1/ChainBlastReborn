@@ -676,8 +676,7 @@ function Board:handleMatches()
     _Vars:set("combo", self.level.combo)
     _Vars:set("multiplier", self.level.multiplier)
     _Game:playSound("sound_events/combo.json")
-    self.hintCoords = nil
-    self.hintTime = 0
+    self:resetHint()
     self.level:startTimer()
 
     for i, match in ipairs(matchGroups) do
@@ -685,6 +684,7 @@ function Board:handleMatches()
 		local colors = self:countGroupColors(match)
         local modifiedMatch = self:rearrangeMatchGroup(match, self.lastSelectStart, true)
         for j, group in ipairs(modifiedMatch) do
+            local playerMade = _Utils.isValueInTable(group, self.lastSelectStart)
             for k, coords in ipairs(group) do
                 local tile = self:assertGetTile(coords)
                 local chain = self:assertGetChain(coords)
@@ -695,8 +695,8 @@ function Board:handleMatches()
                 --    self.level:addToBombMeter(1)
                 --end
                 -- New (power meter)
-                self.level:addToPowerMeter(1, chain.color)
-                if self.level.powerColor == chain.color then
+                self.level:addToPowerMeter(1, chain.color, playerMade)
+                if self.level.powerColor == chain.color or (not playerMade and self.level.powerColor == 0) then
                     chain:spawnPowerParticles(9)
                 else
                     chain:spawnPowerParticles(3)
@@ -747,6 +747,14 @@ function Board:handleMatches()
     _Vars:unset("multiplier")
 
     return true
+end
+
+
+
+---Resets the hint coordinates and timer.
+function Board:resetHint()
+    self.hintCoords = nil
+    self.hintTime = 0
 end
 
 
@@ -990,6 +998,25 @@ function Board:getRandomNonGoldTileCoords(excludedCoords)
     end
     if #tiles == 0 then
         return
+    end
+    return tiles[love.math.random(#tiles)]
+end
+
+---Returns coordinates of a random tile on the board.
+---@param excludedCoords table? A list of excluded coordinates (Vector2's) which are guaranteed to not be returned by this function.
+---@return Vector2
+function Board:getRandomTileCoords(excludedCoords)
+    local tiles = {}
+    for i = 1, self.size.x do
+        for j = 1, self.size.y do
+            local coords = Vec2(i, j)
+            if not excludedCoords or not _Utils.isValueInTable(excludedCoords, coords) then
+                local tile = self:getTile(coords)
+                if tile then
+                    table.insert(tiles, coords)
+                end
+            end
+        end
     end
     return tiles[love.math.random(#tiles)]
 end
@@ -1244,35 +1271,40 @@ function Board:mousepressed(x, y, button)
                 self:explodeBomb(self.hoverCoords)
                 self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
                 self.level:resetPowerMeter()
+                self:resetHint()
                 self.mode = "select"
             elseif self.mode == "lightning" then
                 self:explodeLightning(self.hoverCoords, true, true)
                 self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
                 self.level:resetPowerMeter()
+                self:resetHint()
                 self.mode = "select"
             end
         end
     elseif button == 2 then
-        if self:isSelectionActive() then
-            self.selection:finish(true)
-            self.selection = nil
-        elseif self.mode == "select" then
-            -- If a power can be activated, set the mode to that power.
-            local powerMode = self.level:getPowerMode()
-            if powerMode then
-                if powerMode == "laser" then
-                    self.level:spawnLasers(6)
-                    self.level:resetPowerMeter()
+        if self.playerControl then
+            if self:isSelectionActive() then
+                self.selection:finish(true)
+                self.selection = nil
+            elseif self.mode == "select" then
+                -- If a power can be activated, set the mode to that power.
+                local powerMode = self.level:getPowerMode()
+                if powerMode then
+                    if powerMode == "laser" then
+                        self.level:spawnLasers(6)
+                        self.level:resetPowerMeter()
+                        self:resetHint()
+                    else
+                        self.mode = powerMode
+                        _Game:playSound("sound_events/power_activate.json")
+                    end
                 else
-                    self.mode = powerMode
-                    _Game:playSound("sound_events/power_activate.json")
+                    _Game:playSound("sound_events/no.json")
                 end
             else
-                _Game:playSound("sound_events/no.json")
+                -- Cancel the power if we were in a power mode.
+                self.mode = "select"
             end
-        else
-            -- Cancel the power if we were in a power mode.
-            self.mode = "select"
         end
     end
 end

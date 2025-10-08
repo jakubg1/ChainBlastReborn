@@ -50,8 +50,8 @@ end
 ---Draws the level background.
 function LevelBackground:draw()
     local natRes = _Game:getNativeResolution()
-    --love.graphics.setColor(0.02, 0.05, 0.16)
-    --love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
+    love.graphics.setColor(0.05, 0.08, 0.13)
+    love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
 
     for i, star in ipairs(self.stars) do
         star:draw()

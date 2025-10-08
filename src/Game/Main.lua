@@ -171,6 +171,7 @@ function GameMain:draw()
 
 	-- Debug
 	self.smallFont:draw("mouse: " .. _MousePos.x .. "," .. _MousePos.y, Vec2(), Vec2())
+	--self.smallFont:draw("transition: " .. tostring(self.transition.time) .. "," .. tostring(self.transition.state) .. "," .. tostring(self.transition.playing), Vec2(0, 6), Vec2())
 end
 
 ---Callback from `main.lua`.
@@ -195,6 +196,10 @@ function GameMain:keypresed(key)
 	self.scene:keypressed(key)
 	if key == "p" then
 		_Game.game:spawnParticle(Vec2(200, 100), "lavalamp", 15, 0, 4)
+	elseif key == "o" then
+		for i = 1, 10 do
+			_Game:playSound("sound_events/ice_break.json")
+		end
 	end
 end
 

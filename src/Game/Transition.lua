@@ -60,6 +60,7 @@ function Transition:draw()
 
     if self.time == 0 then
         if self.state or self.playing then
+            love.graphics.setColor(0, 0, 0)
             love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
         end
     else
