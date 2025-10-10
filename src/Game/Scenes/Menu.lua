@@ -1,5 +1,5 @@
 local class = require "com.class"
-local Vec2 = require("src.Essentials.Vector2")
+local MenuStar = require("src.Game.Scenes.MenuStar")
 
 ---@class Menu
 ---@overload fun(game):Menu
@@ -12,6 +12,11 @@ function Menu:new(game)
     self.game = game
 
 	self.font = _Game.resourceManager:getFont("fonts/standard.json")
+    self.stars = {}
+    -- Spawn initial stars.
+    for i = 1, 150 do
+        table.insert(self.stars, MenuStar(math.random()))
+    end
 end
 
 ---Returns whether this scene should accept any input.
@@ -23,7 +28,12 @@ end
 ---Updates the Menu.
 ---@param dt number Time delta in seconds.
 function Menu:update(dt)
-    
+    for i, star in ipairs(self.stars) do
+        star:update(dt)
+        if star.delQueue then
+            self.stars[i] = MenuStar()
+        end
+    end
 end
 
 ---Draws the Menu.
@@ -31,8 +41,12 @@ function Menu:draw()
     local natRes = _Game:getNativeResolution()
     love.graphics.setColor(0.06, 0.02, 0.05)
     love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
-    self.font:draw("Welcome to the Main Menu!", Vec2(100, 100))
-    self.font:draw("Click to start", Vec2(100, 110))
+    --self.font:draw("Welcome to the Main Menu!", Vec2(100, 100))
+    --self.font:draw("Click to start", Vec2(100, 110))
+
+    for i, star in ipairs(self.stars) do
+        star:draw()
+    end
 end
 
 ---Callback from `main.lua`.

@@ -28,28 +28,6 @@ function ConfigManager:new()
 	self.spheres = self:loadFolder("config/spheres", "sphere", true)
 	self.sphereEffects = self:loadFolder("config/sphere_effects", "sphere effect")
 	self.colorGenerators = self:loadFolder("config/color_generators", "color generator")
-
-	self.collectibleGeneratorManager = CollectibleGeneratorManager()
-
-	-- Load level and map data.
-	self.levels = {}
-	self.maps = {}
-	local levelList = _Utils.getDirListing(_ParsePath("config/levels"), "file", "json")
-	for i, path in ipairs(levelList) do
-		local id = tonumber(string.sub(path, 7, -6))
-		_Log:printt("ConfigManager", "Loading level " .. tostring(id) .. ", " .. tostring(path))
-		if not id then
-			_Log:printt("ConfigManager", "WARNING: Skipped - illegal name!")
-		else
-			local level = _Utils.loadJson(_ParsePath("config/levels/" .. path))
-			self.levels[id] = level
-			-- Load map data only if it hasn't been loaded yet.
-			if not self.maps[level.map] then
-				_Log:printt("ConfigManager", "Loading map " .. level.map)
-				self.maps[level.map] = _Utils.loadJson(_ParsePath("maps/" .. level.map .. "/config.json"))
-			end
-		end
-	end
 end
 
 

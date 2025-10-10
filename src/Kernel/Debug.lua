@@ -97,7 +97,7 @@ function Debug:draw()
 
 	-- UI tree
 	self.uiHoveredEntry = nil
-	if self.uiDebugVisible then
+	if self.uiDebugVisible and false then
 		-- Scrolling logic.
 		local height = love.graphics.getHeight()
 		local mousePos = _PosOnScreen(_MousePos)
