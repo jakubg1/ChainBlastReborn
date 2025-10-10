@@ -174,7 +174,10 @@ function Particle2:update(dt)
         if (self.targetPos - self.pos):len() <= self.catchRadius then
             self.delQueue = true
             if self.specialFlashPowerCrystal then
-                _Game.game.scene.ui:flashPowerCrystal()
+                local level = _Game.game.sceneManager:getLevel()
+                if level then
+                    level.ui:flashPowerCrystal()
+                end
             end
         end
     end

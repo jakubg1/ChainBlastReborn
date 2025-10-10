@@ -1,16 +1,23 @@
 local class = require "com.class"
+local Vec2 = require("src.Essentials.Vector2")
 
 ---@class Menu
 ---@overload fun(game):Menu
 local Menu = class:derive("Menu")
 
-local Vec2 = require("src.Essentials.Vector2")
-local Color = require("src.Essentials.Color")
-
----Constructs a Menu.
+---Constructs a Menu scene.
 ---@param game GameMain The main game class instance this Menu belongs to.
 function Menu:new(game)
+    self.name = "menu"
     self.game = game
+
+	self.font = _Game.resourceManager:getFont("fonts/standard.json")
+end
+
+---Returns whether this scene should accept any input.
+---@return boolean
+function Menu:isActive()
+    return true
 end
 
 ---Updates the Menu.
@@ -21,9 +28,11 @@ end
 
 ---Draws the Menu.
 function Menu:draw()
-    _DrawFillRect(Vec2(), Vec2(320, 180), Color(0.5, 0.5, 0.5))
-    self.game.font:draw("Welcome to the Main Menu!", Vec2(100, 100))
-    self.game.font:draw("Click to start", Vec2(100, 110))
+    local natRes = _Game:getNativeResolution()
+    love.graphics.setColor(0.06, 0.02, 0.05)
+    love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
+    self.font:draw("Welcome to the Main Menu!", Vec2(100, 100))
+    self.font:draw("Click to start", Vec2(100, 110))
 end
 
 ---Callback from `main.lua`.
@@ -32,7 +41,8 @@ end
 ---@param button integer The mouse button which was pressed.
 function Menu:mousepressed(x, y, button)
     if button == 1 then
-        self.game:changeScene("level")
+        self.game.sceneManager:startLevel()
+        self.game.sceneManager:changeScene("level_intro")
     end
 end
 

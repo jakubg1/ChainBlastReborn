@@ -172,6 +172,7 @@ function Game:draw()
 	end
 
 	-- Particles and UI
+	-- NOTE: The game below clears the screen, so the result of these actions specifically does nothing?
 	if self.particleManager then
 		self.particleManager:draw()
 	end
@@ -238,7 +239,7 @@ end
 ---@param key string The pressed key code.
 function Game:keypressed(key)
 	--self.uiManager:keypressed(key)
-	self.game:keypresed(key)
+	self.game:keypressed(key)
 end
 
 

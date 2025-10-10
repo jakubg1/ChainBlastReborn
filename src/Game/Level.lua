@@ -71,7 +71,7 @@ function Level:update(dt)
             self.board = nil
             self.bombMeterTime = nil
             self:addScore(self:getTimeBonus())
-            self.ui:notifyResults()
+            self.game.sceneManager:changeScene("level_results", true, true)
         end
     end
 
@@ -270,7 +270,7 @@ end
 ---Returns `true` if the time in this level is ticking down.
 ---@return boolean
 function Level:isTimerTicking()
-    return self.board and self.board.playerControl and self.timeCounting and not self.ui:isAnimationPlaying()
+    return self.board and self.board.playerControl and self.timeCounting and self:canPause()
 end
 
 ---Returns `true` if the game can be paused, `false` if only unpaused.
@@ -401,7 +401,7 @@ function Level:win()
     _Game:playSound("sound_events/level_win.json")
     self.levelMusic:stop(0.25)
     self.dangerMusic:stop(0.25)
-    self.ui:notifyWin()
+    self.game.sceneManager:changeScene("level_complete", true, true)
 end
 
 ---Loses this Level by stopping the music, playing the level lose sound, starting the lose animation and panicking the board.
@@ -414,7 +414,7 @@ function Level:lose()
     _Game:playSound("sound_events/level_lose.json")
     self.levelMusic:stop(0.25)
     self.dangerMusic:stop(0.25)
-    self.ui:notifyLose()
+    self.game.sceneManager:changeScene("level_failed", true, true)
 end
 
 ---Returns the current total time bonus the player will get based on the current timer value.

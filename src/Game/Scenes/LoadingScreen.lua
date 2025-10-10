@@ -1,17 +1,18 @@
 local class = require "com.class"
+local Vec2 = require("src.Essentials.Vector2")
+local Color = require("src.Essentials.Color")
 
 ---@class LoadingScreen
 ---@overload fun(game):LoadingScreen
 local LoadingScreen = class:derive("LoadingScreen")
 
-local Vec2 = require("src.Essentials.Vector2")
-local Color = require("src.Essentials.Color")
-
 ---Constructs the Loading Screen.
----@param game GameMain The main game class this Player belongs to.
+---@param game GameMain The main game class this scene belongs to.
 function LoadingScreen:new(game)
-    self.game = game
+    self.name = "loading"
+	self.game = game
 
+	self.font = _Game.resourceManager:getFont("fonts/standard.json")
     self.sprite = _Game.resourceManager:getSprite("sprites/chain_red.json")
 	self.spriteTime = 0
 	self.endTime = nil
@@ -19,6 +20,12 @@ function LoadingScreen:new(game)
 
 	-- Play the music.
 	_Game.resourceManager:getMusic("music_tracks/menu_music.json"):play(1, 1)
+end
+
+---Returns whether this scene should accept any input.
+---@return boolean
+function LoadingScreen:isActive()
+    return true
 end
 
 ---Updates the Loading Screen.
@@ -33,7 +40,7 @@ function LoadingScreen:update(dt)
 	else
 		self.endTime = self.endTime + dt
         if not self.ending and self.endTime > 2 then
-            self.game:changeScene("menu", true)
+            self.game.sceneManager:changeScene("menu", true)
             self.ending = true
         end
 	end
@@ -47,7 +54,7 @@ function LoadingScreen:draw()
 	local alpha = 1 - ((self.endTime or 0) / 1)
 	_DrawFillRect(Vec2(0, 0), Vec2(320, 180), Color(0, 0, 0), 1 - alpha)
 	self.sprite:drawWithShadow(Vec2(140, 90), Vec2(0.5), state, frame, nil, nil, alpha)
-	self.game.font:drawWithShadow("Loading...", Vec2(150, 90), Vec2(0, 0.5), nil, alpha)
+	self.font:drawWithShadow("Loading...", Vec2(150, 90), Vec2(0, 0.5), nil, alpha)
 end
 
 ---Callback from `main.lua`.

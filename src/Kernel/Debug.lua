@@ -587,12 +587,21 @@ function Debug:runCommand(command)
 			self.console:print({_COLORS.green, "Or for the fuck's sake, just press F10, F11 or F12!"})
 		end
 	elseif command == "win" then
-		_Game.game.scene.forcedWin = true
-		self.console:print("Just one more move and you're done!")
+		local level = _Game.game.sceneManager:getLevel()
+		if level then
+			level.forcedWin = true
+			self.console:print("Just one more move and you're done!")
+		else
+			self.console:print({_COLORS.red, "No level is currently present..."})
+		end
 	elseif command == "power" then
-		local level = _Game.game.scene
-		level:chargeMaxPower(parameters[1])
-		self.console:print("Charged!")
+		local level = _Game.game.sceneManager:getLevel()
+		if level then
+			level:chargeMaxPower(parameters[1])
+			self.console:print("Charged!")
+		else
+			self.console:print({_COLORS.red, "No level is currently present..."})
+		end
 	else
 		self.console:print({_COLORS.red, "Unrecognized command"})
 	end
