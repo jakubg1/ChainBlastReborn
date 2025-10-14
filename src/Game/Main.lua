@@ -52,9 +52,9 @@ function GameMain:updateScreenshake(dt)
 	self.screenShakeTotal = Vec2()
 	for i, shake in ipairs(self.screenShakes) do
 		-- Count shake power.
-		local decayFactor = _Utils.mapValue(shake.time, 0, shake.maxTime, 1, 0)
+		local decayFactor = _Utils.map(shake.time, 0, shake.maxTime, 1, 0)
 		-- The following is a quadratic falloff, personally I feel like it is much more headache-inducing
-		--local decayFactor = 1 - _Utils.mapValue(shake.time, 0, shake.maxTime, 0, 1) ^ 2
+		--local decayFactor = 1 - _Utils.map(shake.time, 0, shake.maxTime, 0, 1) ^ 2
 		local t = math.sin((shake.time * shake.frequency) * math.pi * 2) * decayFactor
 		self.screenShakeTotal = self.screenShakeTotal + shake.vector * t
 		-- Count time.

@@ -20,7 +20,7 @@ function Chain:new(board, coords, type)
     -- 1 = straight, 2 = cross
     self.shape = math.random() < 1/15 and 2 or 1
     -- 0 = rainbow / uncolored crate
-    self.color = math.random(1, 3)
+    self.color = math.random() < 0/20 and 0 or math.random(1, 3)
     self.health = 1
 
     -- 1 = vertical, 2 = horizontal
@@ -55,11 +55,13 @@ function Chain:new(board, coords, type)
     self.flashQueue = {}
 
     self.sprites = {
+        [0] = _Game.resourceManager:getSprite("sprites/chain_rainbow.json"),
         _Game.resourceManager:getSprite("sprites/chain_red.json"),
         _Game.resourceManager:getSprite("sprites/chain_blue.json"),
         _Game.resourceManager:getSprite("sprites/chain_yellow.json")
     }
     self.linkSprites = {
+        [0] = _Game.resourceManager:getSprite("sprites/chain_link_rainbow.json"),
         _Game.resourceManager:getSprite("sprites/chain_link_red.json"),
         _Game.resourceManager:getSprite("sprites/chain_link_blue.json"),
         _Game.resourceManager:getSprite("sprites/chain_link_yellow.json")

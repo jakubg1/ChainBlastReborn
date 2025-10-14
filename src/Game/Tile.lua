@@ -177,6 +177,8 @@ function Tile:breakIceLevel()
     local pos = self:getPos() + Vec2(7)
     -- 7 is the ice tile, 2 is the full ice stage.
     _Game.game:spawnParticleFragments(pos, "", self.sprite, 7, 2, 4)
+    -- Add to the timer.
+    self.board.level:addTime(0.5)
 end
 
 
@@ -319,9 +321,9 @@ function Tile:draw(offset)
 
     -- Some fancy gold animation
     if _Game.game.settings.goldTileAnimation and self.goldAnimation2 then
-        _DrawFillRect(pos, Vec2(14, 14), Color(1, 1, 1), _Utils.mapValue(self.goldAnimation2, 0, 0.3, 1, 0))
-        local x = _Utils.mapValue(self.goldAnimation2, 0, 0.2, 0, 20)
-        _DrawRect(pos - Vec2(x), Vec2(14, 14) + Vec2(x * 2), Color(1, 1, 1), _Utils.mapValue(self.goldAnimation2, 0.15, 0.2, 1, 0))
+        _DrawFillRect(pos, Vec2(14, 14), Color(1, 1, 1), _Utils.map(self.goldAnimation2, 0, 0.3, 1, 0))
+        local x = _Utils.map(self.goldAnimation2, 0, 0.2, 0, 20)
+        _DrawRect(pos - Vec2(x), Vec2(14, 14) + Vec2(x * 2), Color(1, 1, 1), _Utils.map(self.goldAnimation2, 0.15, 0.2, 1, 0))
     end
 end
 

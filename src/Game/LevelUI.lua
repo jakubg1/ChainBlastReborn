@@ -129,7 +129,7 @@ function LevelUI:updateHUD(dt)
         self:centerPowerCrystal()
     end
     -- Power meter charge sound
-    local progress = math.min((self.powerMeterDisplay / 75) ^ 2, 1)
+    local progress = math.min((self.powerMeterDisplay / self.level.maxPowerMeter) ^ 3, 1)
     if self.powerMeterDisplay < self.level.powerMeter then
         if not self.powerChargeSound then
             self.powerChargeSound = _Game:playSound("sound_events/power_charge.json")
@@ -248,8 +248,8 @@ function LevelUI:drawHUD()
     -- New power meter
     self.font:draw("Power", Vec2(285, 20), Vec2(0.5, 0), nil, self.hudAlpha)
     -- Bar
-    local color = (self.powerMeterDisplay >= 75 and _TotalTime % 0.3 < 0.15) and Color(1, 1, 1) or self.POWER_METER_COLORS[self.level.powerColor]
-    local progress = math.min(self.powerMeterDisplay / 75, 1)
+    local color = (self.powerMeterDisplay >= self.level.maxPowerMeter and _TotalTime % 0.3 < 0.15) and Color(1, 1, 1) or self.POWER_METER_COLORS[self.level.powerColor]
+    local progress = math.min(self.powerMeterDisplay / self.level.maxPowerMeter, 1)
     _DrawFillRect(Vec2(282, 65 + 80 * (1 - progress)), Vec2(5, 80 * progress), color, self.hudAlpha)
     -- Power box
     self.powerSprite:draw(Vec2(268, 33), nil, nil, nil, nil, nil, self.hudAlpha)
@@ -257,9 +257,9 @@ function LevelUI:drawHUD()
     local offset = math.sin(self.powerCrystalBopProgress * math.pi * 2)
     local shader = self.powerCrystalFlashTime and self.flashShader
     local frame = 1
-    if self.powerMeterDisplay >= 60 then
+    if self.powerMeterDisplay >= self.level.maxPowerMeter * 0.8 then
         frame = 3
-    elseif self.powerMeterDisplay >= 30 then
+    elseif self.powerMeterDisplay >= self.level.maxPowerMeter * 0.4 then
         frame = 2
     end
     self.powerCrystalSprite:draw(Vec2(278, 39 + offset), nil, nil, frame, nil, nil, self.hudAlpha, nil, shader)

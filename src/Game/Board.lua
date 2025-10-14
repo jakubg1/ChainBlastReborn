@@ -685,6 +685,29 @@ function Board:handleMatches()
         local modifiedMatch = self:rearrangeMatchGroup(match, self.lastSelectStart, true)
         for j, group in ipairs(modifiedMatch) do
             local playerMade = _Utils.isValueInTable(group, self.lastSelectStart)
+            local powerColor = nil
+            -- If there is only one color in a match, use it.
+            -- Otherwise, treat this as a wild match (color 0 - neutral).
+            for color, amount in pairs(colors) do
+                if amount > 0 then
+                    if not powerColor then
+                        powerColor = color
+                    else
+                        powerColor = 0
+                    end
+                end
+            end
+            -- Increment, reset or let the color combo as it is based on the current power color and whether the match was player-made.
+            -- 0 (wild/neutral) is excluded from the color combo.
+            -- Non player-made bad power color matches will not reset the color combo.
+            if self.level.powerColor ~= 0 then
+                if powerColor == 0 or self.level.powerColor == powerColor then
+                    --self.level.powerCombo = self.level.powerCombo + 1
+                elseif playerMade then
+                    --self.level.powerCombo = 0
+                end
+            end
+            --_Debug.console:print(tostring(self.level.powerCombo))
             for k, coords in ipairs(group) do
                 local tile = self:assertGetTile(coords)
                 local chain = self:assertGetChain(coords)
@@ -695,7 +718,7 @@ function Board:handleMatches()
                 --    self.level:addToBombMeter(1)
                 --end
                 -- New (power meter)
-                self.level:addToPowerMeter(1, chain.color, playerMade)
+                self.level:addToPowerMeter(chain.color == 0 and 2 or 1, powerColor or 0, playerMade)
                 if self.level.powerColor == chain.color or (not playerMade and self.level.powerColor == 0) then
                     chain:spawnPowerParticles(9)
                 else
@@ -719,7 +742,7 @@ function Board:handleMatches()
         local multiplier = (self.level.combo * (self.level.combo + 1)) / 2 * self.level.multiplier
         self.level:addScore((#match - 2) * 100 * multiplier)
         if #match > 3 then
-            self.level:addTime(#match - 3)
+            --self.level:addTime(#match - 3)
         end
         self.level.largestGroup = math.max(self.level.largestGroup, #match)
         _Game:playSound("sound_events/match.json")
@@ -862,7 +885,7 @@ function Board:explodeBomb(coords)
     local pos = self:getTileCenterPos(coords)
 	_Game.game:spawnParticle(pos, "lavalamp", 15, 0, 4)
     _Game:playSound("sound_events/explosion2.json")
-    _Game.game:shakeScreen(11, nil, 35, 0.35)
+    _Game.game:shakeScreen(9, nil, 35, 0.35)
     self.level.background:flash(0.5, 0.35)
 end
 

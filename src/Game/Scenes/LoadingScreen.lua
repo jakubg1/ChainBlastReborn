@@ -39,8 +39,8 @@ function LoadingScreen:update(dt)
 		end
 	else
 		self.endTime = self.endTime + dt
-        if not self.ending and self.endTime > 2 then
-            self.game.sceneManager:changeScene("menu", true)
+        if not self.ending and self.endTime > 1.2 then
+            self.game.sceneManager:changeScene("menu", true, true)
             self.ending = true
         end
 	end

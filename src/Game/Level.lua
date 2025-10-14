@@ -35,6 +35,8 @@ function Level:new(game)
 
     self.powerMeter = 0
     self.powerColor = 0
+    self.powerCombo = 0
+    self.maxPowerMeter = 75
 
     self.laserPowerShots = 0
     self.laserPowerTime = nil
@@ -326,17 +328,18 @@ end
 ---@param color integer Color of the power.
 ---@param playerMatch boolean Whether the match has been made by the player. If not and the power charge is colorless, it stays colorless and a x3 charge multiplier is applied regardless.
 function Level:addToPowerMeter(amount, color, playerMatch)
-    local multiplier = 3
-    if self.powerColor ~= 0 and self.powerColor ~= color then
+    local multiplier = 3 + self.powerCombo
+    if self.powerColor ~= 0 and color ~= 0 and self.powerColor ~= color then
         multiplier = 1
     end
     if self.powerColor == 0 and playerMatch then
         self.powerColor = color
     end
     local oldMeter = self.powerMeter
+    --_Debug.console:print("Added " .. (amount * multiplier) .. " power")
     self.powerMeter = self.powerMeter + amount * multiplier
     -- Play a sound if enough power has been charged to do something with it.
-    if oldMeter < 75 and self.powerMeter >= 75 then
+    if oldMeter < self.maxPowerMeter and self.powerMeter >= self.maxPowerMeter then
         _Game:playSound("sound_events/power_ready.json")
     end
 end
@@ -345,21 +348,22 @@ end
 function Level:resetPowerMeter()
     self.powerColor = 0
     self.powerMeter = 0
+    self.powerCombo = 0
 end
 
 ---Fully charges the power crystal allowing for instant usage.
 ---@param color integer Color of the power.
 function Level:chargeMaxPower(color)
     self.powerColor = color
-    self.powerMeter = 75
+    self.powerMeter = self.maxPowerMeter
 end
 
 ---Returns a string depicting a board selection mode if a power can be activated.
 ---Returns `nil` if the power cannot be activated.
 ---@return "bomb"|"lightning"|"laser"?
 function Level:getPowerMode()
-    -- Must have at least 75 power points charged.
-    if self.powerMeter < 75 then
+    -- Must have full power bar charged.
+    if self.powerMeter < self.maxPowerMeter then
         return
     end
     -- 2 = blue

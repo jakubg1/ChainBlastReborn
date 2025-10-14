@@ -30,7 +30,7 @@ function MenuStar:new(t)
     elseif temperature < 3 then
         r, g, b = 3 - temperature, 3 - temperature, 1
     end
-    local brightness = love.math.randomNormal(0.15, 0.7)
+    local brightness = love.math.randomNormal(0.15, 0.6)
     self.color = Color(r + (1 - r) * brightness, g + (1 - g) * brightness, b + (1 - b) * brightness)
 
     self.alpha = love.math.randomNormal(0.1, 0.4) + (16 - self.maxTime) * 0.08
