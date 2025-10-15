@@ -45,8 +45,13 @@ function MenuSettings:new(scene)
     self.cursor = MenuCursor()
     self.checkboxSprite = _Game.resourceManager:getSprite("sprites/checkbox.json")
     self.sliderSprite = _Game.resourceManager:getSprite("sprites/slider_frame.json")
+    self.hoveredCategory = nil
     self.selectedCategory = 1
-    self.hoveredSetting = 1
+    self.hoveredSetting = nil
+    self.sliderDragX = nil
+    self.sliderDragOrigValue = nil
+    self.backToMenuHovered = false
+    self.backToMenuTime = nil -- Starts counting up from 0 if a menu option has been selected.
     -- Build UI.
     self.texts = {
         header = Text(Vec2(160, 10), {text = "Settings", textAlign = Vec2(0.5, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
@@ -134,17 +139,60 @@ end
 ---Updates the Settings screen.
 ---@param dt number Time delta in seconds.
 function MenuSettings:update(dt)
-    -- Highlight the current category.
-    for i = 1, #self.settings do
-        self.texts["category" .. i]:setProp("color", self.selectedCategory == i and Color("#ffffff") or Color("#aaaaaa"))
+    self:updateCategories(dt)
+    self:updateSettings(dt)
+    self:updateBackToMenu(dt)
+end
+
+---Updates the category part of the settings interface.
+---@private
+---@param dt number Time delta in seconds.
+function MenuSettings:updateCategories(dt)
+    -- Update category hover.
+    local lastCategoryHover = self.hoveredCategory
+    self.hoveredCategory = nil
+    if not self.backToMenuTime and not self.sliderDragX then
+        for i = 1, #self.settings do
+            if i ~= self.selectedCategory then
+                local text = self.texts["category" .. i]
+                local pos = text.pos
+                local size = text:getFinalTextSize()
+                if _Utils.isPointInsideBox(_MousePos.x, _MousePos.y, pos.x - 2, pos.y, size.x + 4, size.y) then
+                    self.hoveredCategory = i
+                end
+            end
+        end
     end
+    -- Highlight the current and the hovered category.
+    for i = 1, #self.settings do
+        local highlighted = self.selectedCategory == i or self.hoveredCategory == i
+        self.texts["category" .. i]:setProp("color", highlighted and Color("#ffffff") or Color("#aaaaaa"))
+    end
+    -- Play a sound if we've hovered over another option.
+    if self.hoveredCategory and self.hoveredCategory ~= lastCategoryHover then
+        _Game:playSound("sound_events/ui_hover.json")
+    end
+    -- Update the category cursor.
+    self.categoryCursorTargetX, self.categoryCursorTargetWidth = self:getCategoryCursorDetails(self.selectedCategory)
+    self.categoryCursorX = self.categoryCursorX * 0.5 + self.categoryCursorTargetX * 0.5
+    self.categoryCursorWidth = self.categoryCursorWidth * 0.5 + self.categoryCursorTargetWidth * 0.5
+end
+
+---Updates the setting part of the settings interface.
+---@private
+---@param dt number Time delta in seconds.
+function MenuSettings:updateSettings(dt)
     local availableSettings = self.settings[self.selectedCategory].contents
     -- Update setting hover.
     local lastHover = self.hoveredSetting
-    self.hoveredSetting = nil
-    for i = 1, #availableSettings do
-        if _MousePos.y >= 48 + (i - 1) * 12 and _MousePos.y < 48 + i * 12 then
-            self.hoveredSetting = i
+    if not self.sliderDragX then
+        self.hoveredSetting = nil
+        if not self.backToMenuTime then
+            for i = 1, #availableSettings do
+                if _MousePos.y >= 48 + (i - 1) * 12 and _MousePos.y < 48 + i * 12 then
+                    self.hoveredSetting = i
+                end
+            end
         end
     end
     -- Highlight the hovered setting.
@@ -159,17 +207,51 @@ function MenuSettings:update(dt)
     -- Give appropriate description for the currently hovered setting.
     local description = self.hoveredSetting and availableSettings[self.hoveredSetting].description or ""
     self.texts["description"]:setProp("text", description)
-    -- Update the cursor.
-    self.cursor:setWidth(260)
-    if self.hoveredSetting then
-        self.cursor:setY(48 + (self.hoveredSetting - 1) * 12)
+    -- Handle slider dragging.
+    if self.sliderDragX then
+        local setting = self:getHoveredSetting()
+        if setting then
+            -- Sliding relative to the grabbed position feels wrong.
+            --local offset = _MousePos.x - self.sliderDragX
+            --self:setSettingValue(setting, _Utils.clamp(self.sliderDragOrigValue + offset / 96))
+            self:setSettingValue(setting, _Utils.clamp((_MousePos.x - 161) / 96))
+            self:rebuildSettingList()
+        end
     end
-    self.cursor:setGrab(self.hoveredSetting ~= nil)
+
+    -- Check whether Back to Menu is hovered.
+    local oldBackToMenuHover = self.backToMenuHovered
+    self.backToMenuHovered = not self.backToMenuTime and not self.sliderDragX and _Utils.isPointInsideBox(_MousePos.x, _MousePos.y, 160 - 50, 155, 100, 10)
+    -- Highlight the hovered button.
+    self.texts.back:setProp("color", self.backToMenuHovered and Color("#ffffff") or Color("#aaaaaa"))
+    -- If we've just hovered it, play a sound.
+    if not oldBackToMenuHover and self.backToMenuHovered then
+        _Game:playSound("sound_events/ui_hover.json")
+    end
+
+    -- Update the cursor.
+    if self.hoveredSetting then
+        self.cursor:setWidth(260)
+        self.cursor:setY(48 + (self.hoveredSetting - 1) * 12)
+    elseif self.backToMenuHovered then
+        self.cursor:setWidth(60)
+        self.cursor:setY(155)
+    end
+    self.cursor:setGrab(self.hoveredSetting ~= nil or self.backToMenuHovered)
     self.cursor:update(dt)
-    -- Update the category cursor.
-    self.categoryCursorTargetX, self.categoryCursorTargetWidth = self:getCategoryCursorDetails(self.selectedCategory)
-    self.categoryCursorX = self.categoryCursorX * 0.5 + self.categoryCursorTargetX * 0.5
-    self.categoryCursorWidth = self.categoryCursorWidth * 0.5 + self.categoryCursorTargetWidth * 0.5
+end
+
+---Updates the back to menu logic.
+---@private
+---@param dt number Time delta in seconds.
+function MenuSettings:updateBackToMenu(dt)
+    if not self.backToMenuTime then
+        return
+    end
+    self.backToMenuTime = self.backToMenuTime + dt
+    if self.backToMenuTime >= 0.5 then
+        self.scene:goToMain()
+    end
 end
 
 ---Draws the Settings on the screen.
@@ -189,7 +271,11 @@ function MenuSettings:draw()
             self.sliderSprite:draw(Vec2(159, y + 2), nil, nil, nil, nil, color)
             love.graphics.setColor(0.2, 0.2, 0.2)
             love.graphics.rectangle("fill", 161, y + 4, 96, 5)
-            love.graphics.setColor(color.r, color.g, color.b)
+            if self.sliderDragX and self.hoveredSetting == i then
+                love.graphics.setColor(0.5, 0.5, 0.5)
+            else
+                love.graphics.setColor(color.r, color.g, color.b)
+            end
             love.graphics.rectangle("fill", 161, y + 4, 96 * value, 5)
         end
         y = y + 12
@@ -211,18 +297,40 @@ end
 ---@param button integer The mouse button which was pressed.
 function MenuSettings:mousepressed(x, y, button)
     if button == 1 then
+        if self.hoveredCategory then
+            self.selectedCategory = self.hoveredCategory
+            self:rebuildSettingList()
+            _Game:playSound("sound_events/ui_select.json")
+        end
         local setting = self:getHoveredSetting()
         if setting then
             if setting.type == "checkbox" then
                 local newValue = not self:getSettingValue(setting)
                 self:setSettingValue(setting, newValue)
+            elseif setting.type == "slider" then
+                self.sliderDragX = _MousePos.x
+                self.sliderDragOrigValue = self:getSettingValue(setting)
             end
             self:rebuildSettingList()
             _Game:playSound("sound_events/ui_select.json")
         end
-    elseif button == 2 then
-        self.selectedCategory = self.selectedCategory % 3 + 1
-        self:rebuildSettingList()
+        if self.backToMenuHovered then
+            self.backToMenuTime = 0
+            _Game:playSound("sound_events/ui_select.json")
+        end
+    end
+end
+
+---Callback from `main.lua`.
+---@param x integer The X coordinate of mouse position.
+---@param y integer The Y coordinate of mouse position.
+---@param button integer The mouse button which was released.
+function MenuSettings:mousereleased(x, y, button)
+    if button == 1 then
+        if self.sliderDragX then
+            self.sliderDragX = nil
+            self.sliderDragOrigValue = nil
+        end
     end
 end
 

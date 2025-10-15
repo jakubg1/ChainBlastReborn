@@ -28,6 +28,7 @@ end
 ---Goes to the main menu screen.
 function Menu:goToMain()
     self.screen = MenuMain(self)
+    self.screen:animateIntro()
 end
 
 ---Goes to the settings screen.
@@ -120,6 +121,7 @@ end
 ---@param y integer The Y coordinate of mouse position.
 ---@param button integer The mouse button which was released.
 function Menu:mousereleased(x, y, button)
+    self.screen:mousereleased(x, y, button)
 end
 
 ---Callback from `main.lua`.

@@ -49,6 +49,8 @@ function MenuMain:animateIntro(t)
             self.texts.title:setProp("alpha", 1)
         end
     else
+        -- The title is brought up again so that it is properly displayed when going back from settings.
+        self.texts.title:setProp("alpha", 1)
         self.texts.header:setProp("alpha", 1)
         for i, option in ipairs(self.menuOptions) do
             option:setProp("alpha", 1)
@@ -134,6 +136,14 @@ function MenuMain:mousepressed(x, y, button)
             end
         end
     end
+end
+
+---Callback from `main.lua`.
+---@param x integer The X coordinate of mouse position.
+---@param y integer The Y coordinate of mouse position.
+---@param button integer The mouse button which was released.
+function MenuMain:mousereleased(x, y, button)
+    
 end
 
 return MenuMain

@@ -42,13 +42,19 @@ end
 ---Returns `0` if the mute flag is set, else the current music volume.
 ---@return number
 function Options:getEffectiveMusicVolume()
-	return self.data.mute and 0 or self.data.musicVolume
+	return self.data.mute and 0 or self.data.musicVolume * self.data.globalVolume
 end
 
 ---Returns `0` if the mute flag is set, else the current sound volume.
 ---@return number
 function Options:getEffectiveSoundVolume()
-	return self.data.mute and 0 or self.data.soundVolume
+	return self.data.mute and 0 or self.data.soundVolume * self.data.globalVolume
+end
+
+---Returns the effective volume for music cues.
+---@return number
+function Options:getEffectiveMusicCueVolume()
+	return self.data.mute and 0 or self.data.musicCueVolume * self.data.globalVolume
 end
 
 return Options
