@@ -584,7 +584,7 @@ function Debug:runCommand(command)
 			self.console:print(" gold - Gold tile style.")
 			self.console:print(" hmov - Board hover movement style.")
 			self.console:print("")
-			self.console:print({_COLORS.green, "Or for the fuck's sake, just press F10, F11 or F12!"})
+			self.console:print({_COLORS.green, "Or just press F10, F11 or F12!"})
 		end
 	elseif command == "win" then
 		local level = _Game.game.sceneManager:getLevel()
