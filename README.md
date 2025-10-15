@@ -25,7 +25,10 @@ Install [**LÖVE2D**](http://love2d.org/) first and launch the game as any other
 
 ## Screenshots
 **Note that the game is in very early development. All visuals are subject to change and are incomplete.**
-(I will add them soon I need to do it through github lol)
+
+<img width="640" height="360" alt="obraz" src="https://github.com/user-attachments/assets/2393ecfa-9b5a-4de6-9549-b7d9aeb6ec43" />
+<img width="640" height="360" alt="obraz" src="https://github.com/user-attachments/assets/75c35923-b91b-4b2a-b369-4cc552eb1e28" />
+<img width="640" height="360" alt="obraz" src="https://github.com/user-attachments/assets/59ca840d-b7cb-412b-82dd-6ac7cf47ebbc" />
 
 ## Credits
 This repository contains code and assets from external sources.
