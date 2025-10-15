@@ -17,9 +17,6 @@ function LoadingScreen:new(game)
 	self.spriteTime = 0
 	self.endTime = nil
     self.ending = false
-
-	-- Play the music.
-	_Game.resourceManager:getMusic("music_tracks/menu_music.json"):play(1, 1)
 end
 
 ---Returns whether this scene should accept any input.
@@ -34,8 +31,8 @@ function LoadingScreen:update(dt)
 	self.spriteTime = self.spriteTime + dt
 	if not self.endTime then
 		if _Game.resourceManager:getLoadProgress("main") == 1 then
+			-- Everything's loaded. Start the fade out.
 			self.endTime = 0
-			_Game.resourceManager:getMusic("music_tracks/menu_music.json"):stop(2)
 		end
 	else
 		self.endTime = self.endTime + dt
