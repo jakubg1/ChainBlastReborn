@@ -333,7 +333,7 @@ function Text:generateChunks()
                     -- All subsequent chunks are guaranteed to have a line break character before them.
                     -- Do line break stuff.
                     x = 0
-                    y = y + lineHeight
+                    y = y + lineHeight - 2
                     lineHeight = 0
                 end
                 for k, subchunk in ipairs(subchunks) do

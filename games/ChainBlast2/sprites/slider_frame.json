@@ -1,0 +1,21 @@
+{
+    "$schema": "../../../schemas/sprite.json",
+    "path": "images/slider_frame.png",
+    "frameSize": {
+        "x": 100,
+        "y": 9
+    },
+    "states": [
+        {
+            "pos": {
+                "x": 0,
+                "y": 0
+            },
+            "frames": {
+                "x": 1,
+                "y": 1
+            }
+        }
+    ],
+    "batched": false
+}

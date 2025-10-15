@@ -25,10 +25,10 @@ function MenuMain:new(scene)
         footer2 = Text(Vec2(317, 179), {text = "(c) jakubg1", textAlign = Vec2(1, 1), color = Color("#888888"), shadowOffset = Vec2(1), font = self.smallFont}),
     }
     self.menuOptions = {
-        Text(Vec2(160, 90), {text = "Play!", textAlign = Vec2(0.5, 0), color = Color("#bbbbbb"), shadowOffset = Vec2(1), alpha = 0}),
-        Text(Vec2(160, 100), {text = "Settings", textAlign = Vec2(0.5, 0), color = Color("#bbbbbb"), shadowOffset = Vec2(1), alpha = 0}),
-        Text(Vec2(160, 110), {text = "Credits", textAlign = Vec2(0.5, 0), color = Color("#bbbbbb"), shadowOffset = Vec2(1), alpha = 0}),
-        Text(Vec2(160, 120), {text = "Exit", textAlign = Vec2(0.5, 0), color = Color("#bbbbbb"), shadowOffset = Vec2(1), alpha = 0}),
+        Text(Vec2(160, 90), {text = "Play!", textAlign = Vec2(0.5, 0), color = Color("#aaaaaa"), shadowOffset = Vec2(1), alpha = 0}),
+        Text(Vec2(160, 100), {text = "Settings", textAlign = Vec2(0.5, 0), color = Color("#aaaaaa"), shadowOffset = Vec2(1), alpha = 0}),
+        Text(Vec2(160, 110), {text = "Credits", textAlign = Vec2(0.5, 0), color = Color("#aaaaaa"), shadowOffset = Vec2(1), alpha = 0}),
+        Text(Vec2(160, 120), {text = "Exit", textAlign = Vec2(0.5, 0), color = Color("#aaaaaa"), shadowOffset = Vec2(1), alpha = 0}),
     }
     self.hoveredOption = nil
     self.selectedOption = nil
@@ -78,16 +78,14 @@ function MenuMain:update(dt)
     end
     -- Highlight the hovered option.
     for i, option in ipairs(self.menuOptions) do
-        option:setProp("color", self.hoveredOption == i and Color("#ffffff") or Color("#bbbbbb"))
+        option:setProp("color", self.hoveredOption == i and Color("#ffffff") or Color("#aaaaaa"))
     end
     -- Animate the rainbow cursor.
     if self.hoveredOption then
-        self.cursor:grab()
         self.cursor:setY(80 + self.hoveredOption * 10)
         self.cursor:setWidth(self.menuOptions[self.hoveredOption]:getFinalTextSize().x)
-    else
-        self.cursor:release()
     end
+    self.cursor:setGrab(self.hoveredOption ~= nil)
     self.cursor:update(dt)
     -- Handle selected menu entry
     if self.selectedOption and self.selectedTime then

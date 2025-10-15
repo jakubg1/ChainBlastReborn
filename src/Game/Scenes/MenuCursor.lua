@@ -18,14 +18,10 @@ function MenuCursor:new()
     self.font = _Game.resourceManager:getFont("fonts/standard.json")
 end
 
----Clamps the cursor inwards.
-function MenuCursor:grab()
-    self.clampTarget = 0
-end
-
----Releases the clamp. This causes the arrows to leave the screen area.
-function MenuCursor:release()
-    self.clampTarget = 0.5
+---Sets whether the cursor should be grabbing an element, or should it be released and move off the screen.
+---@param grab boolean Whether the cursor should be in the grab mode.
+function MenuCursor:setGrab(grab)
+    self.clampTarget = grab and 0 or 0.5
 end
 
 ---Sets the target Y position of the cursor.

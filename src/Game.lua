@@ -123,6 +123,8 @@ function Game:update(dt) -- callback from main.lua
 	for i = 1, frames do
 		self:tick(delta)
 	end
+
+	self:setFullscreen(self.runtimeManager.options:getSetting("fullscreen"))
 end
 
 
@@ -308,7 +310,7 @@ function Game:setFullscreen(fullscreen)
 		local _, _, flags = love.window.getMode()
 		_DisplaySize = Vec2(love.window.getDesktopDimensions(flags.display))
 	else
-		_DisplaySize = self:getNativeResolution()
+		_DisplaySize = self:getNativeResolution() * 4
 	end
 	love.window.setMode(_DisplaySize.x, _DisplaySize.y, {fullscreen = fullscreen, resizable = true})
 end

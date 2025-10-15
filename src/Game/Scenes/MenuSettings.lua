@@ -18,38 +18,158 @@ function MenuSettings:new(scene)
         {
             name = "Video",
             contents = {
-                {name = "Full Screen", type = "checkbox", description = "Controls whether the game should be running in full screen."},
-                {name = "Reduced Particles", type = "checkbox", description = "Turning this setting on will cause the game to display much less particles. Helps avoiding visual clutter at the cost of graphical quality."},
-                {name = "Screen Flash Strength", type = "slider", description = "Controls how bright the screen flashes are going to be displayed. Setting this to 0% turns screen flashes off completely."},
-                {name = "Screen Shake Strength", type = "slider", description = "Controls the power of screen shake effects. Setting this to 0% will disable screen shake effects completely."}
+                {name = "Full Screen", type = "checkbox", key = "fullscreen", description = "Controls whether the game should be running in full screen."},
+                {name = "Reduced Particles", type = "checkbox", key = "reducedParticles", description = "Turning this setting on will cause the game to display\nmuch less particles. Helps avoiding visual clutter\nat the cost of graphical quality."},
+                {name = "Screen Flash Strength", type = "slider", key = "screenFlashStrength", description = "Controls how bright the screen flashes will be.\nSetting this to 0% turns screen flashes off completely."},
+                {name = "Screen Shake Strength", type = "slider", key = "screenShakeStrength", description = "Controls the power of screen shake effects.\nSetting this to 0% disables screen shake effects completely."},
+                {name = "Auto-Pause on Inactivity", type = "checkbox", key = "autoPause", description = "If enabled, the game will be automatically paused when\nthe player's cursor does not move for 3 seconds."}
             }
         },
         {
             name = "Audio",
             contents = {
-                {name = "Mute", type = "checkbox", description = "Turns off all audio output in this game."},
-                {name = "Global Volume", type = "slider", description = "Controls the level of all audio output in the game."},
-                {name = "SFX Volume", type = "slider", description = "Controls most gameplay sounds\n(such as breaking chains, activating powerups or menu actions)."},
-                {name = "Music Volume", type = "slider", description = "Volume used for the music."},
-                {name = "Music Cue Volume", type = "slider", description = "Volume used for certain in-game events\n(such as level complete, fail, etc.)."}
+                {name = "Mute", type = "checkbox", key = "mute", description = "Turns off all audio output in this game."},
+                {name = "Global Volume", type = "slider", key = "globalVolume", description = "Controls the level of all audio output in the game."},
+                {name = "SFX Volume", type = "slider", key = "soundVolume", description = "Controls most gameplay sounds\n(such as breaking chains, activating powerups or menu actions)."},
+                {name = "Music Volume", type = "slider", key = "musicVolume", description = "Volume used for the music."},
+                {name = "Music Cue Volume", type = "slider", key = "musicCueVolume", description = "Volume used for certain in-game events\n(such as level complete, fail, etc.)."}
             }
         },
         {
             name = "Handicap",
             contents = {
-                {name = "Disable Timer", type = "checkbox", description = "If this is turned on, there will be no time limits on any levels in this game. There is no penalty for doing this; however, in the future, achievements will be disabled if any of the handicap settings are turned on."}
+                {name = "Disable Timer", type = "checkbox", key = "handicapTime", description = "If this is turned on, there will be no time limits on any levels\nin this game. There is no penalty for doing this;\nhowever, in the future, achievements will be disabled if any\nof the handicap settings are turned on."}
             }
         }
     }
+    self.cursor = MenuCursor()
+    self.checkboxSprite = _Game.resourceManager:getSprite("sprites/checkbox.json")
+    self.sliderSprite = _Game.resourceManager:getSprite("sprites/slider_frame.json")
+    self.selectedCategory = 1
+    self.hoveredSetting = 1
+    -- Build UI.
     self.texts = {
         header = Text(Vec2(160, 10), {text = "Settings", textAlign = Vec2(0.5, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
+        description = Text(Vec2(25, 115), {text = "", textAlign = Vec2(0, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
+        back = Text(Vec2(160, 155), {text = "Back to Menu", textAlign = Vec2(0.5, 0), color = Color("#aaaaaa"), shadowOffset = Vec2(1)})
     }
+    local categoryBuildX = 35
+    for i, category in ipairs(self.settings) do
+        local text = Text(Vec2(categoryBuildX, 30), {text = "[" .. category.name .. "]", textAlign = Vec2(0, 0), color = self.selectedCategory == i and Color("#ffffff") or Color("#aaaaaa"), shadowOffset = Vec2(1)})
+        categoryBuildX = categoryBuildX + text:getFinalTextSize().x + 5
+        self.texts["category" .. i] = text
+    end
+    self:rebuildSettingList()
+    self.categoryCursorX, self.categoryCursorWidth = self:getCategoryCursorDetails(1)
+    self.categoryCursorTargetX, self.categoryCursorTargetWidth = self.categoryCursorX, self.categoryCursorWidth
+end
+
+---Returns the current value of the provided setting from the settings manifest as a string.
+---This is what is displayed on the rightmost column of the settings menu.
+---@param setting table<string, string> A single setting from the settings manifest.
+---@return string
+function MenuSettings:getSettingValueStr(setting)
+    local value = self:getSettingValue(setting)
+    if type(value) == "boolean" then
+        return value and "On" or "Off"
+    else
+        return tostring(math.floor(value * 100)) .. "%"
+    end
+end
+
+---Returns the current value of the provided setting from the settings manifest.
+---@param setting table<string, string> A single setting from the settings manifest.
+---@return any
+function MenuSettings:getSettingValue(setting)
+    if setting.key then
+        return _Game.runtimeManager.options:getSetting(setting.key)
+    end
+    return setting.type == "slider" and 1 or false
+end
+
+---Changes the value of the provided setting from the settings manifest.
+---@param setting table<string, string> A single setting from the settings manifest.
+---@param value any A new value for the setting.
+function MenuSettings:setSettingValue(setting, value)
+    if setting.key then
+        _Game.runtimeManager.options:setSetting(setting.key, value)
+    end
+end
+
+---Returns the manifest of the currently hovered setting, or `nil` if no setting is hovered.
+---@return table<string, string>?
+function MenuSettings:getHoveredSetting()
+    if not self.hoveredSetting then
+        return
+    end
+    return self.settings[self.selectedCategory].contents[self.hoveredSetting]
+end
+
+---Rebuilds the setting list UI for the currently selected category. Use if a setting has been changed or a different category has been selected.
+function MenuSettings:rebuildSettingList()
+    for i = 1, 9 do
+        self.texts["setting" .. i] = nil
+        self.texts["setting" .. i .. "_val"] = nil
+    end
+    local settingBuildY = 48
+    for i, setting in ipairs(self.settings[self.selectedCategory].contents) do
+        local color = self.hoveredSetting == i and Color("#ffffff") or Color("#aaaaaa")
+        self.texts["setting" .. i] = Text(Vec2(30, settingBuildY), {text = setting.name, textAlign = Vec2(0, 0), color = color, shadowOffset = Vec2(1)})
+        self.texts["setting" .. i .. "_val"] = Text(Vec2(290, settingBuildY), {text = self:getSettingValueStr(setting), textAlign = Vec2(1, 0), color = color, shadowOffset = Vec2(1)})
+        settingBuildY = settingBuildY + 12
+    end
+end
+
+---Returns the center X position and the width of the category cursor of the `n`-th category specified.
+---@param n integer The ID of the category to calculate the values for.
+---@return number, number
+function MenuSettings:getCategoryCursorDetails(n)
+    local categoryText = self.texts["category" .. n]
+    local w = categoryText:getFinalTextSize().x
+    local x = categoryText.pos.x + w / 2
+    w = w + 4
+    return x, w
 end
 
 ---Updates the Settings screen.
 ---@param dt number Time delta in seconds.
 function MenuSettings:update(dt)
-    
+    -- Highlight the current category.
+    for i = 1, #self.settings do
+        self.texts["category" .. i]:setProp("color", self.selectedCategory == i and Color("#ffffff") or Color("#aaaaaa"))
+    end
+    local availableSettings = self.settings[self.selectedCategory].contents
+    -- Update setting hover.
+    local lastHover = self.hoveredSetting
+    self.hoveredSetting = nil
+    for i = 1, #availableSettings do
+        if _MousePos.y >= 48 + (i - 1) * 12 and _MousePos.y < 48 + i * 12 then
+            self.hoveredSetting = i
+        end
+    end
+    -- Highlight the hovered setting.
+    for i = 1, #availableSettings do
+        self.texts["setting" .. i]:setProp("color", self.hoveredSetting == i and Color("#ffffff") or Color("#aaaaaa"))
+        self.texts["setting" .. i .. "_val"]:setProp("color", self.hoveredSetting == i and Color("#ffffff") or Color("#aaaaaa"))
+    end
+    -- Play a sound if we've hovered over another option.
+    if self.hoveredSetting and self.hoveredSetting ~= lastHover then
+        _Game:playSound("sound_events/ui_hover.json")
+    end
+    -- Give appropriate description for the currently hovered setting.
+    local description = self.hoveredSetting and availableSettings[self.hoveredSetting].description or ""
+    self.texts["description"]:setProp("text", description)
+    -- Update the cursor.
+    self.cursor:setWidth(260)
+    if self.hoveredSetting then
+        self.cursor:setY(48 + (self.hoveredSetting - 1) * 12)
+    end
+    self.cursor:setGrab(self.hoveredSetting ~= nil)
+    self.cursor:update(dt)
+    -- Update the category cursor.
+    self.categoryCursorTargetX, self.categoryCursorTargetWidth = self:getCategoryCursorDetails(self.selectedCategory)
+    self.categoryCursorX = self.categoryCursorX * 0.5 + self.categoryCursorTargetX * 0.5
+    self.categoryCursorWidth = self.categoryCursorWidth * 0.5 + self.categoryCursorTargetWidth * 0.5
 end
 
 ---Draws the Settings on the screen.
@@ -58,6 +178,31 @@ function MenuSettings:draw()
     for id, text in pairs(self.texts) do
         text:draw()
     end
+    -- Settings
+    local y = 48
+    for i, setting in ipairs(self.settings[self.selectedCategory].contents) do
+        local color = self.hoveredSetting == i and Color("#ffffff") or Color("#aaaaaa")
+        local value = self:getSettingValue(setting)
+        if setting.type == "checkbox" then
+            self.checkboxSprite:draw(Vec2(248, y + 1), nil, value and 2 or 1, nil, nil, color)
+        elseif setting.type == "slider" then
+            self.sliderSprite:draw(Vec2(159, y + 2), nil, nil, nil, nil, color)
+            love.graphics.setColor(0.2, 0.2, 0.2)
+            love.graphics.rectangle("fill", 161, y + 4, 96, 5)
+            love.graphics.setColor(color.r, color.g, color.b)
+            love.graphics.rectangle("fill", 161, y + 4, 96 * value, 5)
+        end
+        y = y + 12
+    end
+    -- Selected category underline (cursor)
+    local color = _Utils.getRainbowColor(_TotalTime / 4)
+    love.graphics.setColor(color.r, color.g, color.b)
+    local selectedCategoryText = self.texts["category" .. self.selectedCategory]
+    local x1, y1 = self.categoryCursorX - self.categoryCursorWidth / 2, selectedCategoryText.pos.y + 13
+    local x2, y2 = self.categoryCursorX + self.categoryCursorWidth / 2, y1
+    love.graphics.line(x1, y1, x2, y2)
+    -- Cursor
+    self.cursor:draw()
 end
 
 ---Callback from `main.lua`.
@@ -65,7 +210,20 @@ end
 ---@param y integer The Y coordinate of mouse position.
 ---@param button integer The mouse button which was pressed.
 function MenuSettings:mousepressed(x, y, button)
-    
+    if button == 1 then
+        local setting = self:getHoveredSetting()
+        if setting then
+            if setting.type == "checkbox" then
+                local newValue = not self:getSettingValue(setting)
+                self:setSettingValue(setting, newValue)
+            end
+            self:rebuildSettingList()
+            _Game:playSound("sound_events/ui_select.json")
+        end
+    elseif button == 2 then
+        self.selectedCategory = self.selectedCategory % 3 + 1
+        self:rebuildSettingList()
+    end
 end
 
 return MenuSettings

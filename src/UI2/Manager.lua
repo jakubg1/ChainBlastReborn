@@ -251,12 +251,6 @@ end
 ---Injects the game options to a hardcoded set of Nodes.
 function UI2Manager:optionsLoad()
     -- TODO: HARDCODED - make it more flexible
-    --[[
-    self:getNode("root/Menu_Options/Frame/Slot_music/Slider_Music").widget:setValue(_Game.runtimeManager.options:getMusicVolume())
-    self:getNode("root/Menu_Options/Frame/Slot_sfx/Slider_Effects").widget:setValue(_Game.runtimeManager.options:getSoundVolume())
-    self:getNode("root/Menu_Options/Frame/Toggle_Fullscreen").widget:setState(_Game.runtimeManager.options:getFullscreen())
-    self:getNode("root/Menu_Options/Frame/Toggle_Mute").widget:setState(_Game.runtimeManager.options:getMute())
-    ]]
 end
 
 
@@ -264,12 +258,6 @@ end
 ---Translates the current settings of Nodes to the game options and overwrites them.
 function UI2Manager:optionsSave()
     -- TODO: HARDCODED - make it more flexible
-    --[[
-    _Game.runtimeManager.options:setMusicVolume(self:getNode("root/Menu_Options/Frame/Slot_music/Slider_Music").widget.value)
-    _Game.runtimeManager.options:setSoundVolume(self:getNode("root/Menu_Options/Frame/Slot_sfx/Slider_Effects").widget.value)
-    _Game.runtimeManager.options:setFullscreen(self:getNode("root/Menu_Options/Frame/Toggle_Fullscreen").widget.state)
-    _Game.runtimeManager.options:setMute(self:getNode("root/Menu_Options/Frame/Toggle_Mute").widget.state)
-    ]]
 end
 
 

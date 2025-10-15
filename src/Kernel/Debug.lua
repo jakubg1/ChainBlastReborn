@@ -357,10 +357,10 @@ end
 function Debug:getDebugOptions()
 	local s = ""
 
-	s = s .. "MusicVolume = " .. tostring(_Game.runtimeManager.options:getMusicVolume()) .. "\n"
-	s = s .. "SoundVolume = " .. tostring(_Game.runtimeManager.options:getSoundVolume()) .. "\n"
-	s = s .. "FullScreen = " .. tostring(_Game.runtimeManager.options:getFullscreen()) .. "\n"
-	s = s .. "Mute = " .. tostring(_Game.runtimeManager.options:getMute()) .. "\n"
+	s = s .. "MusicVolume = " .. tostring(_Game.runtimeManager.options:getSetting("musicVolume")) .. "\n"
+	s = s .. "SoundVolume = " .. tostring(_Game.runtimeManager.options:getSetting("soundVolume")) .. "\n"
+	s = s .. "FullScreen = " .. tostring(_Game.runtimeManager.options:getSetting("fullscreen")) .. "\n"
+	s = s .. "Mute = " .. tostring(_Game.runtimeManager.options:getSetting("mute")) .. "\n"
 	s = s .. "\n"
 	s = s .. "EffMusicVolume = " .. tostring(_Game.runtimeManager.options:getEffectiveMusicVolume()) .. "\n"
 	s = s .. "EffSoundVolume = " .. tostring(_Game.runtimeManager.options:getEffectiveSoundVolume()) .. "\n"

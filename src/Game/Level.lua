@@ -110,13 +110,13 @@ end
 ---Updates the inactivity pause mechanism.
 ---@param dt number Time delta in seconds.
 function Level:updateInactivityPause(dt)
-    -- Halt the inactivity pausing when the timer is not ticking yet (level not started or a long combo)
-    -- or when the player is currently dragging through chains.
-    if not self:isTimerTicking() or self.board:isSelectionActive() then
+    -- Halt the inactivity pausing when the timer is not ticking yet (level not started or a long combo),
+    -- when the player is currently dragging through chains,
+    -- or when the inactivity pause is disabled in settings.
+    if not self:isTimerTicking() or self.board:isSelectionActive() or not _Game.runtimeManager.options:getSetting("autoPause") then
         return
     end
     -- Pause the game when 3 seconds from any mouse movement have passed.
-    -- TODO: This might be annoying and should be able to be turned off from the settings menu.
     if self.lastMousePos == _MousePos then
         self.mouseIdleTime = self.mouseIdleTime + dt
         if not self.pause and self.mouseIdleTime > 3 then

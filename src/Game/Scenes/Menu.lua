@@ -91,7 +91,7 @@ function Menu:draw()
     end
     love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
     -- Stars
-    if self.introStep == 2 then
+    if self.introStep == 2 and not _Game.runtimeManager.options:getSetting("reducedParticles") then
         for i, star in ipairs(self.stars) do
             star:draw()
         end
