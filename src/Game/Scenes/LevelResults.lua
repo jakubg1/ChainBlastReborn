@@ -85,9 +85,10 @@ function LevelResults:draw()
         self.font:draw("Time Bonus:", Vec2(xLeft, 80), Vec2(0, 0.5))
     end
     if self.time > 2.5 then
+        local bonus = self.level:getTimeBonus()
         local text = "No Bonus!"
-        if not self.level.lost then
-            text = string.format("%.1fs = %s", self.level.time, self.level:getTimeBonus())
+        if bonus > 0 then
+            text = string.format("%.1fs = %s", self.level.time, bonus)
         end
         self.font:draw(text, Vec2(xRight, 80), Vec2(1, 0.5), Color(1, 1, 0))
     end

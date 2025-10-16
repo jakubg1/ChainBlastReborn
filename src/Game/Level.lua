@@ -262,11 +262,17 @@ end
 
 ---Starts counting time down in this level.
 function Level:startTimer()
-    if self.timeCounting or self.game.player.disableTimeLimit then
+    if self.timeCounting or self:isTimerDisabled() then
         return
     end
     self.timeCounting = true
     _Game:playSound("sound_events/clock.json")
+end
+
+---Returns `true` if the timer has been disabled, either in the level itself, or in the handicap settings.
+---@return boolean
+function Level:isTimerDisabled()
+    return _Game.runtimeManager.options:getSetting("handicapTime")
 end
 
 ---Returns `true` if the time in this level is ticking down.
@@ -424,6 +430,9 @@ end
 ---Returns the current total time bonus the player will get based on the current timer value.
 ---@return integer
 function Level:getTimeBonus()
+    if self:isTimerDisabled() then
+        return 0
+    end
     return math.ceil(self.time * 10) * 30
 end
 

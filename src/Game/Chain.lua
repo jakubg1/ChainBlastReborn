@@ -474,7 +474,9 @@ function Chain:damage()
     else
         if self.type == "crate" then
             self:flash(0.1)
-            _Game.game:spawnParticle(self:getCenterPos(), "chip", 5, 2, 0)
+            if not _Game.runtimeManager.options:getSetting("reducedParticles") then
+                _Game.game:spawnParticle(self:getCenterPos(), "chip", 5, 2, 0)
+            end
             self.crateDestroySound:play()
             _Game.game:shakeScreen(1, nil, 20, 0.15)
         end
@@ -497,6 +499,9 @@ end
 ---Spawns some power particles which go to the power meter.
 ---@param amount integer Amount of particles to be spawned.
 function Chain:spawnPowerParticles(amount)
+    if _Game.runtimeManager.options:getSetting("reducedParticles") then
+        return
+    end
     -- TODO: Better way to store power colors and crystal position?
     local color = self.board.level.ui.POWER_METER_COLORS[self.color]
     _Game.game:spawnParticle(self:getCenterPos(), "power_spark", amount, 4, 0, color, self.board.level.ui.POWER_CRYSTAL_CENTER_POS)
@@ -544,21 +549,23 @@ function Chain:destroy(delay)
 
     -- Spawn some particles.
     local pos = self:getCenterPos()
+    local reduce = _Game.runtimeManager.options:getSetting("reducedParticles")
     if self.type == "chain" then
-        for i = 1, 8 do
-            --_Game.game:spawnParticle(pos + Vec2(math.random() * 5):rotate(math.random() * math.pi * 2), "spark")
-        end
         if _Game.game.settings.chainExplosionStyle == "legacy" then
             _Game.game:spawnParticle(pos, "chain_explosion")
-            _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame())
+            if not reduce then
+                _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame())
+            end
         elseif _Game.game.settings.chainExplosionStyle == "new" then
             _Game.game:spawnParticle(pos, "flare")
         end
+        --_Game.game:spawnParticle(pos, "spark", 8, 0, 3)
     elseif self.type == "crate" then
-        _Game.game:spawnParticle(pos, "chip", 20, 2, 0)
-        _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame(), 4)
-        for i = 1, 4 do
-            --_Game.game:spawnParticle(pos + Vec2(math.random() * 5):rotate(math.random() * math.pi * 2), "spark")
+        _Game.game:spawnParticle(pos, "chain_explosion")
+        if not reduce then
+            _Game.game:spawnParticle(pos, "chip", 20, 2, 0)
+            _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame(), 4)
+            --_Game.game:spawnParticle(pos, "spark", 4, 0, 3)
         end
     end
 

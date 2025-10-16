@@ -176,7 +176,9 @@ function Tile:breakIceLevel()
     self.iceBreakSound:play()
     local pos = self:getPos() + Vec2(7)
     -- 7 is the ice tile, 2 is the full ice stage.
-    _Game.game:spawnParticleFragments(pos, "", self.sprite, 7, 2, 4)
+    if not _Game.runtimeManager.options:getSetting("reducedParticles") then
+        _Game.game:spawnParticleFragments(pos, "", self.sprite, 7, 2, 4)
+    end
     -- Add to the timer.
     self.board.level:addTime(0.5)
 end

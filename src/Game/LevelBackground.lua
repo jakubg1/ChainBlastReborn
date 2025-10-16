@@ -59,7 +59,7 @@ function LevelBackground:draw()
 
     -- Draw the flash.
     if self.flashAlpha then
-        love.graphics.setColor(1, 1, 1, self.flashAlpha)
+        love.graphics.setColor(1, 1, 1, self.flashAlpha * _Game.runtimeManager.options:getSetting("screenFlashStrength"))
         love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
     end
 end

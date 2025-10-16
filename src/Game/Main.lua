@@ -66,7 +66,7 @@ function GameMain:updateScreenshake(dt)
 	-- Remove all finished shakes.
 	_Utils.removeDeadObjects(self.screenShakes)
 	-- Round the screen shake value.
-	self.screenShakeTotal = (self.screenShakeTotal + 0.5):floor()
+	self.screenShakeTotal = (self.screenShakeTotal + 0.5):floor() * _Game.runtimeManager.options:getSetting("screenShakeStrength")
 end
 
 ---Spawns a new Particle.

@@ -38,7 +38,7 @@ function MenuSettings:new(scene)
         {
             name = "Handicap",
             contents = {
-                {name = "Disable Timer", type = "checkbox", key = "handicapTime", description = "If this is turned on, there will be no time limits on any levels\nin this game. There is no penalty for doing this;\nhowever, in the future, achievements will be disabled if any\nof the handicap settings are turned on."}
+                {name = "Disable Time Limit", type = "checkbox", key = "handicapTime", description = "If this is turned on, there will be no time limits on any levels\nin this game. There is no penalty for doing this;\nhowever, in the future, achievements will be disabled if any\nof the handicap settings are turned on."}
             }
         }
     }

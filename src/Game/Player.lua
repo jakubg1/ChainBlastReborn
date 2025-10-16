@@ -12,7 +12,6 @@ function Player:new(game)
     self.score = 0
     self.level = 1 -- math.random(1, 10)
     self.lives = 3
-    self.disableTimeLimit = false
 
     self.largestGroup = 0
     self.maxCombo = 0

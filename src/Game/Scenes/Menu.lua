@@ -102,7 +102,7 @@ function Menu:draw()
     -- Intro flash
     if self.introStep == 2 then
         if self.introTime then
-            love.graphics.setColor(1, 1, 1, 2 - self.introTime)
+            love.graphics.setColor(1, 1, 1, _Utils.clamp(2 - self.introTime) * _Game.runtimeManager.options:getSetting("screenFlashStrength"))
             love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
         end
     end

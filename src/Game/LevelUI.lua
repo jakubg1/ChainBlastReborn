@@ -210,7 +210,7 @@ function LevelUI:drawHUD()
     end
 
     -- Timer
-    if not self.game.player.disableTimeLimit then
+    if not self.level:isTimerDisabled() then
         self.font:draw("Time", Vec2(35, 20), Vec2(0.5, 0), nil, self.hudAlpha)
         -- Bar
         local t = math.min(self.level.time / self.level.maxTime, 1)
