@@ -1,4 +1,5 @@
 {
     "$schema": "../../../schemas/sound_event.json",
-    "sound": "sounds/game_over_T.wav"
+    "sound": "sounds/game_over_T.wav",
+    "volumeCategory": "musicCue"
 }

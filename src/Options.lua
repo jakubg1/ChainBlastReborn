@@ -46,8 +46,12 @@ function Options:getEffectiveMusicVolume()
 end
 
 ---Returns `0` if the mute flag is set, else the current sound volume.
+---@param category string? The sound category for which the volume should be calculated.
 ---@return number
-function Options:getEffectiveSoundVolume()
+function Options:getEffectiveSoundVolume(category)
+	if category == "musicCue" then
+		return self.data.mute and 0 or self.data.musicCueVolume * self.data.globalVolume
+	end
 	return self.data.mute and 0 or self.data.soundVolume * self.data.globalVolume
 end
 

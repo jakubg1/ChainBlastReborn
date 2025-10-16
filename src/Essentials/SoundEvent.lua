@@ -25,6 +25,7 @@ function SoundEvent:new(data, path)
         entry.pitch = Expression(data.pitch or 1)
         entry.loop = data.loop or false
         entry.flat = data.flat or false
+        entry.volumeCategory = data.volumeCategory
         entry.playsPerFrame = data.playsPerFrame
         entry.playsThisFrame = 0
         entry.instanceCount = data.instances or 8
@@ -41,7 +42,8 @@ function SoundEvent:new(data, path)
             entry.pitch = Expression(snd.pitch or 1)
             entry.loop = snd.loop or false
             entry.flat = snd.flat or false
-            entry.playsPerFrame = data.playsPerFrame
+            entry.volumeCategory = snd.volumeCategory
+            entry.playsPerFrame = snd.playsPerFrame
             entry.playsThisFrame = 0
             entry.instanceCount = snd.instances or 8
             entry.instances = {}
@@ -116,6 +118,7 @@ function SoundEvent:play(pos)
                 instance:setPitch(entry.pitch:evaluate())
                 instance:setPos(not entry.flat and pos)
                 instance:setLoop(entry.loop)
+                instance:setVolumeCategory(entry.volumeCategory)
                 if instance:isPlaying() then
                     instance:stop()
                 end

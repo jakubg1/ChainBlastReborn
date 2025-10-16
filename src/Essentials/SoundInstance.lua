@@ -15,6 +15,7 @@ function SoundInstance:new(instance)
   self.sound = instance
 
   self.volume = 1
+  self.volumeCategory = nil
   self.pos = _Game:getNativeResolution() / 2
 end
 
@@ -23,7 +24,7 @@ end
 ---Updates a Sound Instance, so it can adapt to the game volume.
 ---@param dt number Time delta in seconds.
 function SoundInstance:update(dt)
-	self.sound:setVolume(_Game.runtimeManager.options:getEffectiveSoundVolume() * self.volume)
+	self.sound:setVolume(_Game.runtimeManager.options:getEffectiveSoundVolume(self.volumeCategory) * self.volume)
 end
 
 
@@ -73,6 +74,14 @@ end
 ---@param loop boolean Whether the Instance should be looping.
 function SoundInstance:setLoop(loop)
   self.sound:setLooping(loop)
+end
+
+---Sets the volume category to be used by this sound.
+---This determines which setting is responsible for setting the sound volume.
+---`nil` is a valid sound category and is the default.
+---@param category string? The volume category.
+function SoundInstance:setVolumeCategory(category)
+  self.volumeCategory = category
 end
 
 
