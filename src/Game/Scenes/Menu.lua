@@ -1,6 +1,7 @@
 local class = require "com.class"
 local MenuMain = require("src.Game.Scenes.MenuMain")
 local MenuSettings = require("src.Game.Scenes.MenuSettings")
+local MenuCredits = require("src.Game.Scenes.MenuCredits")
 local MenuStar = require("src.Game.Scenes.MenuStar")
 
 ---@class Menu
@@ -34,6 +35,11 @@ end
 ---Goes to the settings screen.
 function Menu:goToSettings()
     self.screen = MenuSettings(self)
+end
+
+---Goes to the credits screen.
+function Menu:goToCredits()
+    self.screen = MenuCredits(self)
 end
 
 ---Ends this scene and starts a level.

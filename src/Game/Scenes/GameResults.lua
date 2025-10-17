@@ -32,6 +32,13 @@ function GameResults:isFinished()
     return self.time > 4.5
 end
 
+---Skips the game results animation.
+function GameResults:skip()
+    self.time = 5
+    self.soundStep = #self.SOUND_STEPS
+    _Game:playSound("sound_events/ui_select.json")
+end
+
 ---Updates the Game Results animation.
 ---@param dt number Time delta in seconds.
 function GameResults:update(dt)
@@ -54,7 +61,7 @@ function GameResults:draw()
         self.font:draw("Chains Destroyed:", Vec2(xLeft, 40), Vec2(0, 0.5))
     end
     if self.time > 1.3 then
-        self.font:draw(tostring(_Game.chainsDestroyed), Vec2(xRight, 40), Vec2(1, 0.5), Color(1, 1, 0))
+        self.font:draw(tostring(self.game.player.chainsDestroyed), Vec2(xRight, 40), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > 1.6 then
         self.font:draw("Largest Link:", Vec2(xLeft, 50), Vec2(0, 0.5))
@@ -72,7 +79,9 @@ function GameResults:draw()
         self.font:draw("Attempts per Level:", Vec2(xLeft, 70), Vec2(0, 0.5))
     end
     if self.time > 2.5 then
-        --self.font:draw(string.format("%s / %s  %.2f", _Game.levelsStarted, _Game.levelsBeaten + 1, _Game.levelsStarted / (_Game.levelsBeaten + 1)), Vec2(xRight, 70), Vec2(1, 0.5), Color(1, 1, 0))
+        local started = self.game.player.levelsStarted
+        local beaten = self.game.player.levelsCompleted
+        self.font:draw(string.format("%s / %s  %.2f", started, beaten, started / beaten), Vec2(xRight, 70), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > 2.8 then
         self.font:draw("Total Time:", Vec2(xLeft, 80), Vec2(0, 0.5))
@@ -103,10 +112,12 @@ end
 function GameResults:mousepressed(x, y, button)
     if button == 1 then
         if self:isFinished() then
-            --_Game:endGame()
             self.game.sceneManager:changeScene("menu")
             self.game.sceneManager:endLevel()
+            self.game.player:resetSession()
             _Game:playSound("sound_events/ui_select.json")
+        else
+            self:skip()
         end
     end
 end

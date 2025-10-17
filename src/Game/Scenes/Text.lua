@@ -480,7 +480,7 @@ end
 --- - When the text is drawn in the simple mode, a magenta line will be drawn above the text.
 function Text:drawDebug()
     local pos = self:getPos()
-    local colors = {_COLORS.blue, _COLORS.green, _COLORS.red, _COLORS.gray}
+    local colors = {_COLORS.aqua, _COLORS.green, _COLORS.red, _COLORS.white}
     for i, chunk in ipairs(self.chunkData) do
         local color = colors[i % 4 + 1]
         love.graphics.setColor(color[1], color[2], color[3], 0.5)

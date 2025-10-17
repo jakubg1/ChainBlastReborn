@@ -93,6 +93,22 @@ function BootScreen:getNativeResolution()
 	return self.nativeResolution
 end
 
+---Plays a sound and returns its instance for modification.
+---Don't use. This is just a dummy function to silence warnings.
+---@param name string|SoundEvent The name of the Sound Effect to be played.
+---@param pos Vector2? The position of the sound.
+---@return SoundInstance
+function BootScreen:playSound(name, pos)
+	-- TODO: Unmangle this code. Will the string representation be still necessary after we fully move to Config Classes?
+	if type(name) == "string" then
+---@diagnostic disable-next-line: undefined-field
+		return self.resourceManager:getSoundEvent(name):play(pos)
+	else
+---@diagnostic disable-next-line: return-type-mismatch
+		return name:play(pos)
+	end
+end
+
 
 
 function BootScreen:mousepressed(x, y, button)

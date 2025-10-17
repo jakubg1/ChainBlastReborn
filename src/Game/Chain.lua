@@ -114,7 +114,6 @@ function Chain:update(dt)
                 self.visualCoords.y = self.fallTarget.y
                 self.fallTarget = nil
                 self.fallSpeed = 0
-                self.board.fallingObjectCount = self.board.fallingObjectCount - 1
                 _Game:playSound("sound_events/chain_land.json")
             end
         end
@@ -133,7 +132,6 @@ function Chain:update(dt)
             self.shuffleStart = nil
             self.shuffleTarget = nil
             self.shuffleTime = 0
-            self.board.shufflingChainCount = self.board.shufflingChainCount - 1
         end
     end
 
@@ -405,9 +403,6 @@ end
 ---@param coords Vector2 The target position for this Chain to fall to. The X component is ignored.
 ---@param delay number? If specified, the chain will wait this amount of seconds before starting to fall.
 function Chain:fallTo(coords, delay)
-    if not self.fallTarget then
-        self.board.fallingObjectCount = self.board.fallingObjectCount + 1
-    end
     self.fallTarget = coords
     self.fallDelay = delay
     self.coords = coords
@@ -420,9 +415,6 @@ end
 ---Use `Board:shuffleChain()` instead.
 ---@param coords Vector2 The new chain position.
 function Chain:shuffleTo(coords)
-    if not self.shuffleTarget then
-        self.board.shufflingChainCount = self.board.shufflingChainCount + 1
-    end
     self.shuffleStart = self.visualCoords
     self.shuffleTarget = coords
     self.shuffleTime = love.math.random() * -0.5
@@ -441,7 +433,6 @@ end
 
 ---Starts the release animation for this Chain.
 function Chain:release()
-    self.board.fallingObjectCount = self.board.fallingObjectCount + 1
     self.releasePos = self:getPos()
     self.releaseSpeed = Vec2(love.math.random() * 75 - 37.5, love.math.random() * -37.5 - 75)
     self.releaseTime = 0
@@ -519,23 +510,12 @@ function Chain:destroy(delay)
 
     -- Handle the delay parameter.
     if delay then
-        if not self.destroyDelay then
-            self.board.primedObjectCount = self.board.primedObjectCount + 1
-        end
         self.destroyDelay = delay
         return
     end
 
     -- Mark as dead.
     self.delQueue = true
-
-    -- Decrement board-specific counters.
-    if self.fallTarget then
-        self.board.fallingObjectCount = self.board.fallingObjectCount - 1
-    end
-    if self.destroyDelay then
-        self.board.primedObjectCount = self.board.primedObjectCount - 1
-    end
 
     -- Use a powerup.
     if self.powerup == "bomb" then
@@ -580,6 +560,23 @@ function Chain:destroy(delay)
     elseif self.type == "crate" then
         _Game.game:shakeScreen(2, nil, 20, 0.15)
     end
+
+    -- Update the statistics.
+    if self.type == "chain" then
+        _Game.game.player.chainsDestroyed = _Game.game.player.chainsDestroyed + 1
+    end
+end
+
+---Returns whether the chain is currently falling.
+---@return boolean
+function Chain:isFalling()
+    return self.fallTarget ~= nil
+end
+
+---Returns whether this board object is currently being shuffled.
+---@return boolean
+function Chain:isShuffling()
+    return self.shuffleTarget ~= nil
 end
 
 ---Returns whether this Chain is primed, which means that it is scheduled for destruction.

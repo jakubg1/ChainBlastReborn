@@ -345,9 +345,8 @@ end
 
 function Debug:getDebugBoard(board)
 	local s = ""
-	
+
 	s = s .. "FallingObjectCount = " .. tostring(board.fallingObjectCount) .. "\n"
-	s = s .. "RotatingChainCount = " .. tostring(board.rotatingChainCount) .. "\n"
 	s = s .. "ShufflingChainCount = " .. tostring(board.shufflingChainCount) .. "\n"
 	s = s .. "PrimedObjectCount = " .. tostring(board.primedObjectCount) .. "\n"
 
@@ -378,8 +377,9 @@ function Debug:getDebugInfo()
 		s = s .. self:getDebugParticle()
 	end
 	s = s .. "\n===== BOARD =====\n"
-	if _Game.game and _Game.game.scene and _Game.game.scene.board then
-		s = s .. self:getDebugBoard(_Game.game.scene.board)
+	local level = _Game.game.sceneManager:getLevel()
+	if level and level.board then
+		s = s .. self:getDebugBoard(level.board)
 	end
 	s = s .. "\n===== OPTIONS =====\n"
 	if _Game.runtimeManager then

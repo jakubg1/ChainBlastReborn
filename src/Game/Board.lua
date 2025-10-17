@@ -114,6 +114,7 @@ function Board:new(level)
 
     self.playerControl = true
     self.over = false
+    self.won = false
     self.hoverCoords = nil
     self.visualHoverCoords = nil
     self.mode = "select" -- `"select"` is the usual one, but can be `"bomb"` or `"lightning"` when a power is active.
@@ -121,11 +122,6 @@ function Board:new(level)
 	self.lastSelectStart = nil
     self.hintTime = 0
     self.hintCoords = nil
-
-    self.fallingObjectCount = 0
-    self.shufflingChainCount = 0
-    self.rotatingChainCount = 0
-    self.primedObjectCount = 0
 
     self.startAnimation = 0
     self.endAnimation = nil
@@ -164,7 +160,10 @@ function Board:update(dt)
     end
 
     -- Game control
-    if self.fallingObjectCount > 0 or self.shufflingChainCount > 0 or self.primedObjectCount > 0 or self.over then
+    local fallingObjects = self:countFallingObjects()
+    local shufflingObjects = self:countShufflingObjects()
+    local primedObjects = self:countPrimedObjects()
+    if fallingObjects > 0 or shufflingObjects > 0 or primedObjects > 0 or self.over then
         self.playerControl = false
         if self:isSelectionActive() then
             self.selection:finish(true)
@@ -172,14 +171,19 @@ function Board:update(dt)
         end
     end
 
-    if not self.playerControl and self.fallingObjectCount == 0 and self.shufflingChainCount == 0 and self.rotatingChainCount == 0 and self.primedObjectCount == 0 and not self.over then
+    if not self.playerControl and fallingObjects == 0 and shufflingObjects == 0 and primedObjects == 0 and not self.over and not self.won then
         -- Do another shot.
         self:handleMatches()
-        if self.fallingObjectCount == 0 and self.shufflingChainCount == 0 and self.rotatingChainCount == 0 and self.primedObjectCount == 0 then
+        -- We need to recalculate the object counts here because we might have just destroyed something and something started falling, etc.
+        fallingObjects = self:countFallingObjects()
+        shufflingObjects = self:countShufflingObjects()
+        primedObjects = self:countPrimedObjects()
+        if fallingObjects == 0 and shufflingObjects == 0 and primedObjects == 0 then
             -- Nothing happened, grant the control to the player.
             if self:isTargetReached() then
                 self:releaseChains()
                 self.level:win()
+                self.won = true
             elseif not self:areMovesAvailable() then
                 self:shuffle()
             else
@@ -524,6 +528,53 @@ end
 ---@return boolean
 function Board:isSelectionActive()
     return self.selection ~= nil
+end
+
+
+
+---Returns the number of board objects currently falling.
+---@return integer
+function Board:countFallingObjects()
+    local count = 0
+    for x = 1, self.size.x do
+        for y = 1, self.size.y do
+            local chain = self:getChain(Vec2(x, y))
+            if chain and chain:isFalling() then
+                count = count + 1
+            end
+        end
+    end
+    return count
+end
+
+---Returns the number of board objects currently being shuffled.
+---@return integer
+function Board:countShufflingObjects()
+    local count = 0
+    for x = 1, self.size.x do
+        for y = 1, self.size.y do
+            local chain = self:getChain(Vec2(x, y))
+            if chain and chain:isShuffling() then
+                count = count + 1
+            end
+        end
+    end
+    return count
+end
+
+---Returns the number of primed board objects.
+---@return integer
+function Board:countPrimedObjects()
+    local count = 0
+    for x = 1, self.size.x do
+        for y = 1, self.size.y do
+            local chain = self:getChain(Vec2(x, y))
+            if chain and chain:isPrimed() then
+                count = count + 1
+            end
+        end
+    end
+    return count
 end
 
 

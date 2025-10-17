@@ -16,6 +16,23 @@ function Player:new(game)
     self.largestGroup = 0
     self.maxCombo = 0
     self.timeElapsed = 0
+    self.chainsDestroyed = 0
+    self.levelsStarted = 0
+    self.levelsCompleted = 0
+end
+
+---Resets all player progress.
+---TODO: Session class.
+function Player:resetSession()
+    self.score = 0
+    self.level = 1
+    self.lives = 3
+    self.largestGroup = 0
+    self.maxCombo = 0
+    self.timeElapsed = 0
+    self.chainsDestroyed = 0
+    self.levelsStarted = 0
+    self.levelsCompleted = 0
 end
 
 ---Advances the player to the next level.

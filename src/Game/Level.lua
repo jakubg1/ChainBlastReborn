@@ -53,6 +53,7 @@ function Level:new(game)
     self.dangerMusic = _Game.resourceManager:getMusic("music_tracks/danger_music.json")
 
     _Game:playSound("sound_events/level_start.json")
+    self.game.player.levelsStarted = self.game.player.levelsStarted + 1
     self.levelMusic:stop()
     self.levelMusic:play()
 end
@@ -153,7 +154,7 @@ end
 ---@param dt number Time delta in seconds.
 function Level:updateBombs(dt)
     -- No bomb spawning happens when the bomb meter is not engaged or when a shuffle is in progress.
-    if not self.bombMeterTime or self.board.shufflingChainCount > 0 then
+    if not self.bombMeterTime or self.board:countShufflingObjects() > 0 then
         return
     end
     -- Every 0.5 seconds, spawn a bomb (check if we moved into another interval).
@@ -412,6 +413,7 @@ function Level:win()
     self.levelMusic:stop(0.25)
     self.dangerMusic:stop(0.25)
     self.game.sceneManager:changeScene("level_complete", true, true)
+    self.game.player.levelsCompleted = self.game.player.levelsCompleted + 1
 end
 
 ---Loses this Level by stopping the music, playing the level lose sound, starting the lose animation and panicking the board.

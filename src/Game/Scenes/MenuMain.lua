@@ -99,6 +99,7 @@ function MenuMain:update(dt)
             elseif self.selectedOption == 2 then
                 self.scene:goToSettings()
             elseif self.selectedOption == 3 then
+                self.scene:goToCredits()
             elseif self.selectedOption == 4 then
                 love.event.quit()
             end

@@ -54,7 +54,7 @@ function MenuSettings:new(scene)
     self.backToMenuTime = nil -- Starts counting up from 0 if a menu option has been selected.
     -- Build UI.
     self.texts = {
-        header = Text(Vec2(160, 10), {text = "Settings", textAlign = Vec2(0.5, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
+        header = Text(Vec2(160, 10), {text = "Settings", textAlign = Vec2(0.5, 0), color = Color("#4cff4c"), gradientWaveColor = Color("#199919"), gradientWaveFrequency = 200, gradientWaveSpeed = 100, shadowOffset = Vec2(1)}),
         description = Text(Vec2(25, 115), {text = "", textAlign = Vec2(0, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
         back = Text(Vec2(160, 155), {text = "Back to Menu", textAlign = Vec2(0.5, 0), color = Color("#aaaaaa"), shadowOffset = Vec2(1)})
     }
