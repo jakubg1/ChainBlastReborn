@@ -67,7 +67,7 @@ end
 ---This is a purely visual effect and should be used in conjunction with actual logic.
 ---@param pos Vector2 The global onscreen position which is the laser target.
 function LevelUI:shootLaserFromPowerCrystal(pos)
-    self.game:spawnParticle(pos, "laser", nil, nil, nil, nil, self.POWER_CRYSTAL_CENTER_POS)
+    self.game:spawnParticles("power_laser", pos, self.POWER_CRYSTAL_CENTER_POS)
     self:flashPowerCrystal()
 end
 

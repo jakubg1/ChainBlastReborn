@@ -37,7 +37,7 @@ function Bomb:update(dt)
         self.pos = self.targetPos
         self:explode()
     else
-        --_Game.game:spawnParticle(self.pos, "spark")
+        --_Game.game:spawnParticles("missile_trail", self.pos)
     end
 end
 

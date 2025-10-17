@@ -183,7 +183,7 @@ function Particle2:update(dt)
     end
 
     if self.type == "spark" then
-        self.game:spawnParticle(self.pos, "spark_trail", nil, nil, nil, self:getColor())
+        self.game:spawnParticles("spark_trail", self.pos, nil, self:getColor())
     elseif self.type == "lightning" or self.type == "laser" then
         self.pointRegenTime = self.pointRegenTime + dt
         if self.pointRegenTime >= self.pointRegenInterval then

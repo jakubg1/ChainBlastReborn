@@ -261,7 +261,7 @@ function Board:update(dt)
                     end
                 end
             end
-        else
+        elseif self.hoverCoords then
             self.selection:start(self.hoverCoords)
             self.lastSelectStart = self.hoverCoords
         end
@@ -472,7 +472,6 @@ function Board:initializeContents()
             local cellData = self:getCellData(coords)
             if cellData and cellData.tile then
                 self.tiles[i][j] = Tile(self, coords, cellData.tile.type)
-                self.tiles[i][j].gold = cellData.tile.gold
                 self.tiles[i][j]:fadeIn((i + j + 10) * 0.12)
                 backgroundData[i][j] = true
             else
@@ -731,7 +730,6 @@ function Board:handleMatches()
     self.level:startTimer()
 
     for i, match in ipairs(matchGroups) do
-        local nonGoldTileIncluded = false
 		local colors = self:countGroupColors(match)
         local modifiedMatch = self:rearrangeMatchGroup(match, self.lastSelectStart, true)
         for j, group in ipairs(modifiedMatch) do
@@ -765,7 +763,7 @@ function Board:handleMatches()
                 local delay = 0 --0.05
                 chain:destroy((k - 1) * delay)
                 -- Old bomb meter stuff
-                --if tile.gold then
+                --if tile.gold then  -- (DEPRECATED: now it would be something along the lines of `tile:chargesPower()`)
                 --    self.level:addToBombMeter(1)
                 --end
                 -- New (power meter)
@@ -775,15 +773,12 @@ function Board:handleMatches()
                 else
                     chain:spawnPowerParticles(3)
                 end
-                if not tile.gold then
-                    nonGoldTileIncluded = true
-                end
                 tile:impact()
                 -- Remove all adjacent crates.
                 for l = 1, 4 do
                     local adjChain = chain:getNeighborChain(l)
-                    if adjChain and adjChain:canBeBrokenByNearbyMatch(chain.color) then
-                        adjChain:damage()
+                    if adjChain then
+                        adjChain:sideImpact()
                     end
                 end
             end
@@ -797,9 +792,6 @@ function Board:handleMatches()
         end
         self.level.largestGroup = math.max(self.level.largestGroup, #match)
         _Game:playSound("sound_events/match.json")
-        if nonGoldTileIncluded then
-            --_Game:playSound("sound_events/tile_gold.json")
-        end
         -- Shake the screen on combos.
         _Game.game:shakeScreen(self.level.combo * 1, nil, 20, 0.15)
 
@@ -934,7 +926,7 @@ function Board:explodeBomb(coords)
         end
     end
     local pos = self:getTileCenterPos(coords)
-	_Game.game:spawnParticle(pos, "lavalamp", 15, 0, 4)
+	_Game.game:spawnParticles("power_bomb", pos)
     _Game:playSound("sound_events/explosion2.json")
     _Game.game:shakeScreen(9, nil, 35, 0.35)
     self.level.background:flash(0.5, 0.35)
@@ -953,7 +945,7 @@ function Board:explodeLightning(coords, horizontal, vertical)
         end
         local p1 = self:getTileCenterPos(Vec2(0, coords.y))
         local p2 = self:getTileCenterPos(Vec2(self.size.x + 1, coords.y))
-        _Game.game:spawnParticle(p1, "lightning", 7, nil, nil, nil, p2)
+        _Game.game:spawnParticles("power_lightning", p1, p2)
     end
     if vertical then
         for i = 1, self.size.y do
@@ -961,7 +953,7 @@ function Board:explodeLightning(coords, horizontal, vertical)
         end
         local p1 = self:getTileCenterPos(Vec2(coords.x, 0))
         local p2 = self:getTileCenterPos(Vec2(coords.x, self.size.y + 1))
-        _Game.game:spawnParticle(p1, "lightning", 7, nil, nil, nil, p2)
+        _Game.game:spawnParticles("power_lightning", p1, p2)
     end
     _Game:playSound("sound_events/powerup_lightning.json")
     _Game.game:shakeScreen(9, nil, 15, 0.25)
@@ -1043,7 +1035,7 @@ function Board:isTargetReached()
         for j = 1, self.size.y do
             local coords = Vec2(i, j)
             local tile = self:getTile(coords)
-            if tile and not tile.gold then
+            if tile and tile:preventsWin() then
                 return false
             end
         end
@@ -1064,7 +1056,7 @@ function Board:getRandomNonGoldTileCoords(excludedCoords)
             local coords = Vec2(i, j)
             if not excludedCoords or not _Utils.isValueInTable(excludedCoords, coords) then
                 local tile = self:getTile(coords)
-                if tile and not tile.gold then
+                if tile and tile:preventsWin() then
                     table.insert(tiles, coords)
                 end
             end

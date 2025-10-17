@@ -26,7 +26,6 @@ function LevelConfig:new(data, path)
         if data.key[n].tile then
             self.key[n].tile = {}
             self.key[n].tile.type = u.parseString(data.key[n].tile.type, path, "key." .. tostring(n) .. ".tile.type")
-            self.key[n].tile.gold = u.parseBooleanOpt(data.key[n].tile.gold, path, "key." .. tostring(n) .. ".tile.gold") or false
         end
         if data.key[n].chain then
             self.key[n].chain = {}

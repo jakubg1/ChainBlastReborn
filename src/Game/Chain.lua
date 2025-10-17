@@ -5,7 +5,42 @@ local class = require "com.class"
 local Chain = class:derive("Chain")
 
 local Vec2 = require("src.Essentials.Vector2")
-local Color = require("src.Essentials.Color")
+
+-- TODO: Extract board object types to resource files.
+-- TODO: Finish and implement.
+local CHAIN_TYPES = {
+    chain = {
+        affectedByGravity = true,
+        selectable = true,
+        shufflable = true,
+        canMatch = true,
+        canConnect = true,
+        rotateSound = "sound_events/chain_rotate.json",
+        onDestroy = {
+            particle = "chain_destroy",
+            --screenShake = {power = 0.5, frequency = 20, duration = 0.15},
+            spawnChainParticles = true,
+            countChainDestroyed = true
+        }
+    },
+    crate = {
+        onNearbyMatch = {
+            damage = 1
+        },
+        onDamage = {
+            sound = "sound_events/crate_destroy.json",
+            flash = 0.1,
+            particle = "crate_damage",
+            screenShake = {power = 1, frequency = 20, duration = 0.15}
+        },
+        onDestroy = {
+            sound = "sound_events/crate_destroy.json",
+            particle = "crate_destroy",
+            screenShake = {power = 2, frequency = 20, duration = 0.15},
+            spawnCrateParticles = true
+        }
+    }
+}
 
 ---Constructs a new Chain. Chains can be chains or can be any other object that occupies a chain space in the game, such as a crate, a rock, etc.
 ---@param board Board The board this Chain belongs to.
@@ -16,6 +51,8 @@ function Chain:new(board, coords, type)
     -- Logical position of the Chain. This is used for match calculation, etc.
     self.coords = coords
     self.type = type
+
+    self.config = CHAIN_TYPES[type]
 
     -- 1 = straight, 2 = cross
     self.shape = math.random() < 1/15 and 2 or 1
@@ -72,19 +109,16 @@ function Chain:new(board, coords, type)
         {pos = Vec2(6, 9), state = 1, rot = 0},
         {pos = Vec2(5, 6), state = 1, rot = math.pi / 2}
     }
-    self.crateSprite = _Game.resourceManager:getSprite("sprites/crate.json")
     self.crateSprites = {
+        [0] = _Game.resourceManager:getSprite("sprites/crate.json"),
         _Game.resourceManager:getSprite("sprites/crate_red.json"),
         _Game.resourceManager:getSprite("sprites/crate_blue.json"),
         _Game.resourceManager:getSprite("sprites/crate_yellow.json")
     }
-    self.crateDestroySound = _Game.resourceManager:getSoundEvent("sound_events/crate_destroy.json")
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
 
     self.delQueue = false
 end
-
-
 
 ---Updates the Chain.
 ---@param dt number Time delta in seconds.
@@ -191,20 +225,15 @@ function Chain:update(dt)
     end
 end
 
-
-
 ---Whether this Chain color can be connected with the given color.
 ---@param color integer The color to be checked with.
 ---@return boolean
 function Chain:matchesWithColor(color)
-    if self.type ~= "chain" then
-        -- Boxes cannot match with any color.
+    if not self.config.canMatch then
         return false
     end
     return self.color == color or self.color == 0 or color == 0
 end
-
-
 
 ---Returns a neighboring chain in the given direction.
 ---@param direction integer The direction to look in. 1 is up, then clockwise.
@@ -213,14 +242,11 @@ function Chain:getNeighborChain(direction)
     return self.board:getChain(self.coords + self.board.DIRECTIONS[direction])
 end
 
-
-
 ---Whether this Chain is able to connect to other chains in the given direction.
 ---@param direction integer The direction to look in. 1 is up, then clockwise.
 ---@return boolean
 function Chain:hasConnection(direction)
-    if self.type ~= "chain" then
-        -- Boxes have no connections.
+    if not self.config.canConnect then
         return false
     end
     if self.shape == 2 then
@@ -232,8 +258,6 @@ function Chain:hasConnection(direction)
         return direction % 2 == 0
     end
 end
-
-
 
 ---Returns whether this Chain is connected with its neighbor in the given direction.
 ---@param direction integer The direction to look in. 1 is up, then clockwise.
@@ -251,8 +275,6 @@ function Chain:isConnected(direction)
     -- And finally, both colors must match.
     return self:matchesWithColor(neighbor.color)
 end
-
-
 
 ---Returns whether this Chain is *visually* connected with its neighbor in the given direction.
 ---This differs from `:isConnected()`, because the chain can be connected without showing its link.
@@ -285,8 +307,6 @@ function Chain:isVisuallyConnected(direction)
     return self:isConnected(direction)
 end
 
-
-
 ---Returns a list of coordinates of all chains connected together that involve this chain.
 ---@param excludedCoords table? Utility parameter used only in recursive calls. Do not set.
 ---@return table
@@ -307,8 +327,6 @@ function Chain:getGroup(excludedCoords)
     return excludedCoords
 end
 
-
-
 ---Returns whether this Chain alongside with its neighbors can make a group of at least 3 chains.
 ---@param directions table? Utility parameter used only in recursive calls. Do not set.
 ---@return boolean
@@ -325,7 +343,7 @@ function Chain:canMakeMatch(directions)
     local potentialConnections = 0
     for i, direction in ipairs(directions) do
         local chain = self:getNeighborChain(direction)
-        if chain and chain.type == "chain" and self:matchesWithColor(chain.color) then
+        if chain and chain.config.canMatch and self:matchesWithColor(chain.color) then
             potentialConnections = potentialConnections + 1
         end
         if potentialConnections >= 2 then
@@ -335,41 +353,23 @@ function Chain:canMakeMatch(directions)
     return false
 end
 
-
-
 ---Returns whether this Chain can fall downwards when there is an empty space below.
 ---@return boolean
 function Chain:canFall()
-    return self.type == "chain"
+    return self.config.affectedByGravity
 end
-
-
 
 ---Returns whether this Chain can be selected by the player.
 ---@return boolean
 function Chain:canBeSelected()
-    return self.type == "chain"
+    return self.config.selectable
 end
-
-
 
 ---Returns whether this Chain can be shuffled.
 ---@return boolean
 function Chain:canBeShuffled()
-    return self.type == "chain"
+    return self.config.shufflable
 end
-
-
-
----Returns whether this Chain can be broken by a nearby match.
----If `true`, the Chain will be destroyed whenever a match occurs on one of its four neighbors.
----@param color integer The neighbor's color this should be checked against (for example, in colored boxes).
----@return boolean
-function Chain:canBeBrokenByNearbyMatch(color)
-    return self.type == "crate" and (self.color == 0 or color == 0 or self.color == color)
-end
-
-
 
 ---Rotates the Chain one step clockwise, or to the given rotation state.
 ---@param rotation integer? The new Chain rotation state.
@@ -380,7 +380,7 @@ function Chain:rotate(rotation, temporary)
 
     if self.rotation ~= newRotation then
         self.rotationAnim = 1
-        _Game:playSound("sound_events/chain_rotate.json")
+        _Game:playSound(self.config.rotateSound)
     end
     self.rotation = newRotation
     if not temporary then
@@ -388,14 +388,10 @@ function Chain:rotate(rotation, temporary)
     end
 end
 
-
-
 ---Restores the previous Chain rotation if it has been temporarily rotated.
 function Chain:unrotate()
     self.rotation = self.savedRotation
 end
-
-
 
 ---Starts the fall animation for this Chain and updates its coordinates.
 ---This function DOES NOT update the position of this Chain on the board.
@@ -408,8 +404,6 @@ function Chain:fallTo(coords, delay)
     self.coords = coords
 end
 
-
-
 ---Starts the shuffle animation for this Chain and updates its coordinates.
 ---This function DOES NOT update the position of this Chain on the board.
 ---Use `Board:shuffleChain()` instead.
@@ -421,15 +415,11 @@ function Chain:shuffleTo(coords)
     self.coords = coords
 end
 
-
-
 ---Sets a Powerup on this Chain.
 ---@param powerup string The powerup ID.
 function Chain:setPowerup(powerup)
     self.powerup = powerup
 end
-
-
 
 ---Starts the release animation for this Chain.
 function Chain:release()
@@ -440,41 +430,16 @@ function Chain:release()
     --self.releaseRotationSpeed = love.math.randomNormal(15, 0)
 end
 
-
-
 ---Starts the panic animation for this Chain (shaking rapidly).
 function Chain:panic()
     self.panicTime = 0
 end
-
-
 
 ---Shakes the chain slightly for the provided duration.
 ---@param duration number The duration of the shake in seconds.
 function Chain:shake(duration)
     self.shakeTime = duration
 end
-
-
-
----Damages this Chain. If its health hits 0, it is also destroyed.
-function Chain:damage()
-    self.health = self.health - 1
-    if self.health == 0 then
-        self:destroy()
-    else
-        if self.type == "crate" then
-            self:flash(0.1)
-            if not _Game.runtimeManager.options:getSetting("reducedParticles") then
-                _Game.game:spawnParticle(self:getCenterPos(), "chip", 5, 2, 0)
-            end
-            self.crateDestroySound:play()
-            _Game.game:shakeScreen(1, nil, 20, 0.15)
-        end
-    end
-end
-
-
 
 ---Flashes the chain white for a specified amount of time.
 ---@param duration number Flash duration in seconds.
@@ -490,15 +455,77 @@ end
 ---Spawns some power particles which go to the power meter.
 ---@param amount integer Amount of particles to be spawned.
 function Chain:spawnPowerParticles(amount)
-    if _Game.runtimeManager.options:getSetting("reducedParticles") then
-        return
-    end
     -- TODO: Better way to store power colors and crystal position?
+    local pos = self:getCenterPos()
+    local pos2 = self.board.level.ui.POWER_CRYSTAL_CENTER_POS
     local color = self.board.level.ui.POWER_METER_COLORS[self.color]
-    _Game.game:spawnParticle(self:getCenterPos(), "power_spark", amount, 4, 0, color, self.board.level.ui.POWER_CRYSTAL_CENTER_POS)
+    for i = 1, amount do
+        -- Because the amount of particles in particle effect data is constant, we have to spawn them one by one.
+        _Game.game:spawnParticles("power_spark", pos, pos2, color)
+    end
 end
 
+---Dispatches effects from this board object being damaged or destroyed, by playing a sound, shaking the screen, spawning particles, etc.
+---@private
+---@param effects table? A table of effects to be executed.
+function Chain:dispatchEffects(effects)
+    if not effects then
+        return
+    end
+    local pos = self:getCenterPos()
+    local reduce = _Game.runtimeManager.options:getSetting("reducedParticles")
+    if effects.flash then
+        self:flash(effects.flash)
+    end
+    if effects.particle then
+        _Game.game:spawnParticles(effects.particle, pos)
+    end
+    if effects.spawnChainParticles then
+        if not reduce and _Game.game.settings.chainExplosionStyle == "legacy" then
+            _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame())
+        end
+    end
+    if effects.spawnCrateParticles then
+        if not reduce then
+            _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame(), 4)
+        end
+    end
+    if effects.sound then
+        _Game:playSound(effects.sound)
+    end
+    if effects.screenShake then
+        _Game.game:shakeScreen(effects.screenShake.power, effects.screenShake.direction, effects.screenShake.frequency, effects.screenShake.duration)
+    end
+    if effects.countChainDestroyed then
+        _Game.game.player.chainsDestroyed = _Game.game.player.chainsDestroyed + 1
+    end
+end
 
+---Damages this Chain. If its health hits 0, it is also destroyed.
+---@param amount integer? How many hit points should be deducted from this object, 1 by default.
+function Chain:damage(amount)
+    amount = amount or 1
+    if amount <= 0 then
+        return
+    end
+    self.health = math.max(self.health - amount, 0)
+    if self.health == 0 then
+        self:destroy()
+    else
+        self:dispatchEffects(self.config.onDamage)
+    end
+end
+
+---Notifies this board object that a match has happened nearby. For crates, this means that they get damaged or destroyed.
+function Chain:sideImpact()
+    local effects = self.config.onNearbyMatch
+    if not effects then
+        return
+    end
+    if effects.damage then
+        self:damage(effects.damage)
+    end
+end
 
 ---Destroys this Chain and marks it as dead (`delQueue = true`). It will be removed from the Board at the end of this frame.
 ---Or, alternatively, marks this Chain to be destroyed after a certain delay. We say this Chain is **primed**.
@@ -527,44 +554,8 @@ function Chain:destroy(delay)
         _Game:playSound("sound_events/powerup_missile.json")
     end
 
-    -- Spawn some particles.
-    local pos = self:getCenterPos()
-    local reduce = _Game.runtimeManager.options:getSetting("reducedParticles")
-    if self.type == "chain" then
-        if _Game.game.settings.chainExplosionStyle == "legacy" then
-            _Game.game:spawnParticle(pos, "chain_explosion")
-            if not reduce then
-                _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame())
-            end
-        elseif _Game.game.settings.chainExplosionStyle == "new" then
-            _Game.game:spawnParticle(pos, "flare")
-        end
-        --_Game.game:spawnParticle(pos, "spark", 8, 0, 3)
-    elseif self.type == "crate" then
-        _Game.game:spawnParticle(pos, "chain_explosion")
-        if not reduce then
-            _Game.game:spawnParticle(pos, "chip", 20, 2, 0)
-            _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame(), 4)
-            --_Game.game:spawnParticle(pos, "spark", 4, 0, 3)
-        end
-    end
-
-    -- Crates play a sound when destroyed.
-    if self.type == "crate" then
-        self.crateDestroySound:play()
-    end
-
-    -- Shake the screen.
-    if self.type == "chain" then
-        --_Game.game:shakeScreen(0.5, nil, 20, 0.15)
-    elseif self.type == "crate" then
-        _Game.game:shakeScreen(2, nil, 20, 0.15)
-    end
-
-    -- Update the statistics.
-    if self.type == "chain" then
-        _Game.game.player.chainsDestroyed = _Game.game.player.chainsDestroyed + 1
-    end
+    -- Dispatch effects: screenshake, particles, sound, stat counting, etc.
+    self:dispatchEffects(self.config.onDestroy)
 end
 
 ---Returns whether the chain is currently falling.
@@ -591,8 +582,6 @@ function Chain:isDead()
     return self.delQueue
 end
 
-
-
 ---Returns the current position this Chain should be drawn at.
 ---@return Vector2
 function Chain:getPos()
@@ -608,23 +597,16 @@ function Chain:getCenterPos()
     return self:getPos() + 7
 end
 
-
-
 ---Returns the Sprite that should be used to draw this Chain on the screen.
 ---@return Sprite
 function Chain:getSprite()
     if self.type == "chain" then
         return self.sprites[self.color]
     elseif self.type == "crate" then
-        if self.color == 0 then
-            return self.crateSprite
-        end
         return self.crateSprites[self.color]
     end
     error(string.format("Illegal chain type: %s", self.type))
 end
-
-
 
 ---Returns the current sprite state of the Chain which should be drawn.
 ---@return integer
@@ -647,8 +629,6 @@ function Chain:getState()
     error(string.format("Illegal chain type: %s", self.type))
 end
 
-
-
 ---Returns the current animation frame of the Chain which should be drawn.
 ---@return integer
 function Chain:getFrame()
@@ -667,8 +647,6 @@ function Chain:getFrame()
     end
     error(string.format("Illegal chain type: %s", self.type))
 end
-
-
 
 ---Draws the Chain on the screen, alongside with its links.
 ---@param offset Vector2? If set, the offset from the actual draw position in pixels. Used for screen shake.
@@ -697,7 +675,5 @@ function Chain:draw(offset)
         end
     end
 end
-
-
 
 return Chain

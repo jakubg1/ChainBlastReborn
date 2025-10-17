@@ -4,14 +4,51 @@ local class = require "com.class"
 ---@overload fun(params):GameMain
 local GameMain = class:derive("GameMain")
 
+local Vec2 = require("src.Essentials.Vector2")
 local Settings = require("src.Game.Settings")
 local Player = require("src.Game.Player")
 local SceneManager = require("src.Game.SceneManager")
 local Particle2 = require("src.Game.Particle2")
 local ChainFragment = require("src.Game.ChainFragment")
 
-local Vec2 = require("src.Essentials.Vector2")
-local Color = require("src.Essentials.Color")
+-- TODO: Extract particle effects to a separate class.
+local PARTICLE_EFFECT_TYPES = {
+	power_bomb = {
+		{type = "lavalamp", amount = 15, rangeMean = 0, rangeDev = 4}
+	},
+	power_lightning = {
+		{type = "lightning", amount = 7}
+	},
+	power_laser = {
+		-- TODO: This is used both as the actual laser powerup strike, as well as the bomb/lightning ignition. Split this off.
+		{type = "laser"}
+	},
+	power_spark = {
+		{type = "power_spark", amount = 1, rangeMean = 0, rangeDev = 2, full = true}
+	},
+	crate_damage = {
+		{type = "chip", amount = 5, rangeMean = 0, rangeDev = 2, full = true}
+	},
+	crate_destroy = {
+		{type = "chain_explosion"},
+		{type = "chip", amount = 20, rangeMean = 0, rangeDev = 2, full = true},
+		--{type = "spark", amount = 4, rangeMean = 0, rangeDev = 3, full = true}
+	},
+	chain_destroy = {
+		{type = "chain_explosion", chainExplosionStyle = "legacy"},
+		{type = "flare", chainExplosionStyle = "new"},
+		--{type = "spark", amount = 8, rangeMean = 0, rangeDev = 3, full = true}
+	},
+	missile_trail = {
+		{type = "spark"}
+	},
+	spark_trail = {
+		{type = "spark_trail"}
+	},
+	debug = {
+		{type = "lavalamp", amount = 15, rangeMean = 0, rangeDev = 4}
+	}
+}
 
 ---Constructs the actual game class.
 ---@param game Game The base game instance.
@@ -70,6 +107,7 @@ function GameMain:updateScreenshake(dt)
 end
 
 ---Spawns a new Particle.
+---@private
 ---@param pos Vector2 The initial position of the Particle.
 ---@param type string The type of the Particle. TODO: Replace with data.
 ---@param amount integer? The amount of Particles of this type to spawn.
@@ -84,6 +122,29 @@ function GameMain:spawnParticle(pos, type, amount, rangeMean, rangeDev, color, p
 			spawnPos = spawnPos + Vec2(love.math.randomNormal(rangeDev, rangeMean), love.math.randomNormal(rangeDev, rangeMean))
 		end
 		table.insert(self.particles, Particle2(self, spawnPos, type, color, pos2))
+	end
+end
+
+---Spawns particles from a particle effect. See `PARTICLE_EFFECT_TYPES` in `src/Game/Main.lua`.
+---@param type string Particle type.
+---@param pos Vector2 Where the particles should be spawned.
+---@param pos2 Vector2? Secondary position, used for specific particles, such as lightning or power sparks.
+---@param color Color? The color of the particles, used for certain particles, such as lightning or power sparks.
+function GameMain:spawnParticles(type, pos, pos2, color)
+	local data = PARTICLE_EFFECT_TYPES[type]
+	for i, item in ipairs(data) do
+		local spawn = true
+		-- Don't spawn an item if the item requires reduced particles to be turned off, but they are turned on.
+		if item.full and _Game.runtimeManager.options:getSetting("reducedParticles") then
+			spawn = false
+		end
+		-- Don't spawn if the chain explosion style doesn't match the current setting.
+		if item.chainExplosionStyle and item.chainExplosionStyle ~= _Game.game.settings.chainExplosionStyle then
+			spawn = false
+		end
+		if spawn then
+			self:spawnParticle(pos, item.type, item.amount, item.rangeMean, item.rangeDev, color, pos2)
+		end
 	end
 end
 
@@ -167,7 +228,7 @@ function GameMain:keypressed(key)
 	self.sceneManager:keypressed(key)
 	-- Debug measures:
 	if key == "p" then
-		_Game.game:spawnParticle(Vec2(200, 100), "lavalamp", 15, 0, 4)
+		_Game.game:spawnParticles("debug", Vec2(200, 100))
 	elseif key == "o" then
 		for i = 1, 10 do
 			_Game:playSound("sound_events/ice_break.json")
