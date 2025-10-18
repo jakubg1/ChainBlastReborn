@@ -39,6 +39,13 @@ function LevelConfig:new(data, path)
     for i = 1, #data.layout do
         self.layout[i] = u.parseString(data.layout[i], path, "layout[" .. tostring(i) .. "]")
     end
+
+    self.spawns = {}
+    for i = 1, #data.spawns do
+        self.spawns[i] = {}
+        self.spawns[i].weight = u.parseInteger(data.spawns[i].weight, path, "spawns[" .. tostring(i) .. "].weight")
+        self.spawns[i].type = u.parseString(data.spawns[i].type, path, "spawns[" .. tostring(i) .. "].type")
+    end
 end
 
 

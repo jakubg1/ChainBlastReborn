@@ -57,7 +57,7 @@ function LevelResults:draw()
     local xMid = 160
     local xRight = 260
     local alpha = math.min(math.max((self.time - 0.5) * 2, 0), 1)
-    self.font:draw(string.format("Level %s", self.level.data.name), Vec2(xMid, 15), Vec2(0.5), nil, alpha)
+    self.font:draw(string.format("Level %s", self.level.config.name), Vec2(xMid, 15), Vec2(0.5), nil, alpha)
     if self.level.lost then
         self.font:draw("Failed!", Vec2(xMid, 25), Vec2(0.5), Color(1, 0, 0), alpha)
     else

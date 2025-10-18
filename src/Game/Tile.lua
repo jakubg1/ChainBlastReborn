@@ -12,6 +12,7 @@ local TILE_TYPES = {
     normal = {
         sprite = {state = 1, frame = 1},
         preventsWin = true,
+        hostsChain = true,
         onDamage = {
             transformTo = "gold",
             goldAnimation = true,
@@ -25,11 +26,13 @@ local TILE_TYPES = {
     },
     gold = {
         sprite = {state = 2, stateAlt = 3, frame = "gold"},
-        preventsWin = false
+        preventsWin = false,
+        hostsChain = true
     },
     flip = {
         sprite = {state = 4, frame = 1},
         preventsWin = true,
+        hostsChain = true,
         onDamage = {
             transformTo = "flip_gold",
             goldAnimation2 = true
@@ -42,6 +45,7 @@ local TILE_TYPES = {
     flip_gold = {
         sprite = {state = 5, frame = 1},
         preventsWin = false,
+        hostsChain = true,
         onDamage = {
             transformTo = "flip"
         }
@@ -49,6 +53,7 @@ local TILE_TYPES = {
     ice = {
         sprite = {state = 7, frame = 2},
         preventsWin = true,
+        hostsChain = true,
         onDamage = {
             transformTo = "ice_broken",
             sound = "sound_events/ice_break.json",
@@ -62,6 +67,7 @@ local TILE_TYPES = {
     ice_broken = {
         sprite = {state = 7, frame = 1},
         preventsWin = true,
+        hostsChain = true,
         onDamage = {
             transformTo = "normal",
             sound = "sound_events/ice_break.json",
@@ -71,6 +77,11 @@ local TILE_TYPES = {
         onExplode = {
             transformTo = "normal"
         }
+    },
+    wall = {
+        sprite = {state = 8, frame = 1},
+        preventsWin = false,
+        hostsChain = false
     },
 }
 
@@ -159,6 +170,12 @@ end
 ---@return boolean
 function Tile:preventsWin()
     return self.config.preventsWin
+end
+
+---Returns whether a Chain (or another board object) can sit on this Tile.
+---@return boolean
+function Tile:hostsChain()
+    return self.config.hostsChain
 end
 
 ---Dispatches impact or explosion effects on this Tile.

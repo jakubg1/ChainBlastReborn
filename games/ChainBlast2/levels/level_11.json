@@ -21,5 +21,19 @@
         "  XXX   XXX",
         " XXX   XXX ",
         "XXX   XXX  "
+    ],
+    "spawns": [
+        {
+            "weight": 100,
+            "type": "chain_red"
+        },
+        {
+            "weight": 100,
+            "type": "chain_blue"
+        },
+        {
+            "weight": 100,
+            "type": "chain_yellow"
+        }
     ]
 }

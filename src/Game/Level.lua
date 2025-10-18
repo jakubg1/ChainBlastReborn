@@ -13,14 +13,14 @@ local LevelBackground = require("src.Game.LevelBackground")
 ---@param game GameMain The main game class instance this Level belongs to.
 function Level:new(game)
     self.game = game
-    self.data = _Game.resourceManager:getLevelConfig("levels/level_" .. tostring(self.game.player.level) .. ".json")
+    self.config = _Game.resourceManager:getLevelConfig("levels/level_" .. tostring(self.game.player.level) .. ".json")
 
     self.board = nil
     self.ui = LevelUI(self)
     self.background = LevelBackground(self)
 
     self.score = 0
-    self.maxTime = self.data.time
+    self.maxTime = self.config.time
     self.time = self.maxTime
     self.timeCounting = false
     self.combo = 0
@@ -133,7 +133,7 @@ end
 ---Updates the score multiplier (currently unused).
 ---@param dt number Time delta in seconds.
 function Level:updateMultiplier(dt)
-    if not self.data.multiplierEnabled then
+    if not self.config.multiplierEnabled then
         return
     end
     -- Decrease the value of the bar naturally.
@@ -230,6 +230,16 @@ function Level:updateMusic(dt)
         self.levelMusic:play(1, 2)
         self.dangerMusic:stop(1)
     end
+end
+
+---Returns a random board object type that can spawn in this level, based on the level configuration.
+---@return string
+function Level:getRandomSpawn()
+    local weights = {}
+    for i, item in ipairs(self.config.spawns) do
+        table.insert(weights, item.weight)
+    end
+    return self.config.spawns[_Utils.weightedRandom(weights)].type
 end
 
 ---Creates a Board for this Level.
@@ -365,6 +375,12 @@ function Level:chargeMaxPower(color)
     self.powerMeter = self.maxPowerMeter
 end
 
+---Returns whether the power crystal is fully charged.
+---@return boolean
+function Level:isPowerFull()
+    return self.powerMeter >= self.maxPowerMeter
+end
+
 ---Returns a string depicting a board selection mode if a power can be activated.
 ---Returns `nil` if the power cannot be activated.
 ---@return "bomb"|"lightning"|"laser"?
@@ -393,7 +409,7 @@ end
 ---Adds the given amount to the multiplier progress. 1 is the full bar.
 ---@param amount number The progress to be given.
 function Level:addToMultiplier(amount)
-    if not self.data.multiplierEnabled then
+    if not self.config.multiplierEnabled then
         return
     end
     self.multiplierProgress = self.multiplierProgress + amount

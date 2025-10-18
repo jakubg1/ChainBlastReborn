@@ -265,7 +265,7 @@ function LevelUI:drawHUD()
     self.powerCrystalSprite:draw(Vec2(278, 39 + offset), nil, nil, frame, nil, nil, self.hudAlpha, nil, shader)
 
     -- Multiplier
-    if self.level.data.multiplierEnabled then
+    if self.level.config.multiplierEnabled then
         self.font:draw("Multiplier", Vec2(50, 165), Vec2(1, 0), nil, self.hudAlpha)
         _DrawFillRect(Vec2(55, 168), Vec2(150, 7), Color(0.3, 0.3, 0.3), self.hudAlpha)
         _DrawFillRect(Vec2(55, 168), Vec2(150 * self.multiplierProgressDisplay, 7), Color(0, 1, 0), self.hudAlpha)

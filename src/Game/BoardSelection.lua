@@ -57,7 +57,7 @@ function BoardSelection:expand(direction)
         return
     end
     -- And finally if the color doesn't match.
-    if not prevChain:matchesWithColor(chain.color) then
+    if not prevChain:matchesWithColor(chain:getColor()) then
         return
     end
 
@@ -122,7 +122,7 @@ function BoardSelection:finish(abort)
         tile:unselectSides()
     end
 	-- Deploy a powerup if applicable. The powerup will always appear at the cursor position.
-    if self.board.level.data.enablePowerups then
+    if self.board.level.config.enablePowerups then
         local powerupCoords = self.selectedCoords[#self.selectedCoords]
         if powerupCoords then
             local powerupChain = self.board:getChain(powerupCoords)
@@ -192,7 +192,7 @@ function BoardSelection:updateHighlights()
         end
     end
     -- Exit here if powerups are disabled.
-    if not self.board.level.data.enablePowerups then
+    if not self.board.level.config.enablePowerups then
         return
     end
 

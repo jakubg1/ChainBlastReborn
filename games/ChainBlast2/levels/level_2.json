@@ -9,17 +9,39 @@
             "tile": {
                 "type": "normal"
             }
+        },
+        "#": {
+            "tile": {
+                "type": "wall"
+            }
         }
     },
     "layout": [
-        " X X X X X ",
-        " X X X X X ",
-        " X X X X X ",
-        " X X X X X ",
-        " X X X X X ",
-        " X X X X X ",
-        " X X X X X ",
-        " X X X X X ",
-        " X X X X X "
+        "XX#XXX#XX",
+        "XX#XXX#XX",
+        "XX#XXX#XX",
+        "XXXXXXXXX",
+        "XXXXXXXXX",
+        "XX#XXX#XX",
+        "XX#XXX#XX",
+        "XX#XXX#XX"
+    ],
+    "spawns": [
+        {
+            "weight": 100,
+            "type": "chain_red"
+        },
+        {
+            "weight": 100,
+            "type": "chain_blue"
+        },
+        {
+            "weight": 100,
+            "type": "chain_yellow"
+        },
+        {
+            "weight": 15,
+            "type": "rock"
+        }
     ]
 }

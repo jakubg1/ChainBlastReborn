@@ -28,8 +28,8 @@ function Board:new(level)
         Vec2(-1, 0)
     }
 
-	self.pos = Vec2(76, 28)
-    self.size = Vec2(11, 9)
+    self.size = self:getSizeFromData()
+    self.pos = Vec2(159, 95) - (self.size * 7.5):ceil()
 
     -- Note: Contrary to chain and tile tables, this table is indexed Y-first!
     self.layout = {
@@ -404,20 +404,31 @@ end
 ---@param coords Vector2 Tile coordinates.
 function Board:impactTile(coords)
     local tile = self:assertGetTile(coords)
-    local chain = self:assertGetChain(coords)
-    chain:damage()
-    if chain:isDead() then
+    local chain = self:getChain(coords)
+    if chain then
+        chain:damage()
+        if chain:isDead() then
+            tile:impact()
+        end
+    else
         tile:impact()
     end
 end
 
 
 
+---Returns the board size from level data.
+---@return Vector2
+function Board:getSizeFromData()
+    local data = self.level.config
+    return Vec2(#data.layout[1], #data.layout)
+end
+
 ---Returns the Cell data from the given coordinates, as defined in the level. Returns `nil` if no tile is there.
 ---@param coords Vector2 The tile coordinates.
 ---@return table?
 function Board:getCellData(coords)
-    local data = self.level.data
+    local data = self.level.config
     local key = data.layout[coords.y]:sub(coords.x, coords.x)
     return data.key[key]
 end
@@ -489,8 +500,8 @@ function Board:initializeContents()
             for j = 1, self.size.y do
                 local coords = Vec2(i, j)
                 local cellData = self:getCellData(coords)
-                if cellData and cellData.tile then
-                    local chainType = cellData.chain and cellData.chain.type or "chain"
+                if cellData and cellData.tile and self.tiles[i][j]:hostsChain() then
+                    local chainType = cellData.chain and cellData.chain.type or self.level:getRandomSpawn()
                     self.chains[i][j] = Chain(self, coords, chainType)
                     if cellData.chain then
                         if cellData.chain.color then
@@ -584,7 +595,7 @@ end
 function Board:countGroupColors(group)
 	local colors = {[0] = 0, [1] = 0, [2] = 0, [3] = 0}
 	for i, coords in ipairs(group) do
-		local color = self:getChain(coords).color
+		local color = self:getChain(coords):getColor()
 		colors[color] = colors[color] and colors[color] + 1 or 1
 	end
 	return colors
@@ -767,11 +778,13 @@ function Board:handleMatches()
                 --    self.level:addToBombMeter(1)
                 --end
                 -- New (power meter)
-                self.level:addToPowerMeter(chain.color == 0 and 2 or 1, powerColor or 0, playerMade)
-                if self.level.powerColor == chain.color or (not playerMade and self.level.powerColor == 0) then
-                    chain:spawnPowerParticles(9)
-                else
-                    chain:spawnPowerParticles(3)
+                if not self.level:isPowerFull() then
+                    self.level:addToPowerMeter(chain:getColor() == 0 and 2 or 1, powerColor or 0, playerMade)
+                    if self.level.powerColor == chain:getColor() or (not playerMade and self.level.powerColor == 0) then
+                        chain:spawnPowerParticles(9)
+                    else
+                        chain:spawnPowerParticles(3)
+                    end
                 end
                 tile:impact()
                 -- Remove all adjacent crates.
@@ -797,7 +810,7 @@ function Board:handleMatches()
 
 		-- Add a powerup only if it's not us who have matched these chains (combo).
         -- Powerups on user-made matches are dispatched in `:finishSelection()`.
-		if self.level.data.enablePowerups and self.level.combo > 1 then
+		if self.level.config.enablePowerups and self.level.combo > 1 then
             local powerup = self:getPowerupFromColors(colors)
 			local powerupChain = self:getChain(modifiedMatch[#modifiedMatch][#modifiedMatch[#modifiedMatch]])
             if powerup and powerupChain then
@@ -842,8 +855,9 @@ function Board:fillHoles()
         if update then
             for j = self.size.y, 0, -1 do
                 local coords = Vec2(i, j)
+                local tile = self:getTile(coords)
                 -- If there is an empty space to be filled, start scanning upwards for any possible objects to fall down here.
-                if self:getTile(coords) and not self:getChain(coords) then
+                if tile and tile:hostsChain() and not self:getChain(coords) then
                     for k = j - 1, 0, -1 do
                         local seekCoords = Vec2(i, k)
                         local chain = self:getChain(seekCoords)
@@ -881,8 +895,8 @@ function Board:fillHolesUp()
                 local coords = Vec2(i, j)
                 local tile = self:getTile(coords)
                 local chain = self:getChain(coords)
-                if tile and not chain then
-                    local newChain = Chain(self, Vec2(coords.x, -2 - chainsPlaced), "chain")
+                if tile and tile:hostsChain() and not chain then
+                    local newChain = Chain(self, Vec2(coords.x, -((13 - self.size.y) / 2) - chainsPlaced), self.level:getRandomSpawn())
                     self:fallNewChain(newChain, coords)
                     chainsPlaced = chainsPlaced + 1
                 end

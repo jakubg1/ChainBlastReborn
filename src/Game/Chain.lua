@@ -9,7 +9,65 @@ local Vec2 = require("src.Essentials.Vector2")
 -- TODO: Extract board object types to resource files.
 -- TODO: Finish and implement.
 local CHAIN_TYPES = {
-    chain = {
+    chain_red = {
+        sprite = "sprites/chain_red.json",
+        linkSprite = "sprites/chain_link_red.json",
+        rendering = "chain",
+        color = 1,
+        affectedByGravity = true,
+        selectable = true,
+        shufflable = true,
+        canMatch = true,
+        canConnect = true,
+        rotateSound = "sound_events/chain_rotate.json",
+        onDestroy = {
+            particle = "chain_destroy",
+            --screenShake = {power = 0.5, frequency = 20, duration = 0.15},
+            spawnChainParticles = true,
+            countChainDestroyed = true
+        }
+    },
+    chain_blue = {
+        sprite = "sprites/chain_blue.json",
+        linkSprite = "sprites/chain_link_blue.json",
+        rendering = "chain",
+        color = 2,
+        affectedByGravity = true,
+        selectable = true,
+        shufflable = true,
+        canMatch = true,
+        canConnect = true,
+        rotateSound = "sound_events/chain_rotate.json",
+        onDestroy = {
+            particle = "chain_destroy",
+            --screenShake = {power = 0.5, frequency = 20, duration = 0.15},
+            spawnChainParticles = true,
+            countChainDestroyed = true
+        }
+    },
+    chain_yellow = {
+        sprite = "sprites/chain_yellow.json",
+        linkSprite = "sprites/chain_link_yellow.json",
+        rendering = "chain",
+        color = 3,
+        affectedByGravity = true,
+        selectable = true,
+        shufflable = true,
+        canMatch = true,
+        canConnect = true,
+        rotateSound = "sound_events/chain_rotate.json",
+        onDestroy = {
+            particle = "chain_destroy",
+            --screenShake = {power = 0.5, frequency = 20, duration = 0.15},
+            spawnChainParticles = true,
+            countChainDestroyed = true
+        }
+    },
+    chain_rainbow = {
+        sprite = "sprites/chain_rainbow.json",
+        linkSprite = "sprites/chain_link_rainbow.json",
+        rendering = "chain",
+        color = 0,
         affectedByGravity = true,
         selectable = true,
         shufflable = true,
@@ -24,6 +82,8 @@ local CHAIN_TYPES = {
         }
     },
     crate = {
+        sprite = "sprites/crate.json",
+        rendering = "crate",
         onNearbyMatch = {
             damage = 1
         },
@@ -39,6 +99,15 @@ local CHAIN_TYPES = {
             screenShake = {power = 2, frequency = 20, duration = 0.15},
             spawnCrateParticles = true
         }
+    },
+    rock = {
+        sprite = "sprites/rock.json",
+        rendering = "crate",
+        affectedByGravity = true,
+        onDestroy = {
+            screenShake = {power = 2, frequency = 20, duration = 0.15},
+            spawnCrateParticles = true
+        }
     }
 }
 
@@ -51,13 +120,10 @@ function Chain:new(board, coords, type)
     -- Logical position of the Chain. This is used for match calculation, etc.
     self.coords = coords
     self.type = type
-
     self.config = CHAIN_TYPES[type]
 
     -- 1 = straight, 2 = cross
     self.shape = math.random() < 1/15 and 2 or 1
-    -- 0 = rainbow / uncolored crate
-    self.color = math.random() < 0/20 and 0 or math.random(1, 3)
     self.health = 1
 
     -- 1 = vertical, 2 = horizontal
@@ -91,30 +157,14 @@ function Chain:new(board, coords, type)
     ---@type {delay: number, time: number}[]
     self.flashQueue = {}
 
-    self.sprites = {
-        [0] = _Game.resourceManager:getSprite("sprites/chain_rainbow.json"),
-        _Game.resourceManager:getSprite("sprites/chain_red.json"),
-        _Game.resourceManager:getSprite("sprites/chain_blue.json"),
-        _Game.resourceManager:getSprite("sprites/chain_yellow.json")
-    }
-    self.linkSprites = {
-        [0] = _Game.resourceManager:getSprite("sprites/chain_link_rainbow.json"),
-        _Game.resourceManager:getSprite("sprites/chain_link_red.json"),
-        _Game.resourceManager:getSprite("sprites/chain_link_blue.json"),
-        _Game.resourceManager:getSprite("sprites/chain_link_yellow.json")
-    }
     self.LINK_DATA = {
         {pos = Vec2(6, -1), state = 2, rot = 0},
         {pos = Vec2(15, 6), state = 2, rot = math.pi / 2},
         {pos = Vec2(6, 9), state = 1, rot = 0},
         {pos = Vec2(5, 6), state = 1, rot = math.pi / 2}
     }
-    self.crateSprites = {
-        [0] = _Game.resourceManager:getSprite("sprites/crate.json"),
-        _Game.resourceManager:getSprite("sprites/crate_red.json"),
-        _Game.resourceManager:getSprite("sprites/crate_blue.json"),
-        _Game.resourceManager:getSprite("sprites/crate_yellow.json")
-    }
+    self.sprite = _Game.resourceManager:getSprite(self.config.sprite)
+    self.linkSprite = self.config.linkSprite and _Game.resourceManager:getSprite(self.config.linkSprite)
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
 
     self.delQueue = false
@@ -232,7 +282,7 @@ function Chain:matchesWithColor(color)
     if not self.config.canMatch then
         return false
     end
-    return self.color == color or self.color == 0 or color == 0
+    return self.config.color == color or self.config.color == 0 or color == 0
 end
 
 ---Returns a neighboring chain in the given direction.
@@ -273,7 +323,7 @@ function Chain:isConnected(direction)
         return false
     end
     -- And finally, both colors must match.
-    return self:matchesWithColor(neighbor.color)
+    return self:matchesWithColor(neighbor:getColor())
 end
 
 ---Returns whether this Chain is *visually* connected with its neighbor in the given direction.
@@ -343,7 +393,7 @@ function Chain:canMakeMatch(directions)
     local potentialConnections = 0
     for i, direction in ipairs(directions) do
         local chain = self:getNeighborChain(direction)
-        if chain and chain.config.canMatch and self:matchesWithColor(chain.color) then
+        if chain and chain.config.canMatch and self:matchesWithColor(chain:getColor()) then
             potentialConnections = potentialConnections + 1
         end
         if potentialConnections >= 2 then
@@ -351,6 +401,12 @@ function Chain:canMakeMatch(directions)
         end
     end
     return false
+end
+
+---Returns the color of this Chain, used to determine if chains can connect and for selections.
+---@return integer
+function Chain:getColor()
+    return self.config.color
 end
 
 ---Returns whether this Chain can fall downwards when there is an empty space below.
@@ -458,7 +514,7 @@ function Chain:spawnPowerParticles(amount)
     -- TODO: Better way to store power colors and crystal position?
     local pos = self:getCenterPos()
     local pos2 = self.board.level.ui.POWER_CRYSTAL_CENTER_POS
-    local color = self.board.level.ui.POWER_METER_COLORS[self.color]
+    local color = self.board.level.ui.POWER_METER_COLORS[self.config.color]
     for i = 1, amount do
         -- Because the amount of particles in particle effect data is constant, we have to spawn them one by one.
         _Game.game:spawnParticles("power_spark", pos, pos2, color)
@@ -482,12 +538,12 @@ function Chain:dispatchEffects(effects)
     end
     if effects.spawnChainParticles then
         if not reduce and _Game.game.settings.chainExplosionStyle == "legacy" then
-            _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame())
+            _Game.game:spawnParticleFragments(pos, "", self.sprite, self:getState(), self:getFrame())
         end
     end
     if effects.spawnCrateParticles then
         if not reduce then
-            _Game.game:spawnParticleFragments(pos, "", self:getSprite(), self:getState(), self:getFrame(), 4)
+            _Game.game:spawnParticleFragments(pos, "", self.sprite, self:getState(), self:getFrame(), 4)
         end
     end
     if effects.sound then
@@ -597,21 +653,10 @@ function Chain:getCenterPos()
     return self:getPos() + 7
 end
 
----Returns the Sprite that should be used to draw this Chain on the screen.
----@return Sprite
-function Chain:getSprite()
-    if self.type == "chain" then
-        return self.sprites[self.color]
-    elseif self.type == "crate" then
-        return self.crateSprites[self.color]
-    end
-    error(string.format("Illegal chain type: %s", self.type))
-end
-
 ---Returns the current sprite state of the Chain which should be drawn.
 ---@return integer
 function Chain:getState()
-    if self.type == "chain" then
+    if self.config.rendering == "chain" then
         if self.shape == 2 then
             return 3
         end
@@ -623,16 +668,16 @@ function Chain:getState()
             return (rot - 1) % 2 + 1
         end
         return self.rotation
-    elseif self.type == "crate" then
+    elseif self.config.rendering == "crate" then
         return math.max(self.health, 1)
     end
-    error(string.format("Illegal chain type: %s", self.type))
+    error(string.format("Illegal chain type: %s", self.config.rendering))
 end
 
 ---Returns the current animation frame of the Chain which should be drawn.
 ---@return integer
 function Chain:getFrame()
-    if self.type == "chain" then
+    if self.config.rendering == "chain" then
         if self.rotationAnim then
             --local n = math.sin(math.sin((self.rotationAnim / 4) * math.pi / 2) * math.pi / 2) * 3.99
             local n = self.rotationAnim
@@ -642,10 +687,10 @@ function Chain:getFrame()
             return math.floor(self.releaseRotation) % 4 + 1
         end
         return 1
-    elseif self.type == "crate" then
+    elseif self.config.rendering == "crate" then
         return 1
     end
-    error(string.format("Illegal chain type: %s", self.type))
+    error(string.format("Illegal chain type: %s", self.config.rendering))
 end
 
 ---Draws the Chain on the screen, alongside with its links.
@@ -655,23 +700,21 @@ function Chain:draw(offset)
     if offset then
         pos = pos + offset
     end
-    local sprite = self:getSprite()
     local state = self:getState()
     local frame = self:getFrame()
     local shader = self.flashTime and self.flashShader
     -- Draw the shadow.
-    sprite:drawWithShadow(pos, nil, state, frame, nil, nil, nil, nil, shader, 0.6)
+    self.sprite:drawWithShadow(pos, nil, state, frame, nil, nil, nil, nil, shader, 0.6)
     -- Draw the debugging sprite.
     if _Debug.chainDebug then
         local logicalPos = self.board:getTilePos(self.coords)
-        sprite:drawWithShadow(logicalPos, nil, state, frame, nil, nil, 0.5)
+        self.sprite:drawWithShadow(logicalPos, nil, state, frame, nil, nil, 0.5)
     end
     -- Draw chain connections.
     for i = 1, 4 do
         if self:isVisuallyConnected(i) then
             local data = self.LINK_DATA[i]
-            local linkSprite = self.linkSprites[self.color]
-            linkSprite:drawWithShadow(pos + data.pos, nil, data.state, nil, data.rot, nil, nil, nil, shader)
+            self.linkSprite:drawWithShadow(pos + data.pos, nil, data.state, nil, data.rot, nil, nil, nil, shader)
         end
     end
 end
