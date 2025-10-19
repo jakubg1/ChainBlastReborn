@@ -1,11 +1,10 @@
 local class = require "com.class"
+local Vec2 = require("src.Essentials.Vector2")
+local Color = require("src.Essentials.Color")
 
 ---@class Tile
 ---@overload fun(board, coords, type):Tile
 local Tile = class:derive("Tile")
-
-local Vec2 = require("src.Essentials.Vector2")
-local Color = require("src.Essentials.Color")
 
 -- TODO: Extract tile types to resource files.
 local TILE_TYPES = {
@@ -81,7 +80,23 @@ local TILE_TYPES = {
     wall = {
         sprite = {state = 8, frame = 1},
         preventsWin = false,
-        hostsChain = false
+        hostsChain = false,
+        blocksLightning = true
+    },
+    dirt = {
+        useDirtMap = true,
+        preventsWin = true,
+        hostsChain = true,
+        onDamage = {
+            transformTo = "normal",
+            sound = "sound_events/dirt_break.json",
+            spawnDirtParticles = true
+        },
+        onExplode = {
+            transformTo = "normal",
+            sound = "sound_events/dirt_break.json",
+            spawnDirtParticles = true
+        }
     },
 }
 
@@ -178,6 +193,18 @@ function Tile:hostsChain()
     return self.config.hostsChain
 end
 
+---Returns whether the lightning beams cannot reach past this Tile.
+---@return boolean
+function Tile:blocksLightning()
+    return self.config.blocksLightning
+end
+
+---Returns whether this Tile is using a dirt map.
+---TODO: Change the map to use any string for multi-map support.
+function Tile:usesDirtMap()
+    return self.config.useDirtMap
+end
+
 ---Dispatches impact or explosion effects on this Tile.
 ---@private
 ---@param effects table? A table of effects to be applied on this Tile.
@@ -204,6 +231,12 @@ function Tile:dispatchEffects(effects)
         -- 7 is the ice tile, 2 is the full ice stage.
         if not _Game.runtimeManager.options:getSetting("reducedParticles") then
             _Game.game:spawnParticleFragments(self:getCenterPos(), "", self.sprite, 7, 2, 4)
+        end
+    end
+    if effects.spawnDirtParticles then
+        -- 13th frame in the dual-grid system is the full tile sprite.
+        if not _Game.runtimeManager.options:getSetting("reducedParticles") then
+            _Game.game:spawnParticleFragments(self:getCenterPos(), "", _Game.resourceManager:getSprite("sprites/dirt.json"), 1, 13, 4)
         end
     end
 end
@@ -310,7 +343,9 @@ function Tile:draw(offset)
     if offset then
         pos = pos + offset
     end
-    self.sprite:draw(pos, nil, self:getState(), self:getFrame(), nil, nil, self.alpha)
+    if self.config.sprite then
+        self.sprite:draw(pos, nil, self:getState(), self:getFrame(), nil, nil, self.alpha)
+    end
     if self.selected or self.selectedAsPowerupVictim then
         _DrawFillRect(pos, Vec2(14, 14), Color(0.5, 1, 0.5), 0.7)
     end

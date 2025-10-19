@@ -23,7 +23,7 @@ local CHAIN_TYPES = {
         onDestroy = {
             particle = "chain_destroy",
             --screenShake = {power = 0.5, frequency = 20, duration = 0.15},
-            spawnChainParticles = true,
+            fragmentParticles = {legacyStyleOnly = true},
             countChainDestroyed = true
         }
     },
@@ -41,7 +41,7 @@ local CHAIN_TYPES = {
         onDestroy = {
             particle = "chain_destroy",
             --screenShake = {power = 0.5, frequency = 20, duration = 0.15},
-            spawnChainParticles = true,
+            fragmentParticles = {legacyStyleOnly = true},
             countChainDestroyed = true
         }
     },
@@ -59,7 +59,7 @@ local CHAIN_TYPES = {
         onDestroy = {
             particle = "chain_destroy",
             --screenShake = {power = 0.5, frequency = 20, duration = 0.15},
-            spawnChainParticles = true,
+            fragmentParticles = {legacyStyleOnly = true},
             countChainDestroyed = true
         }
     },
@@ -77,14 +77,14 @@ local CHAIN_TYPES = {
         onDestroy = {
             particle = "chain_destroy",
             --screenShake = {power = 0.5, frequency = 20, duration = 0.15},
-            spawnChainParticles = true,
+            fragmentParticles = {legacyStyleOnly = true},
             countChainDestroyed = true
         }
     },
     crate = {
         sprite = "sprites/crate.json",
         rendering = "crate",
-        onNearbyMatch = {
+        onSideMatch = {
             damage = 1
         },
         onDamage = {
@@ -97,7 +97,7 @@ local CHAIN_TYPES = {
             sound = "sound_events/crate_destroy.json",
             particle = "crate_destroy",
             screenShake = {power = 2, frequency = 20, duration = 0.15},
-            spawnCrateParticles = true
+            fragmentParticles = {maxAmount = 4}
         }
     },
     rock = {
@@ -105,8 +105,10 @@ local CHAIN_TYPES = {
         rendering = "crate",
         affectedByGravity = true,
         onDestroy = {
-            screenShake = {power = 2, frequency = 20, duration = 0.15},
-            spawnCrateParticles = true
+            sound = "sound_events/rock_destroy.json",
+            particle = "rock_destroy",
+            screenShake = {power = 4, frequency = 15, duration = 0.15},
+            fragmentParticles = {}
         }
     }
 }
@@ -536,14 +538,10 @@ function Chain:dispatchEffects(effects)
     if effects.particle then
         _Game.game:spawnParticles(effects.particle, pos)
     end
-    if effects.spawnChainParticles then
-        if not reduce and _Game.game.settings.chainExplosionStyle == "legacy" then
-            _Game.game:spawnParticleFragments(pos, "", self.sprite, self:getState(), self:getFrame())
-        end
-    end
-    if effects.spawnCrateParticles then
-        if not reduce then
-            _Game.game:spawnParticleFragments(pos, "", self.sprite, self:getState(), self:getFrame(), 4)
+    if effects.fragmentParticles then
+        local cancel = effects.fragmentParticles.legacyStyleOnly and _Game.game.settings.chainExplosionStyle ~= "legacy"
+        if not reduce and not cancel then
+            _Game.game:spawnParticleFragments(pos, "", self.sprite, self:getState(), self:getFrame(), effects.fragmentParticles.maxAmount)
         end
     end
     if effects.sound then
@@ -574,7 +572,7 @@ end
 
 ---Notifies this board object that a match has happened nearby. For crates, this means that they get damaged or destroyed.
 function Chain:sideImpact()
-    local effects = self.config.onNearbyMatch
+    local effects = self.config.onSideMatch
     if not effects then
         return
     end

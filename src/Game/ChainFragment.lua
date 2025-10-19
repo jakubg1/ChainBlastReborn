@@ -21,7 +21,7 @@ function ChainFragment:new(game, pos, type, sprite, state)
     self.state = state
 
     self.time = 0
-    self.speed = Vec2(love.math.randomNormal(40, 80), 0):rotate(love.math.random() * math.pi * 2) + Vec2(0, -60)
+    self.speed = Vec2(love.math.randomNormal(20, 80), 0):rotate(love.math.random() * math.pi * 2) + Vec2(0, -60)
     self.acceleration = Vec2(0, 200)
     self.angle = 0--love.math.random() * math.pi * 2
     self.angleSpeed = (love.math.random() - 0.5) * math.pi

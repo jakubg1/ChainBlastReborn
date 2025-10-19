@@ -4,17 +4,14 @@ local class = require "com.class"
 ---@overload fun(level):Board
 local Board = class:derive("Board")
 
+local Vec2 = require("src.Essentials.Vector2")
+local Color = require("src.Essentials.Color")
 local Tile = require("src.Game.Tile")
 local Chain = require("src.Game.Chain")
 local Bomb = require("src.Game.Bomb")
 local Missile = require("src.Game.Missile")
-local ConjoinedSprite = require("src.Game.ConjoinedSprite")
+local Tilemap = require("src.Game.Tilemap")
 local BoardSelection = require("src.Game.BoardSelection")
-
-local Vec2 = require("src.Essentials.Vector2")
-local Color = require("src.Essentials.Color")
-
-
 
 ---Constructs the Board.
 ---@param level Level The level instance this Board belongs to.
@@ -30,75 +27,6 @@ function Board:new(level)
 
     self.size = self:getSizeFromData()
     self.pos = Vec2(159, 95) - (self.size * 7.5):ceil()
-
-    -- Note: Contrary to chain and tile tables, this table is indexed Y-first!
-    self.layout = {
-        --[[
-        {1, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 1, 2, 2, 2, 2, 2, 2, 1},
-        {1, 1, 2, 2, 2, 2, 2, 1, 1},
-        {1, 1, 2, 2, 2, 2, 2, 2, 1},
-        {1, 2, 2, 2, 2, 1, 2, 1, 1},
-        {1, 2, 2, 2, 2, 2, 2, 2, 1},
-        {1, 2, 2, 2, 2, 1, 2, 1, 1},
-        {1, 2, 1, 1, 1, 1, 2, 1, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 1}
-        ]]
-        --[[
-        {0, 0, 0, 1, 1, 1, 0, 0, 0},
-        {0, 1, 0, 1, 1, 1, 0, 1, 0},
-        {0, 0, 1, 1, 1, 1, 1, 0, 0},
-        {1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {0, 0, 1, 1, 1, 1, 1, 0, 0},
-        {0, 1, 0, 1, 1, 1, 0, 1, 0},
-        {0, 0, 0, 1, 1, 1, 0, 0, 0}
-        ]]
-        --[[
-        -- Level 1
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0},
-        {0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0},
-        {0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0},
-        {0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0},
-        {0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        ]]
-        --[[
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 5, 6, 4, 5, 7, 0, 0, 0},
-        {0, 0, 0, 8, 3, 6, 3, 8, 0, 0, 0},
-        {0, 0, 0, 8, 8, 7, 8, 8, 0, 0, 0},
-        {0, 0, 0, 8, 3, 7, 3, 8, 0, 0, 0},
-        {0, 0, 0, 8, 8, 8, 8, 8, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        ]]
-        --[[
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 8, 8, 8, 8, 8, 8, 8, 0, 0},
-        {0, 0, 8, 8, 8, 8, 8, 8, 8, 0, 0},
-        {0, 0, 5, 6, 7, 5, 6, 7, 5, 0, 0},
-        {0, 0, 6, 7, 5, 6, 7, 5, 6, 0, 0},
-        {0, 0, 7, 5, 6, 7, 5, 6, 7, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        ]]
-    }
-
-    -- tile IDs:
-    -- 0: empty space
-    -- 1: normal tile
-    -- 2: already gold
-    -- 3: flip tile
-    -- 4: crate
-    -- 5 to 7: colored crates
-    -- 8: ice
 
     self.tiles = {}
     for i = 1, self.size.x do
@@ -131,6 +59,8 @@ function Board:new(level)
     self.hintPalette = _Game.resourceManager:getColorPalette("color_palettes/hint.json")
     self.backgroundSprite = _Game.resourceManager:getSprite("sprites/board_background.json")
     self.background = nil
+    self.dirtLayerSprite = _Game.resourceManager:getSprite("sprites/dirt.json")
+    self.dirtLayer = Tilemap(self.dirtLayerSprite, self.size.x + 2, self.size.y + 2)
 
     self.delQueue = false
 
@@ -311,6 +241,16 @@ function Board:update(dt)
         bomb:update(dt)
     end
     _Utils.removeDeadObjects(self.bombs)
+
+    -- Update dirtmap
+    for x = 1, self.size.x do
+        for y = 1, self.size.y do
+            local tile = self:getTile(Vec2(x, y))
+            if tile then
+                self.dirtLayer:setCell(x + 1, y + 1, tile:usesDirtMap())
+            end
+        end
+    end
 end
 
 
@@ -322,8 +262,6 @@ end
 function Board:getTileGridPos(coords)
 	return self.pos + (coords - 1) * 15
 end
-
-
 
 ---Returns the position of the top left pixel of a given tile.
 ---@param coords Vector2 The tile coordinates, starting from `(1, 1)`.
@@ -339,8 +277,6 @@ function Board:getTileCenterPos(coords)
     return self:getTilePos(coords) + 7
 end
 
-
-
 ---Returns the 1-based coordinates of the tile laying on the given screen position.
 ---The function does not check for out-of-bounds coordinates, and as such can return negative or big values!
 ---@param pos Vector2 The onscreen position of the tile.
@@ -349,16 +285,12 @@ function Board:getTileCoords(pos)
     return ((pos - self.pos) / 15):floor() + 1
 end
 
-
-
 ---Returns whether a tile exists at the given board coordinates.
 ---@param coords Vector2 The tile coordinates to be checked.
 ---@return boolean
 function Board:tileExists(coords)
     return coords.x >= 1 and coords.y >= 1 and coords.x <= self.size.x and coords.y <= self.size.y and self.tiles[coords.x][coords.y] ~= nil
 end
-
-
 
 ---Returns the Tile located at the given coordinates.
 ---If the tile is not found there, returns `nil`.
@@ -379,8 +311,6 @@ function Board:assertGetTile(coords)
     return assert(self:getTile(coords), string.format("Attempt to get a tile at %s, but no tile was found :(", coords))
 end
 
-
-
 ---Returns the Chain (or any board item, including boxes, etc.) located at the given coordinates.
 ---@param coords Vector2 The tile coordinates.
 ---@return Chain?
@@ -398,8 +328,6 @@ function Board:assertGetChain(coords)
     return assert(self:getChain(coords), string.format("Attempt to get a chain at %s, but no chain was found :(", coords))
 end
 
-
-
 ---Impacts the tile/object at the provided coordinates, for example by damaging a crate or destroying a chain (and creating gold under it).
 ---@param coords Vector2 Tile coordinates.
 function Board:impactTile(coords)
@@ -415,8 +343,6 @@ function Board:impactTile(coords)
     end
 end
 
-
-
 ---Returns the board size from level data.
 ---@return Vector2
 function Board:getSizeFromData()
@@ -424,7 +350,7 @@ function Board:getSizeFromData()
     return Vec2(#data.layout[1], #data.layout)
 end
 
----Returns the Cell data from the given coordinates, as defined in the level. Returns `nil` if no tile is there.
+---Returns the Cell data from the given coordinates, as defined in the level config file. Returns `nil` if no tile is there.
 ---@param coords Vector2 The tile coordinates.
 ---@return table?
 function Board:getCellData(coords)
@@ -475,24 +401,18 @@ end
 ---Fills the board with initial tiles, chains and objects for the first time, and generates the background.
 function Board:initializeContents()
     -- Generate the tiles and background data first.
-    local backgroundData = {}
+    self.background = Tilemap(self.backgroundSprite, self.size.x + 2, self.size.y + 2)
     for i = 1, self.size.x do
-        backgroundData[i] = {}
         for j = 1, self.size.y do
             local coords = Vec2(i, j)
             local cellData = self:getCellData(coords)
             if cellData and cellData.tile then
                 self.tiles[i][j] = Tile(self, coords, cellData.tile.type)
                 self.tiles[i][j]:fadeIn((i + j + 10) * 0.12)
-                backgroundData[i][j] = true
-            else
-                backgroundData[i][j] = false
+                self.background:setCell(i + 1, j + 1, true)
             end
         end
     end
-
-    -- Generate the background.
-    self.background = ConjoinedSprite(self.backgroundSprite, backgroundData)
 
     -- We will fill the board repeatedly until no premade matches exist.
     repeat
@@ -504,9 +424,6 @@ function Board:initializeContents()
                     local chainType = cellData.chain and cellData.chain.type or self.level:getRandomSpawn()
                     self.chains[i][j] = Chain(self, coords, chainType)
                     if cellData.chain then
-                        if cellData.chain.color then
-                            self.chains[i][j].color = cellData.chain.color
-                        end
                         if cellData.chain.health then
                             self.chains[i][j].health = cellData.chain.health
                         end
@@ -954,24 +871,67 @@ end
 ---@param vertical boolean Whether the lightning should strike vertically.
 function Board:explodeLightning(coords, horizontal, vertical)
     if horizontal then
-        for i = 1, self.size.x do
+        local left, right = self:getHorizontalLightningRange(coords.x, coords.y)
+        for i = left, right do
             self:explodeChain(Vec2(i, coords.y))
         end
-        local p1 = self:getTileCenterPos(Vec2(0, coords.y))
-        local p2 = self:getTileCenterPos(Vec2(self.size.x + 1, coords.y))
+        local p1 = self:getTileCenterPos(Vec2(left, coords.y))
+        local p2 = self:getTileCenterPos(Vec2(right, coords.y))
         _Game.game:spawnParticles("power_lightning", p1, p2)
     end
     if vertical then
-        for i = 1, self.size.y do
+        local top, bottom = self:getVerticalLightningRange(coords.x, coords.y)
+        for i = top, bottom do
             self:explodeChain(Vec2(coords.x, i))
         end
-        local p1 = self:getTileCenterPos(Vec2(coords.x, 0))
-        local p2 = self:getTileCenterPos(Vec2(coords.x, self.size.y + 1))
+        local p1 = self:getTileCenterPos(Vec2(coords.x, top))
+        local p2 = self:getTileCenterPos(Vec2(coords.x, bottom))
         _Game.game:spawnParticles("power_lightning", p1, p2)
     end
     _Game:playSound("sound_events/powerup_lightning.json")
     _Game.game:shakeScreen(9, nil, 15, 0.25)
     self.level.background:flash(0.5, 0.35)
+end
+
+---Returns whether the tile at the given coordinates blocks lightning.
+---@param x integer X coordinate of the tile.
+---@param y integer Y coordinate of the tile.
+---@return boolean
+function Board:tileBlocksLightning(x, y)
+    local tile = self:getTile(Vec2(x, y))
+    return tile and tile:blocksLightning() or false
+end
+
+---Returns the first and last X coordinate the lightning strike will span.
+---If the lightning reaches THE EDGE!!!!! THIS IS THE FINAL CHALLENGE O- of the board, the returned coordinates can go 1 tile outside the board.
+---@param x integer X coordinate of the lightning initiation.
+---@param y integer Y coordinate of the lightning initiation.
+---@return integer, integer
+function Board:getHorizontalLightningRange(x, y)
+    local left, right = x - 1, x + 1
+    while left > 0 and not self:tileBlocksLightning(left, y) do
+        left = left - 1
+    end
+    while right <= self.size.x and not self:tileBlocksLightning(right, y) do
+        right = right + 1
+    end
+    return left, right
+end
+
+---Returns the first and last Y coordinate the lightning strike will span.
+---If the lightning reaches the edge of the board, the returned coordinates can go 1 tile outside the board.
+---@param x integer X coordinate of the lightning initiation.
+---@param y integer Y coordinate of the lightning initiation.
+---@return integer, integer
+function Board:getVerticalLightningRange(x, y)
+    local top, bottom = y - 1, y + 1
+    while top > 0 and not self:tileBlocksLightning(x, top) do
+        top = top - 1
+    end
+    while bottom <= self.size.y and not self:tileBlocksLightning(x, bottom) do
+        bottom = bottom + 1
+    end
+    return top, bottom
 end
 
 
@@ -1195,18 +1155,58 @@ end
 function Board:draw()
     local offset = _Game.game.screenShakeTotal
 
-    -- Board background
-    if self.background then
-        if self.startAnimation then
-            self:setDiamondStencil(self.startAnimation * 100)
-        elseif self.endAnimation then
-            self:setDiamondStencil(math.max(self.endAnimation - 2, 0) * 100, true)
+    self:drawBackground()
+    self:drawGrid()
+    -- Tiles
+    for i = 1, self.size.x do
+        for j = 1, self.size.y do
+            local tile = self:getTile(Vec2(i, j))
+            if tile and tile.type ~= "wall" then
+                tile:draw(offset)
+            end
         end
-        self.background:draw(self.pos + offset)
-        self:resetStencil()
     end
+    -- Dirt
+    if self.startAnimation then
+        self:setDiamondStencil(self.startAnimation * 100)
+    elseif self.endAnimation then
+        self:setDiamondStencil(math.max(self.endAnimation - 2, 0) * 100, true)
+    end
+    self.dirtLayer:draw(self.pos - 7 + offset)
+    self:resetStencil()
+    -- Walls go over dirt
+    for i = 1, self.size.x do
+        for j = 1, self.size.y do
+            local tile = self:getTile(Vec2(i, j))
+            if tile and tile.type == "wall" then
+                tile:draw(offset)
+            end
+        end
+    end
+    self:drawObjects()
+    self:drawTileHighlights()
+    self:drawHint()
+    self:drawCursor()
+end
 
-    -- Board grid
+---Draws the board background.
+function Board:drawBackground()
+    if not self.background then
+        return
+    end
+    local offset = _Game.game.screenShakeTotal
+    if self.startAnimation then
+        self:setDiamondStencil(self.startAnimation * 100)
+    elseif self.endAnimation then
+        self:setDiamondStencil(math.max(self.endAnimation - 2, 0) * 100, true)
+    end
+    self.background:draw(self.pos - 7 + offset)
+    self:resetStencil()
+end
+
+---Draws the board grid.
+function Board:drawGrid()
+    local offset = _Game.game.screenShakeTotal
 	local lineColor = Color(0.5, 0.5, 0.7)
     local lineShadowColor = Color(0, 0, 0)
 
@@ -1245,18 +1245,11 @@ function Board:draw()
         end
     end
     self:resetStencil()
+end
 
-    -- Tiles
-    for i = 1, self.size.x do
-        for j = 1, self.size.y do
-            local tile = self:getTile(Vec2(i, j))
-            if tile then
-                tile:draw(offset)
-            end
-        end
-    end
-
-    -- Chains
+---Draws all board objects on the screen.
+function Board:drawObjects()
+    local offset = _Game.game.screenShakeTotal
     for i = 1, self.size.x do
         for j = 1, self.size.y do
             local chain = self:getChain(Vec2(i, j))
@@ -1265,8 +1258,12 @@ function Board:draw()
             end
         end
     end
+end
 
-    -- Tile highlight (power modes)
+---Draws tile highlights.
+---The tile highlights show up when a powerup is active and the player is choosing its deployment position.
+function Board:drawTileHighlights()
+    local offset = _Game.game.screenShakeTotal
     for i = 1, self.size.x do
         for j = 1, self.size.y do
             local highlighted = false
@@ -1274,7 +1271,12 @@ function Board:draw()
                 if self.mode == "bomb" then
                     highlighted = math.abs(self.hoverCoords.x - i) <= 1 and math.abs(self.hoverCoords.y - j) <= 1
                 elseif self.mode == "lightning" then
-                    highlighted = i == self.hoverCoords.x or j == self.hoverCoords.y
+                    local hoveredTile = self:getTile(self.hoverCoords)
+                    if hoveredTile and not hoveredTile:blocksLightning() then
+                        local left, right = self:getHorizontalLightningRange(self.hoverCoords.x, self.hoverCoords.y)
+                        local top, bottom = self:getVerticalLightningRange(self.hoverCoords.x, self.hoverCoords.y)
+                        highlighted = (i == self.hoverCoords.x and j >= top and j <= bottom) or (j == self.hoverCoords.y and i >= left and i <= right)
+                    end
                 end
             end
             if highlighted then
@@ -1286,24 +1288,29 @@ function Board:draw()
             end
         end
     end
+end
 
-    -- Hint sprite
-    if self.hintCoords then
-        local pos = self:getTilePos(self.hintCoords) - 2 + offset
-        local frame = math.floor((_TotalTime * 15) % 10) + 1
-        local color = self.hintPalette:getColor(_TotalTime * 60)
-        self.hintSprite:draw(pos, nil, 1, frame, nil, color)
+---Draws the hint indicator, if it is currently present.
+function Board:drawHint()
+    if not self.hintCoords then
+        return
     end
+    local offset = _Game.game.screenShakeTotal
+    local pos = self:getTilePos(self.hintCoords) - 2 + offset
+    local frame = math.floor((_TotalTime * 15) % 10) + 1
+    local color = self.hintPalette:getColor(_TotalTime * 60)
+    self.hintSprite:draw(pos, nil, 1, frame, nil, color)
+end
 
-    -- Hover sprite
-    if self.visualHoverCoords then
-        local pos = self:getTilePos(self.visualHoverCoords) - 5 + offset
-        local frame = math.floor(math.sin(_TotalTime * 3) * 2 + 2) + 1
-        self.hoverSprite:draw(pos, nil, 1, frame)
+---Draws the cursor at the currently hovered tile position.
+function Board:drawCursor()
+    if not self.visualHoverCoords then
+        return
     end
-
-    -- Debug
-    --_Game.game.font:draw("pos: " .. tostring(self.hoverCoords), Vec2(10, 10), Vec2())
+    local offset = _Game.game.screenShakeTotal
+    local pos = self:getTilePos(self.visualHoverCoords) - 5 + offset
+    local frame = math.floor(math.sin(_TotalTime * 3) * 2 + 2) + 1
+    self.hoverSprite:draw(pos, nil, 1, frame)
 end
 
 

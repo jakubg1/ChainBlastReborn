@@ -14,17 +14,22 @@
             "tile": {
                 "type": "wall"
             }
+        },
+        "D": {
+            "tile": {
+                "type": "dirt"
+            }
         }
     },
     "layout": [
-        "XX#XXX#XX",
-        "XX#XXX#XX",
-        "XX#XXX#XX",
-        "XXXXXXXXX",
-        "XXXXXXXXX",
-        "XX#XXX#XX",
-        "XX#XXX#XX",
-        "XX#XXX#XX"
+        "DD#DDD#DD",
+        "DD#DDD#DD",
+        "DD#DDD#DD",
+        "DDDDDDDDD",
+        "DDDDDDDDD",
+        "DD#DDD#DD",
+        "DD#DDD#DD",
+        "DD#DDD#DD"
     ],
     "spawns": [
         {

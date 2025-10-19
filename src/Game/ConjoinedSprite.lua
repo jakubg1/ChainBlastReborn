@@ -1,13 +1,10 @@
 local class = require "com.class"
 
 ---@class ConjoinedSprite
----@overload fun(sprite, data):ConjoinedSprite
+---@overload fun(sprite, width, height):ConjoinedSprite
 local ConjoinedSprite = class:derive("ConjoinedSprite")
 
--- Place your imports here
 local Vec2 = require("src.Essentials.Vector2")
-
-
 
 ---Constructs a new Conjoined Sprite.
 ---Conjoined Sprites are a series of Sprites arranged in a grid, where borders matter.
@@ -18,11 +15,18 @@ local Vec2 = require("src.Essentials.Vector2")
 --- - States 49-64: Right bottom quadrant. 49 - nothing, +1 - right, +2 - bottom, +4 - bottom-right corner, +8 - middle.
 ---
 --- All states from each group must have the same size. Group pairs 1+3 and 2+4 must have common width, while group pairs 1+2 and 3+4 must have common height.
----@param data table A two-dimensional array of booleans, indexed by X first.
+---@param width integer Width of the data table.
+---@param height integer Height of the data table.
 ---Whether a particular cell is enabled or disabled. The size of this array will determine the size of this object, plus two cells horizontally and vertically.
-function ConjoinedSprite:new(sprite, data)
+function ConjoinedSprite:new(sprite, width, height)
     self.sprite = sprite
-    self.data = data
+    self.data = {}
+    for x = 1, width do
+        self.data[x] = {}
+        for y = 1, height do
+            self.data[x][y] = false
+        end
+    end
 
     self.sx1 = self.sprite:getFrameSize(1).x
     self.sx2 = self.sprite:getFrameSize(17).x
@@ -32,9 +36,17 @@ function ConjoinedSprite:new(sprite, data)
     self.sy = self.sy1 + self.sy2
 end
 
-
+---Sets the new cell state at the given position.
+---@param x integer X position, starting from 1.
+---@param y integer Y position, starting from 1.
+---@param state boolean Whether the cell should be filled.
+function ConjoinedSprite:setCell(x, y, state)
+    assert(x >= 1 and x <= #self.data and y >= 1 and y <= #self.data[1], "Out of bounds indexing: (" .. x .. ", " .. y .. ") with size (" .. #self.data .. ", " .. #self.data[1] .. ")")
+    self.data[x][y] = state
+end
 
 ---Returns the state number to be used in the given tile of this Conjoined Sprite.
+---@private
 ---@param pos Vector2 The tile on the grid, ranging from `(0, 0)` to `(#self.data + 1, #self.data[1] + 1)`.
 ---@param quadrant integer The quadrant. 1 = top left, 2 = top right, 3 = bottom left, 4 = bottom right.
 function ConjoinedSprite:getStateFromPos(pos, quadrant)
@@ -62,8 +74,6 @@ function ConjoinedSprite:getStateFromPos(pos, quadrant)
     return state
 end
 
-
-
 ---Draws the Conjoined Sprite on the screen.
 ---@param pos Vector2 The position this Conjoined Sprite should be drawn on. The top left corner of the actual data tile.
 function ConjoinedSprite:draw(pos)
@@ -78,7 +88,5 @@ function ConjoinedSprite:draw(pos)
         end
     end
 end
-
-
 
 return ConjoinedSprite

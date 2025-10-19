@@ -1,6 +1,6 @@
 {
     "$schema": "../../../schemas/sprite.json",
-    "path": "images/board_background.png",
+    "path": "images/dirt.png",
     "frameSize": {
         "x": 0,
         "y": 0

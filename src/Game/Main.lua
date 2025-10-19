@@ -29,15 +29,19 @@ local PARTICLE_EFFECT_TYPES = {
 	crate_damage = {
 		{type = "chip", amount = 5, rangeMean = 0, rangeDev = 2, full = true}
 	},
+	chain_destroy = {
+		{type = "chain_explosion", chainExplosionStyle = "legacy"},
+		{type = "flare", chainExplosionStyle = "new"},
+		--{type = "spark", amount = 8, rangeMean = 0, rangeDev = 3, full = true}
+	},
 	crate_destroy = {
 		{type = "chain_explosion"},
 		{type = "chip", amount = 20, rangeMean = 0, rangeDev = 2, full = true},
 		--{type = "spark", amount = 4, rangeMean = 0, rangeDev = 3, full = true}
 	},
-	chain_destroy = {
-		{type = "chain_explosion", chainExplosionStyle = "legacy"},
-		{type = "flare", chainExplosionStyle = "new"},
-		--{type = "spark", amount = 8, rangeMean = 0, rangeDev = 3, full = true}
+	rock_destroy = {
+		{type = "chain_explosion"},
+		{type = "spark", amount = 10, rangeMean = 0, rangeDev = 3, full = true}
 	},
 	missile_trail = {
 		{type = "spark"}

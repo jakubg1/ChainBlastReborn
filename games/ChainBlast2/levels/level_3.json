@@ -5,32 +5,55 @@
     "multiplierEnabled": false,
     "enablePowerups": false,
     "key": {
-        "X": {
+        "#": {
             "tile": {
                 "type": "normal"
             }
         },
-        "#": {
+        "/": {
             "tile": {
                 "type": "normal"
             },
             "chain": {
                 "type": "crate",
                 "color": 0,
+                "health": 1
+            }
+        },
+        "X": {
+            "tile": {
+                "type": "dirt"
+            },
+            "chain": {
+                "type": "crate",
+                "color": 0,
                 "health": 2
+            }
+        },
+        "I": {
+            "tile": {
+                "type": "ice"
+            }
+        },
+        "i": {
+            "tile": {
+                "type": "ice_broken"
+            }
+        },
+        "F": {
+            "tile": {
+                "type": "flip"
             }
         }
     },
     "layout": [
-        "   XXXXX   ",
-        "  XXXXXXX  ",
-        " XX##X##XX ",
-        " X#######X ",
-        " X#######X ",
-        " XX#####XX ",
-        " XXX###XXX ",
-        "  XXX#XXX  ",
-        "   XXXXX   "
+        " ////X//// ",
+        "II###X###II",
+        "IFiF#X#FiFI",
+        "IIF##X##FII",
+        "IFiF#X#FiFI",
+        "II###X###II",
+        " ////X//// "
     ],
     "spawns": [
         {

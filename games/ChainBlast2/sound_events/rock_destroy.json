@@ -1,0 +1,5 @@
+{
+    "$schema": "../../../schemas/sound_event.json",
+    "sound": "sounds/break_stone.wav",
+    "playsPerFrame": 3
+}
