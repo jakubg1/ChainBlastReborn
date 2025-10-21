@@ -45,17 +45,7 @@ function LevelIntro:draw()
     if self.time >= 6.5 then
         alpha = math.min(7.5 - self.time, 1)
     end
-    if self.game.player.lives == 1 then
-        self.font:drawWithShadow(string.format("Level %s", self.level.config.name), natRes / 2 + Vec2(0, -10), Vec2(0.5), nil, alpha)
-        alpha = math.max(math.min(self.time - 1.5, 1))
-        if self.time >= 6.5 then
-            alpha = math.min(7.5 - self.time, 1)
-        end
-        self.font:drawWithShadow("This is your last chance!", natRes / 2, Vec2(0.5), Color(1, 0, 0), alpha)
-        self.font:drawWithShadow("Don't screw up!", natRes / 2 + Vec2(0, 10), Vec2(0.5), Color(1, 0, 0), alpha)
-    else
-        self.font:drawWithShadow(string.format("Level %s", self.level.config.name), natRes / 2, Vec2(0.5), nil, alpha)
-    end
+    self.font:drawWithShadow(string.format("Level %s", self.level.config.name), natRes / 2, Vec2(0.5), nil, alpha)
 end
 
 ---Callback from `main.lua`.

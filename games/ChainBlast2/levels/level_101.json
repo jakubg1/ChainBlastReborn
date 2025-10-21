@@ -1,0 +1,39 @@
+{
+    "$schema": "../../schemas/level.json",
+    "name": "1",
+    "time": 60,
+    "multiplierEnabled": false,
+    "enablePowerups": false,
+    "key": {
+        "X": {
+            "tile": {
+                "type": "normal"
+            }
+        }
+    },
+    "layout": [
+        "           ",
+        "  XXXXXXX  ",
+        "  XXXXXXX  ",
+        "  XXXXXXX  ",
+        "  XXXXXXX  ",
+        "  XXXXXXX  ",
+        "  XXXXXXX  ",
+        "  XXXXXXX  ",
+        "           "
+    ],
+    "spawns": [
+        {
+            "weight": 100,
+            "type": "chain_red"
+        },
+        {
+            "weight": 100,
+            "type": "chain_blue"
+        },
+        {
+            "weight": 70,
+            "type": "chain_yellow"
+        }
+    ]
+}

@@ -83,6 +83,13 @@ local TILE_TYPES = {
         hostsChain = false,
         blocksLightning = true
     },
+    wall_dirt = {
+        sprite = {state = 8, frame = 1},
+        preventsWin = false,
+        hostsChain = false,
+        blocksLightning = true,
+        useDirtMap = true
+    },
     dirt = {
         useDirtMap = true,
         preventsWin = true,

@@ -219,12 +219,13 @@ function LevelUI:drawHUD()
         -- Timer box
         self.timerSprite:draw(Vec2(19, 33), nil, nil, nil, nil, nil, self.hudAlpha)
         -- Text display
-        if self.level.time < 9.9 then
-            if self.level.time > 5 or not self.level:isTimerTicking() or _TotalTime % 0.25 < 0.125 then
-                self.font:draw(string.format("%.2f", self.level.time), Vec2(36, 150), Vec2(0.5, 0), Color(1, 0, 0), self.hudAlpha)
+        local time = math.max(self.level.time, 0)
+        if time < 9.9 then
+            if time > 5 or not self.level:isTimerTicking() or _TotalTime % 0.25 < 0.125 then
+                self.font:draw(string.format("%.2f", time), Vec2(36, 150), Vec2(0.5, 0), Color(1, 0, 0), self.hudAlpha)
             end
         else
-            self.font:draw(string.format("%.1d:%.2d", self.level.time / 60, self.level.time % 60), Vec2(36, 150), Vec2(0.5, 0), nil, self.hudAlpha)
+            self.font:draw(string.format("%.1d:%.2d", time / 60, time % 60), Vec2(36, 150), Vec2(0.5, 0), nil, self.hudAlpha)
         end
     end
 

@@ -14,9 +14,8 @@ function LevelFailed:new(game)
     self.level = game.sceneManager:getLevel()
 
 	self.font = _Game.resourceManager:getFont("fonts/standard.json")
-    self.time = 0
+    self.time = 1
     self.boardNuked = false
-    self.TEXTS = {"2 attempts left!", "Last attempt left!!!", "Uh oh..."}
 end
 
 ---Returns whether this scene should accept any input.
@@ -35,13 +34,6 @@ function LevelFailed:update(dt)
     if self.time >= 1 and not self.boardNuked then
         self.boardNuked = true
         self.level:nukeBoard()
-        if self.game.player.lives == 0 then
-            self.time = nil
-            self.board = nil
-            self.bombMeterTime = nil
-            self.game.particles = {}
-            self.gameOverAnimation = 0
-        end
     elseif self.time >= 12.5 then
         self.time = nil
         self.level:finishBoard()
@@ -63,7 +55,7 @@ function LevelFailed:draw()
     if self.time >= 11 then
         textAlpha = math.min(12 - self.time, 1)
     end
-    local text = self.TEXTS[3 - self.game.player.lives]
+    local text = "Level Failed!"
     self.font:drawWithShadow(text, natRes / 2, Vec2(0.5), Color(1, 0, 0), textAlpha)
 end
 

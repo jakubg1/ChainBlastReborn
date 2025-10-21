@@ -911,13 +911,14 @@ end
 
 ---Interpolates a number from `a` to `b` based on **clamped** time `t` in range from `t1` to `t2`.
 ---The result for `t < t1` is the same as `t = t1`, and the result for `t > t2` is the same as `t = t2`.
----@param a number The value for `t <= t1`.
----@param b number The value for `t >= t2`.
+---NOTE: For backwards compatibility, this function's arguments are reversed compared to standard OpenSMCE utils.
+---@param t number The time parameter.
 ---@param t1 number The time for which `a` is returned.
 ---@param t2 number The time for which `b` is returned.
----@param t number The time parameter.
+---@param a number The value for `t = t1`.
+---@param b number The value for `t = t2`.
 ---@return number
-function utils.mapc(a, b, t1, t2, t)
+function utils.mapc(t, t1, t2, a, b)
 	return utils.lerpc(a, b, (t - t1) / (t2 - t1))
 end
 

@@ -1,0 +1,47 @@
+{
+    "$schema": "../../schemas/level.json",
+    "name": "3",
+    "time": 70,
+    "multiplierEnabled": false,
+    "enablePowerups": false,
+    "key": {
+        "#": {
+            "tile": {
+                "type": "normal"
+            }
+        },
+        "/": {
+            "tile": {
+                "type": "normal"
+            },
+            "chain": {
+                "type": "crate",
+                "health": 1
+            }
+        }
+    },
+    "layout": [
+        "   #####   ",
+        "   #####   ",
+        "/#########/",
+        "/####/####/",
+        "/#########/",
+        "   #####   ",
+        "   #####   ",
+        "   /////   "
+    ],
+    "spawns": [
+        {
+            "weight": 100,
+            "type": "chain_red"
+        },
+        {
+            "weight": 100,
+            "type": "chain_blue"
+        },
+        {
+            "weight": 70,
+            "type": "chain_yellow"
+        }
+    ]
+}

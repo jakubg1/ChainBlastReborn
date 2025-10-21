@@ -45,6 +45,17 @@ function LevelConfig:new(data, path)
         self.spawns[i] = {}
         self.spawns[i].weight = u.parseInteger(data.spawns[i].weight, path, "spawns[" .. tostring(i) .. "].weight")
         self.spawns[i].type = u.parseString(data.spawns[i].type, path, "spawns[" .. tostring(i) .. "].type")
+        self.spawns[i].initialOnly = u.parseBooleanOpt(data.spawns[i].initialOnly, path, "spawns[" .. tostring(i) .. "].initialOnly")
+        self.spawns[i].fillOnly = u.parseBooleanOpt(data.spawns[i].fillOnly, path, "spawns[" .. tostring(i) .. "].fillOnly")
+    end
+
+    self.extraSpawns = {}
+    if data.extraSpawns then
+        for i = 1, #data.extraSpawns do
+            self.extraSpawns[i] = {}
+            self.extraSpawns[i].amount = u.parseInteger(data.extraSpawns[i].amount, path, "extraSpawns[" .. tostring(i) .. "].amount")
+            self.extraSpawns[i].type = u.parseString(data.extraSpawns[i].type, path, "extraSpawns[" .. tostring(i) .. "].type")
+        end
     end
 end
 

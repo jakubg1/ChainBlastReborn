@@ -150,7 +150,7 @@ function Chain:new(board, coords, type)
     self.releaseTime = nil
     self.releaseRotation = nil
     self.releaseRotationSpeed = nil
-    self.panicTime = nil
+    self.panicStrength = 0
     self.panicOffset = Vec2()
     self.shakeTime = nil
     self.shakeOffset = Vec2()
@@ -232,9 +232,10 @@ function Chain:update(dt)
     end
 
     -- Panic animation
-    if self.panicTime then
-        self.panicTime = self.panicTime + dt
-        self.panicOffset = Vec2(love.math.randomNormal(self.panicTime), love.math.randomNormal(self.panicTime))
+    if self.panicStrength > 0 then
+        self.panicOffset = Vec2(love.math.randomNormal(self.panicStrength), love.math.randomNormal(self.panicStrength))
+    elseif self.panicOffset.x ~= 0 or self.panicOffset.y ~= 0 then
+        self.panicOffset = Vec2()
     end
 
     -- Shake animation
@@ -488,9 +489,9 @@ function Chain:release()
     --self.releaseRotationSpeed = love.math.randomNormal(15, 0)
 end
 
----Starts the panic animation for this Chain (shaking rapidly).
-function Chain:panic()
-    self.panicTime = 0
+---Sets the strength of the rapid shake of this board object. This should be used only when losing a level.
+function Chain:setPanicStrength(strength)
+    self.panicStrength = strength
 end
 
 ---Shakes the chain slightly for the provided duration.

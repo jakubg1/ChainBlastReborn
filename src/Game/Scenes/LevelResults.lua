@@ -85,7 +85,7 @@ function LevelResults:draw()
         self.font:draw("Time Bonus:", Vec2(xLeft, 80), Vec2(0, 0.5))
     end
     if self.time > 2.5 then
-        local bonus = self.level:getTimeBonus()
+        local bonus = self.level.givenTimeBonus
         local text = "No Bonus!"
         if bonus > 0 then
             text = string.format("%.1fs = %s", self.level.time, bonus)
@@ -107,11 +107,7 @@ function LevelResults:draw()
     if self.time > 4.5 then
         local text = "Click anywhere to start next level!"
         if self.level.lost then
-            if self.game.player.lives > 0 then
-                text = "Click anywhere to try again!"
-            else
-                text = "Click anywhere to continue!"
-            end
+            text = "Click anywhere to try again!"
         else
             if self.game.player.level == 10 then
                 text = "Click anywhere to continue!"
@@ -134,13 +130,13 @@ function LevelResults:mousepressed(x, y, button)
     if button == 1 then
         if self:isFinished() then
             self.level:submitLevelStats()
-            if self.game.player.lives == 0 then
-                self.game.sceneManager:changeScene("game_results", true, true)
-            elseif not self.level.lost and self.game.player.level == 10 then
+            if not self.level.lost and self.game.player.level == 10 then
                 self.game.sceneManager:changeScene("game_win", true, true)
             else
                 if not self.level.lost then
                     self.game.player:advanceLevel()
+                else
+                    self.game.player:restartLevel()
                 end
                 self.game.sceneManager:startLevel()
                 self.game.sceneManager:changeScene("level_intro", true, true)

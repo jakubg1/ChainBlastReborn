@@ -1,35 +1,39 @@
 {
     "$schema": "../../schemas/level.json",
-    "name": "2",
-    "time": 40,
+    "name": "4",
+    "time": 65,
     "multiplierEnabled": false,
     "enablePowerups": false,
     "key": {
-        "X": {
-            "tile": {
-                "type": "normal"
-            }
-        },
         "#": {
             "tile": {
-                "type": "wall_dirt"
+                "type": "normal"
             }
         },
         "D": {
             "tile": {
                 "type": "dirt"
             }
+        },
+        "/": {
+            "tile": {
+                "type": "dirt"
+            },
+            "chain": {
+                "type": "crate",
+                "health": 1
+            }
         }
     },
     "layout": [
-        "DD#DDD#DD",
-        "DD#DDD#DD",
-        "DD#DDD#DD",
-        "DDDDDDDDD",
-        "DDDDDDDDD",
-        "DD#DDD#DD",
-        "DD#DDD#DD",
-        "DD#DDD#DD"
+        "#### ####  ",
+        "##/# #/##  ",
+        "##D#/#DD#  ",
+        " #DDD#/D## ",
+        " ##D/#DDD# ",
+        "  #DD#/#D##",
+        "  ##/# #/##",
+        "  #### ####"
     ],
     "spawns": [
         {
@@ -41,19 +45,8 @@
             "type": "chain_blue"
         },
         {
-            "weight": 100,
+            "weight": 70,
             "type": "chain_yellow"
-        },
-        {
-            "weight": 15,
-            "type": "rock",
-            "fillOnly": true
-        }
-    ],
-    "extraSpawns": [
-        {
-            "amount": 5,
-            "type": "rock"
         }
     ]
 }

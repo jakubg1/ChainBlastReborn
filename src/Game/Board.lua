@@ -95,8 +95,9 @@ function Board:update(dt)
     local primedObjects = self:countPrimedObjects()
     if fallingObjects > 0 or shufflingObjects > 0 or primedObjects > 0 or self.over then
         self.playerControl = false
+        -- If the player was making a selection, forcibly stop it but also try submitting whatever the player might have managed to select.
         if self:isSelectionActive() then
-            self.selection:finish(true)
+            self.selection:finish()
             self.selection = nil
         end
     end
@@ -241,6 +242,9 @@ function Board:update(dt)
         bomb:update(dt)
     end
     _Utils.removeDeadObjects(self.bombs)
+
+    -- Update the panic animation for chains.
+    self:setChainPanicStrength(_Utils.mapc(self.level.time, 0, self.level.minCoyoteTime, 0, 1))
 
     -- Update dirtmap
     for x = 1, self.size.x do
@@ -416,18 +420,29 @@ function Board:initializeContents()
 
     -- We will fill the board repeatedly until no premade matches exist.
     repeat
+        local specialSpawnPositions = {}
         for i = 1, self.size.x do
             for j = 1, self.size.y do
                 local coords = Vec2(i, j)
                 local cellData = self:getCellData(coords)
                 if cellData and cellData.tile and self.tiles[i][j]:hostsChain() then
-                    local chainType = cellData.chain and cellData.chain.type or self.level:getRandomSpawn()
+                    local chainType = cellData.chain and cellData.chain.type or self.level:getRandomSpawn(true)
                     self.chains[i][j] = Chain(self, coords, chainType)
                     if cellData.chain then
                         if cellData.chain.health then
                             self.chains[i][j].health = cellData.chain.health
                         end
                     end
+                    table.insert(specialSpawnPositions, coords)
+                end
+            end
+        end
+        -- Distribute special spawns.
+        if self.level.config.extraSpawns then
+            for i, spawn in ipairs(self.level.config.extraSpawns) do
+                for j = 1, spawn.amount do
+                    local coords = table.remove(specialSpawnPositions, math.random(1, #specialSpawnPositions))
+                    self.chains[coords.x][coords.y] = Chain(self, coords, spawn.type)
                 end
             end
         end
@@ -696,7 +711,7 @@ function Board:handleMatches()
                 --end
                 -- New (power meter)
                 if not self.level:isPowerFull() then
-                    self.level:addToPowerMeter(chain:getColor() == 0 and 2 or 1, powerColor or 0, playerMade)
+                    self.level:addToPowerMeter(self.level.combo > 1 and 2 or 1, powerColor or 0, playerMade)
                     if self.level.powerColor == chain:getColor() or (not playerMade and self.level.powerColor == 0) then
                         chain:spawnPowerParticles(9)
                     else
@@ -720,6 +735,7 @@ function Board:handleMatches()
         if #match > 3 then
             --self.level:addTime(#match - 3)
         end
+        self.level:capTimerAtZero()
         self.level.largestGroup = math.max(self.level.largestGroup, #match)
         _Game:playSound("sound_events/match.json")
         -- Shake the screen on combos.
@@ -813,7 +829,7 @@ function Board:fillHolesUp()
                 local tile = self:getTile(coords)
                 local chain = self:getChain(coords)
                 if tile and tile:hostsChain() and not chain then
-                    local newChain = Chain(self, Vec2(coords.x, -((13 - self.size.y) / 2) - chainsPlaced), self.level:getRandomSpawn())
+                    local newChain = Chain(self, Vec2(coords.x, -((13 - self.size.y) / 2) - chainsPlaced), self.level:getRandomSpawn(false))
                     self:fallNewChain(newChain, coords)
                     chainsPlaced = chainsPlaced + 1
                 end
@@ -1042,6 +1058,29 @@ function Board:getRandomNonGoldTileCoords(excludedCoords)
     return tiles[love.math.random(#tiles)]
 end
 
+---Returns coordinates of a random rock on the board.
+---If there are no rocks, returns `nil`.
+---@param excludedCoords table? A list of excluded coordinates (Vector2's) which are guaranteed to not be returned by this function.
+---@return Vector2?
+function Board:getRandomRockCoords(excludedCoords)
+    local tiles = {}
+    for i = 1, self.size.x do
+        for j = 1, self.size.y do
+            local coords = Vec2(i, j)
+            if not excludedCoords or not _Utils.isValueInTable(excludedCoords, coords) then
+                local chain = self:getChain(coords)
+                if chain and chain.type == "rock" then
+                    table.insert(tiles, coords)
+                end
+            end
+        end
+    end
+    if #tiles == 0 then
+        return
+    end
+    return tiles[love.math.random(#tiles)]
+end
+
 ---Returns coordinates of a random tile on the board.
 ---@param excludedCoords table? A list of excluded coordinates (Vector2's) which are guaranteed to not be returned by this function.
 ---@return Vector2
@@ -1059,6 +1098,13 @@ function Board:getRandomTileCoords(excludedCoords)
         end
     end
     return tiles[love.math.random(#tiles)]
+end
+
+---Returns the coordinates of the next laser strike.
+---@return Vector2
+function Board:getRandomLaserTarget()
+    -- First, the game looks for rocks. Then for any non-gold tile, and finally, any tile at all.
+    return self:getRandomRockCoords() or self:getRandomNonGoldTileCoords() or self:getRandomTileCoords()
 end
 
 
@@ -1100,15 +1146,26 @@ end
 
 
 
----Starts the panic animation for all chains (shaking rapidly) and marks this board as over, which takes control away from the player.
-function Board:panicChains()
-    self.over = true
+---Sets the panic animation strength for all board objects. This should be used primarily when losing a level.
+function Board:setChainPanicStrength(strength)
     for i = 1, self.size.x do
         for j = 1, self.size.y do
-            local coords = Vec2(i, j)
-            local chain = self:getChain(coords)
+            local chain = self:getChain(Vec2(i, j))
             if chain then
-                chain:panic()
+                chain:setPanicStrength(strength)
+            end
+        end
+    end
+end
+
+---Shakes all the chains slightly for the provided duration.
+---@param duration number The duration of the shake in seconds.
+function Board:shakeChains(duration)
+    for i = 1, self.size.x do
+        for j = 1, self.size.y do
+            local chain = self:getChain(Vec2(i, j))
+            if chain then
+                chain:shake(duration)
             end
         end
     end
@@ -1351,21 +1408,29 @@ end
 ---@param button integer The mouse button which was pressed.
 function Board:mousepressed(x, y, button)
     if button == 1 then
-        if self.hoverCoords and self:getChain(self.hoverCoords) then
+        if self.hoverCoords then
             if self.mode == "select" then
-                self.selection = BoardSelection(self)
+                if self:getChain(self.hoverCoords) then
+                    self.selection = BoardSelection(self)
+                end
             elseif self.mode == "bomb" then
-                self:explodeBomb(self.hoverCoords)
-                self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
-                self.level:resetPowerMeter()
-                self:resetHint()
-                self.mode = "select"
+                if self:getTile(self.hoverCoords) then
+                    self:explodeBomb(self.hoverCoords)
+                    self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
+                    self.level:resetPowerMeter()
+                    self.level:capTimerAtZero()
+                    self:resetHint()
+                    self.mode = "select"
+                end
             elseif self.mode == "lightning" then
-                self:explodeLightning(self.hoverCoords, true, true)
-                self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
-                self.level:resetPowerMeter()
-                self:resetHint()
-                self.mode = "select"
+                if self:getChain(self.hoverCoords) then
+                    self:explodeLightning(self.hoverCoords, true, true)
+                    self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
+                    self.level:resetPowerMeter()
+                    self.level:capTimerAtZero()
+                    self:resetHint()
+                    self.mode = "select"
+                end
             end
         end
     elseif button == 2 then
@@ -1380,6 +1445,7 @@ function Board:mousepressed(x, y, button)
                     if powerMode == "laser" then
                         self.level:spawnLasers(6)
                         self.level:resetPowerMeter()
+                        self.level:capTimerAtZero()
                         self:resetHint()
                     else
                         self.mode = powerMode

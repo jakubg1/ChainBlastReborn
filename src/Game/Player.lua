@@ -10,8 +10,8 @@ function Player:new(game)
     self.game = game
 
     self.score = 0
-    self.level = 1 -- math.random(1, 10)
-    self.lives = 3
+    self.previousScore = 0
+    self.level = 101 -- math.random(1, 10)
 
     self.largestGroup = 0
     self.maxCombo = 0
@@ -25,8 +25,8 @@ end
 ---TODO: Session class.
 function Player:resetSession()
     self.score = 0
+    self.previousScore = 0
     self.level = 1
-    self.lives = 3
     self.largestGroup = 0
     self.maxCombo = 0
     self.timeElapsed = 0
@@ -35,10 +35,15 @@ function Player:resetSession()
     self.levelsCompleted = 0
 end
 
+---Notifies that the level has been restarted - reduces score to prior to the level starting.
+function Player:restartLevel()
+    self.score = self.previousScore
+end
+
 ---Advances the player to the next level.
 function Player:advanceLevel()
     self.level = self.level + 1
-    self.lives = 3
+    self.previousScore = self.score
 end
 
 ---Submits the largest group size of a played level. If it is higher than recorded so far, it is increased.

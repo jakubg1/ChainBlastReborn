@@ -1,35 +1,24 @@
 {
     "$schema": "../../schemas/level.json",
-    "name": "2",
-    "time": 40,
+    "name": "5",
+    "time": 70,
     "multiplierEnabled": false,
     "enablePowerups": false,
     "key": {
-        "X": {
-            "tile": {
-                "type": "normal"
-            }
-        },
         "#": {
             "tile": {
-                "type": "wall_dirt"
-            }
-        },
-        "D": {
-            "tile": {
-                "type": "dirt"
+                "type": "normal"
             }
         }
     },
     "layout": [
-        "DD#DDD#DD",
-        "DD#DDD#DD",
-        "DD#DDD#DD",
-        "DDDDDDDDD",
-        "DDDDDDDDD",
-        "DD#DDD#DD",
-        "DD#DDD#DD",
-        "DD#DDD#DD"
+        " ####### ",
+        "#########",
+        "#########",
+        "#########",
+        " ####### ",
+        "   ###   ",
+        "   ###   "
     ],
     "spawns": [
         {
@@ -41,7 +30,7 @@
             "type": "chain_blue"
         },
         {
-            "weight": 100,
+            "weight": 70,
             "type": "chain_yellow"
         },
         {

@@ -20,9 +20,11 @@ function Level:new(game)
     self.background = LevelBackground(self)
 
     self.score = 0
+    self.givenTimeBonus = 0
     self.maxTime = self.config.time
     self.time = self.maxTime
     self.timeCounting = false
+    self.minCoyoteTime = -1
     self.combo = 0
     self.multiplier = 1
     self.multiplierProgress = 0
@@ -71,10 +73,7 @@ function Level:update(dt)
 
         -- Delete the board if it is dead and start the results animation.
         if self.board.delQueue then
-            self.board = nil
-            self.bombMeterTime = nil
-            self:addScore(self:getTimeBonus())
-            self.game.sceneManager:changeScene("level_results", true, true)
+            self:startLevelResults()
         end
     end
 
@@ -94,8 +93,8 @@ function Level:updateTime(dt)
         if self.time < 10 and math.floor(self.time) ~= math.floor(self.time + dt) then
             _Game:playSound("sound_events/clock.json")
         end
-        if self.time <= 0 then
-            self.time = 0
+        if self.time <= self.minCoyoteTime then
+            self.time = self.minCoyoteTime
             if not self.bombMeterTime then
                 self:lose()
             end
@@ -182,7 +181,7 @@ function Level:updateLasers(dt)
     end
     self.laserPowerTime = self.laserPowerTime - dt
     if self.laserPowerTime <= 0 then
-        local targetCoords = self.board:getRandomNonGoldTileCoords() or self.board:getRandomTileCoords()
+        local targetCoords = self.board:getRandomLaserTarget()
         self.board:impactTile(targetCoords)
         local sideTargets = {targetCoords + Vec2(0, 1), targetCoords + Vec2(0, -1), targetCoords + Vec2(1, 0), targetCoords + Vec2(-1, 0)}
         for i, sideTarget in ipairs(sideTargets) do
@@ -233,13 +232,25 @@ function Level:updateMusic(dt)
 end
 
 ---Returns a random board object type that can spawn in this level, based on the level configuration.
+---@param initial boolean Whether the spawn is a part of the initial board fill.
 ---@return string
-function Level:getRandomSpawn()
+function Level:getRandomSpawn(initial)
     local weights = {}
+    local items = {}
     for i, item in ipairs(self.config.spawns) do
-        table.insert(weights, item.weight)
+        local cancel = false
+        if item.initialOnly and not initial then
+            cancel = true
+        end
+        if item.fillOnly and initial then
+            cancel = true
+        end
+        if not cancel then
+            table.insert(weights, item.weight)
+            table.insert(items, item)
+        end
     end
-    return self.config.spawns[_Utils.weightedRandom(weights)].type
+    return items[_Utils.weightedRandom(weights)].type
 end
 
 ---Creates a Board for this Level.
@@ -255,6 +266,15 @@ end
 ---Starts a fadeout animation for this level's Board.
 function Level:finishBoard()
     self.board:startEndAnimation()
+end
+
+---Removes the board, applies time bonus and starts the level results animation.
+function Level:startLevelResults()
+    self.board = nil
+    self.bombMeterTime = nil
+    self.givenTimeBonus = self:getTimeBonus()
+    self:addScore(self.givenTimeBonus)
+    self.game.sceneManager:changeScene("level_results", true, true)
 end
 
 ---Adds score to this level.
@@ -423,6 +443,16 @@ function Level:addToMultiplier(amount)
     end
 end
 
+---Caps the timer at zero if the grace period (time < 0) was active. Typically you only want to do this when matches are made.
+---Each time the timer is capped, the minimum coyote time is decreased by 0.02 seconds to avoid infinite clutching.
+function Level:capTimerAtZero()
+    if self.time >= 0 then
+        return
+    end
+    self.time = 0
+    self.minCoyoteTime = self.minCoyoteTime + 0.02
+end
+
 ---Wins this Level by stopping the music, playing the level win sound and starting the win animation.
 function Level:win()
     _Game:playSound("sound_events/level_win.json")
@@ -436,8 +466,7 @@ end
 ---Also, takes one attempt away from the player.
 function Level:lose()
     self.lost = true
-    self.board:panicChains()
-    self.game.player.lives = self.game.player.lives - 1
+    self.board.over = true
 
     _Game:playSound("sound_events/level_lose.json")
     self.levelMusic:stop(0.25)
@@ -445,13 +474,14 @@ function Level:lose()
     self.game.sceneManager:changeScene("level_failed", true, true)
 end
 
----Returns the current total time bonus the player will get based on the current timer value.
+---Returns the current total time bonus the player will get based on the current level state.
 ---@return integer
 function Level:getTimeBonus()
     if self:isTimerDisabled() then
         return 0
     end
-    return math.ceil(self.time * 10) * 30
+    local value = (self.time / self.maxTime) * self.score * 2
+    return math.ceil(value / 10) * 10
 end
 
 ---Submits the level statistics to the Player, and upates the game records and statistics.
