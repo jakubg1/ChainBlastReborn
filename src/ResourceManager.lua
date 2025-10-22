@@ -364,6 +364,7 @@ function ResourceManager:loadAsset(key, batches)
 	local contents = nil
 	if _Utils.strEndsWith(key, ".json") then
 		contents = _Utils.loadJson(_ParsePath(key))
+		assert(contents, "Failed to load file " .. key)
 		local schema = contents["$schema"]
 		if schema then
 			schema = _Utils.strSplit(schema, "/schemas/")

@@ -1,4 +1,6 @@
 local class = require "com.class"
+local Vec2 = require("src.Essentials.Vector2")
+local Tilemap = require("src.Game.Tilemap")
 local LevelStar = require("src.Game.LevelStar")
 
 ---@class LevelBackground
@@ -9,6 +11,24 @@ local LevelBackground = class:derive("LevelBackground")
 ---@param level Level The level which owns this background.
 function LevelBackground:new(level)
     self.level = level
+
+    self.sprites = {
+        _Game.resourceManager:getSprite("sprites/background_1.json"),
+        _Game.resourceManager:getSprite("sprites/background_2.json"),
+        _Game.resourceManager:getSprite("sprites/background_3.json"),
+    }
+    self.maps = {
+        Tilemap(self.sprites[1], 50, 30),
+        Tilemap(self.sprites[2], 50, 30),
+        Tilemap(self.sprites[3], 50, 30)
+    }
+    for i = 1, 50 do
+        for j = 1, 30 do
+            for k = 1, 3 do
+                self.maps[k]:setCell(i, j, math.random() < 0.2)
+            end
+        end
+    end
 
     self.stars = {}
     for i = 1, 1500 do
@@ -55,6 +75,10 @@ function LevelBackground:draw()
 
     for i, star in ipairs(self.stars) do
         star:draw()
+    end
+
+    for i = 3, 1, -1 do
+        self.maps[i]:draw(Vec2())
     end
 
     -- Draw the flash.

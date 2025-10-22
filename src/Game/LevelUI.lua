@@ -14,7 +14,9 @@ function LevelUI:new(level)
 
 	self.font = _Game.resourceManager:getFont("fonts/standard.json")
     self.timerSprite = _Game.resourceManager:getSprite("sprites/hud_timer.json")
+    self.timerSpriteBg = _Game.resourceManager:getSprite("sprites/hud_timer_background.json")
     self.powerSprite = _Game.resourceManager:getSprite("sprites/hud_power.json")
+    self.powerSpriteBg = _Game.resourceManager:getSprite("sprites/hud_power_background.json")
     self.powerCrystalSprite = _Game.resourceManager:getSprite("sprites/hud_power_crystal.json")
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
 
@@ -212,6 +214,8 @@ function LevelUI:drawHUD()
     -- Timer
     if not self.level:isTimerDisabled() then
         self.font:draw("Time", Vec2(35, 20), Vec2(0.5, 0), nil, self.hudAlpha)
+        -- Background
+        self.timerSpriteBg:draw(Vec2(19, 33), nil, nil, nil, nil, nil, self.hudAlpha)
         -- Bar
         local t = math.min(self.level.time / self.level.maxTime, 1)
         _DrawFillRect(Vec2(33, 40 + 108 * (1 - t)), Vec2(5, 110 * t), Color(0.1, 0.4, 0.9), self.hudAlpha)
@@ -248,6 +252,8 @@ function LevelUI:drawHUD()
 
     -- New power meter
     self.font:draw("Power", Vec2(285, 20), Vec2(0.5, 0), nil, self.hudAlpha)
+    -- Background
+    self.powerSpriteBg:draw(Vec2(268, 33), nil, nil, nil, nil, nil, self.hudAlpha)
     -- Bar
     local color = (self.powerMeterDisplay >= self.level.maxPowerMeter and _TotalTime % 0.3 < 0.15) and Color(1, 1, 1) or self.POWER_METER_COLORS[self.level.powerColor]
     local progress = math.min(self.powerMeterDisplay / self.level.maxPowerMeter, 1)

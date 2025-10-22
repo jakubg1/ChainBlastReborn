@@ -109,7 +109,7 @@ function LevelResults:draw()
         if self.level.lost then
             text = "Click anywhere to try again!"
         else
-            if self.game.player.level == 10 then
+            if self.level.config.final then
                 text = "Click anywhere to continue!"
             end
         end
@@ -130,7 +130,7 @@ function LevelResults:mousepressed(x, y, button)
     if button == 1 then
         if self:isFinished() then
             self.level:submitLevelStats()
-            if not self.level.lost and self.game.player.level == 10 then
+            if not self.level.lost and self.level.config.final then
                 self.game.sceneManager:changeScene("game_win", true, true)
             else
                 if not self.level.lost then

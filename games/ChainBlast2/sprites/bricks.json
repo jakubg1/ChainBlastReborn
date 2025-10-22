@@ -1,0 +1,25 @@
+{
+    "$schema": "../../../schemas/sprite.json",
+    "path": "images/bricks.png",
+    "frameSize": {
+        "x": 0,
+        "y": 0
+    },
+    "states": [
+        {
+            "pos": {
+                "x": 0,
+                "y": 0
+            },
+            "frames": {
+                "x": 4,
+                "y": 4
+            },
+            "frameSize": {
+                "x": 15,
+                "y": 15
+            }
+        }
+    ],
+    "batched": false
+}

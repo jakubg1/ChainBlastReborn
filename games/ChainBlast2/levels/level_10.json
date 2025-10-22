@@ -2,6 +2,7 @@
     "$schema": "../../schemas/level.json",
     "name": "10",
     "time": 30,
+    "final": true,
     "multiplierEnabled": false,
     "enablePowerups": false,
     "key": {

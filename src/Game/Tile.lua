@@ -78,17 +78,17 @@ local TILE_TYPES = {
         }
     },
     wall = {
-        sprite = {state = 8, frame = 1},
-        preventsWin = false,
-        hostsChain = false,
-        blocksLightning = true
-    },
-    wall_dirt = {
-        sprite = {state = 8, frame = 1},
         preventsWin = false,
         hostsChain = false,
         blocksLightning = true,
-        useDirtMap = true
+        useBrickMap = true
+    },
+    wall_dirt = {
+        preventsWin = false,
+        hostsChain = false,
+        blocksLightning = true,
+        useDirtMap = true,
+        useBrickMap = true
     },
     dirt = {
         useDirtMap = true,
@@ -210,6 +210,12 @@ end
 ---TODO: Change the map to use any string for multi-map support.
 function Tile:usesDirtMap()
     return self.config.useDirtMap
+end
+
+---Returns whether this Tile is using a brick map.
+---TODO: Change the map to use any string for multi-map support.
+function Tile:usesBrickMap()
+    return self.config.useBrickMap
 end
 
 ---Dispatches impact or explosion effects on this Tile.

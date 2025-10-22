@@ -1,7 +1,8 @@
 {
     "$schema": "../../schemas/level.json",
-    "name": "8",
-    "time": 80,
+    "name": "10",
+    "time": 70,
+    "final": true,
     "multiplierEnabled": false,
     "enablePowerups": false,
     "key": {
@@ -15,27 +16,39 @@
                 "type": "wall"
             }
         },
-        "i": {
-            "tile": {
-                "type": "wall_dirt"
-            }
-        },
         "D": {
             "tile": {
                 "type": "dirt"
             }
+        },
+        "/": {
+            "tile": {
+                "type": "dirt"
+            },
+            "chain": {
+                "type": "crate",
+                "health": 1
+            }
+        },
+        "X": {
+            "tile": {
+                "type": "dirt"
+            },
+            "chain": {
+                "type": "crate",
+                "health": 2
+            }
         }
     },
     "layout": [
-        " D### ###D ",
-        "DD#######DD",
-        "DD###D###DD",
-        "D   #D#   D",
-        "i!!!###!!!i",
-        "D   #D#   D",
-        "DD###D###DD",
-        "DD#######DD",
-        " D### ###D "
+        "        ###",
+        "    ### ###",
+        "### #D# #D#",
+        "#D# #D# #D#",
+        "#D#!#D#!#D#",
+        "#D#X#D#X#D#",
+        "DDDXDDDXDDD",
+        "/DDXDDDXDD/"
     ],
     "spawns": [
         {
@@ -49,6 +62,10 @@
         {
             "weight": 70,
             "type": "chain_yellow"
+        },
+        {
+            "weight": 10,
+            "type": "rock"
         }
     ]
 }

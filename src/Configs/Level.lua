@@ -16,6 +16,7 @@ function LevelConfig:new(data, path)
 
     self.name = u.parseString(data.name, path, "name")
     self.time = u.parseNumber(data.time, path, "time")
+    self.final = u.parseBooleanOpt(data.final, path, "final")
     self.multiplierEnabled = u.parseBoolean(data.multiplierEnabled, path, "multiplierEnabled")
     self.enablePowerups = u.parseBoolean(data.enablePowerups, path, "enablePowerups")
 

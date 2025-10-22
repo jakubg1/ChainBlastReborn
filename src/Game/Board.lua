@@ -61,6 +61,8 @@ function Board:new(level)
     self.background = nil
     self.dirtLayerSprite = _Game.resourceManager:getSprite("sprites/dirt.json")
     self.dirtLayer = Tilemap(self.dirtLayerSprite, self.size.x + 2, self.size.y + 2)
+    self.brickLayerSprite = _Game.resourceManager:getSprite("sprites/bricks.json")
+    self.brickLayer = Tilemap(self.brickLayerSprite, self.size.x + 2, self.size.y + 2)
 
     self.delQueue = false
 
@@ -252,6 +254,7 @@ function Board:update(dt)
             local tile = self:getTile(Vec2(x, y))
             if tile then
                 self.dirtLayer:setCell(x + 1, y + 1, tile:usesDirtMap())
+                self.brickLayer:setCell(x + 1, y + 1, tile:usesBrickMap())
             end
         end
     end
@@ -1218,28 +1221,21 @@ function Board:draw()
     for i = 1, self.size.x do
         for j = 1, self.size.y do
             local tile = self:getTile(Vec2(i, j))
-            if tile and tile.type ~= "wall" then
+            if tile then
                 tile:draw(offset)
             end
         end
     end
-    -- Dirt
+    -- Dirt and walls
     if self.startAnimation then
         self:setDiamondStencil(self.startAnimation * 100)
     elseif self.endAnimation then
         self:setDiamondStencil(math.max(self.endAnimation - 2, 0) * 100, true)
     end
     self.dirtLayer:draw(self.pos - 7 + offset)
+    self.brickLayer:draw(self.pos - 7 + offset)
     self:resetStencil()
-    -- Walls go over dirt
-    for i = 1, self.size.x do
-        for j = 1, self.size.y do
-            local tile = self:getTile(Vec2(i, j))
-            if tile and tile.type == "wall" then
-                tile:draw(offset)
-            end
-        end
-    end
+
     self:drawObjects()
     self:drawTileHighlights()
     self:drawHint()

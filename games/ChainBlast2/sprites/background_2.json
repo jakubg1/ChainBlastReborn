@@ -1,0 +1,21 @@
+{
+    "$schema": "../../../schemas/sprite.json",
+    "path": "images/background_2.png",
+    "frameSize": {
+        "x": 12,
+        "y": 12
+    },
+    "states": [
+        {
+            "pos": {
+                "x": 0,
+                "y": 0
+            },
+            "frames": {
+                "x": 4,
+                "y": 4
+            }
+        }
+    ],
+    "batched": false
+}
