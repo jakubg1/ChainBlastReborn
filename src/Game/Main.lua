@@ -227,6 +227,13 @@ function GameMain:mousereleased(x, y, button)
 end
 
 ---Callback from `main.lua`.
+---@param x integer X movement of the mouse wheel.
+---@param y integer Y movement of the mouse wheel.
+function GameMain:wheelmoved(x, y)
+	self.sceneManager:wheelmoved(x, y)
+end
+
+---Callback from `main.lua`.
 ---@param key string The pressed key code.
 function GameMain:keypressed(key)
 	self.sceneManager:keypressed(key)

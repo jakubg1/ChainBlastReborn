@@ -29,6 +29,20 @@ function Tilemap:new(sprite, width, height)
     self.tileSize = self.sprite:getFrameSize(1)
 end
 
+---Returns the logical width of this Tilemap (the exact number provided in the constructor).
+---The actual amount of tiles is lower by 1.
+---@return integer
+function Tilemap:getWidth()
+    return #self.data
+end
+
+---Returns the logical height of this Tilemap (the exact number provided in the constructor).
+---The actual amount of tiles is lower by 1.
+---@return integer
+function Tilemap:getHeight()
+    return #self.data[1]
+end
+
 ---Sets the new cell state at the given position.
 ---@param x integer X position, starting from 1.
 ---@param y integer Y position, starting from 1.

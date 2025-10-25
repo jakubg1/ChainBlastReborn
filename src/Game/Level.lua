@@ -274,7 +274,7 @@ function Level:startLevelResults()
     self.bombMeterTime = nil
     self.givenTimeBonus = self:getTimeBonus()
     self:addScore(self.givenTimeBonus)
-    self.game.sceneManager:changeScene("level_results", true, true)
+    self.game.sceneManager:changeScene("level_results", false, true)
 end
 
 ---Adds score to this level.
@@ -494,8 +494,10 @@ end
 ---Draws the Level.
 function Level:draw()
     self.background:draw()
-    self:drawBoard()
-    self.ui:draw()
+    if not _Debug.hideBoard then
+        self:drawBoard()
+        self.ui:draw()
+    end
 end
 
 ---Draws the level board.

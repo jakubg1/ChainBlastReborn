@@ -17,15 +17,17 @@ function LevelBackground:new(level)
         _Game.resourceManager:getSprite("sprites/background_2.json"),
         _Game.resourceManager:getSprite("sprites/background_3.json"),
     }
+    local natRes = _Game:getNativeResolution()
     self.maps = {
-        Tilemap(self.sprites[1], 50, 30),
+        Tilemap(self.sprites[1], math.ceil(natRes.x / 16) + 2, math.ceil(natRes.y / 16) + 2),
         Tilemap(self.sprites[2], 50, 30),
         Tilemap(self.sprites[3], 50, 30)
     }
-    for i = 1, 50 do
-        for j = 1, 30 do
-            for k = 1, 3 do
-                self.maps[k]:setCell(i, j, math.random() < 0.2)
+    for i = 1, 3 do
+        local map = self.maps[i]
+        for x = 1, map:getWidth() do
+            for y = 1, map:getHeight() do
+                map:setCell(x, y, math.random() < 0.5 or y > 10)
             end
         end
     end
@@ -35,6 +37,7 @@ function LevelBackground:new(level)
         --self.stars[i] = LevelStar(true)
     end
 
+    self.visible = true
     self.flashAlpha = nil
     self.flashDecay = nil
 end
@@ -45,6 +48,12 @@ end
 function LevelBackground:flash(intensity, duration)
     self.flashAlpha = intensity
     self.flashDecay = 1 / duration * intensity
+end
+
+---Sets whether the background should be visible.
+---@param visible boolean `true` if the background should be visible, `false` if not.
+function LevelBackground:setVisible(visible)
+    self.visible = visible
 end
 
 ---Updates the level background.
@@ -69,19 +78,22 @@ end
 
 ---Draws the level background.
 function LevelBackground:draw()
+    if not self.visible then
+        return
+    end
+    -- Background
     local natRes = _Game:getNativeResolution()
     love.graphics.setColor(0.05, 0.08, 0.13)
     love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
-
+    -- Stars
     for i, star in ipairs(self.stars) do
         star:draw()
     end
-
+    -- Tilemaps
     for i = 3, 1, -1 do
-        self.maps[i]:draw(Vec2())
+        self.maps[i]:draw(Vec2(-8))
     end
-
-    -- Draw the flash.
+    -- Flash
     if self.flashAlpha then
         love.graphics.setColor(1, 1, 1, self.flashAlpha * _Game.runtimeManager.options:getSetting("screenFlashStrength"))
         love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)

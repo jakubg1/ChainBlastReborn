@@ -47,14 +47,14 @@ end
 ---Updates the Scene Manager.
 ---@param dt number Time delta in seconds.
 function SceneManager:update(dt)
+	if self.nextScene and self.transition:isShown() then
+		self:loadNextScene()
+	end
     if self.level then
         self.level:update(dt)
     end
 	self.scene:update(dt)
 	self.transition:update(dt)
-	if self.nextScene and self.transition:isShown() then
-		self:loadNextScene()
-	end
 end
 
 ---Changes the scene with an optional transition animation.
@@ -157,6 +157,15 @@ function SceneManager:mousereleased(x, y, button)
 		self.scene:mousereleased(x, y, button)
     elseif self.level then
         self.level:mousereleased(x, y, button)
+	end
+end
+
+---Callback from `main.lua`.
+---@param x integer X movement of the mouse wheel.
+---@param y integer Y movement of the mouse wheel.
+function SceneManager:wheelmoved(x, y)
+	if self:isSceneActive() and self.scene.wheelmoved then
+		self.scene:wheelmoved(x, y)
 	end
 end
 

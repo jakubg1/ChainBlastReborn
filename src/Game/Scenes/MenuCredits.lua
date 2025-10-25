@@ -4,12 +4,12 @@ local Color = require("src.Essentials.Color")
 local Text = require("src.Game.Scenes.Text")
 local MenuCursor = require("src.Game.Scenes.MenuCursor")
 
----Settings screen in the Menu scene.
+---Credits screen in the Menu scene.
 ---@class MenuCredits
 ---@overload fun(scene):MenuCredits
 local MenuCredits = class:derive("MenuCredits")
 
----Constructs a new Settings screen.
+---Constructs a new Credits screen.
 ---@param scene Menu The owner of this screen.
 function MenuCredits:new(scene)
     self.scene = scene
@@ -25,7 +25,7 @@ function MenuCredits:new(scene)
     }
 end
 
----Updates the Settings screen.
+---Updates the Credits screen.
 ---@param dt number Time delta in seconds.
 function MenuCredits:update(dt)
     self:updateBackToMenu(dt)
@@ -62,7 +62,7 @@ function MenuCredits:updateBackToMenu(dt)
     end
 end
 
----Draws the Settings on the screen.
+---Draws the Credits on the screen.
 function MenuCredits:draw()
     -- Text
     for id, text in pairs(self.texts) do

@@ -56,6 +56,7 @@ function Debug:new()
 	self.gameDebugVisible = false
 	self.fpsDebugVisible = false
 	self.chainDebug = false
+	self.hideBoard = false
 
 	-- widget debug variables
 	self.uiWidgetDebugCount = 0
@@ -90,6 +91,7 @@ function Debug:draw()
 		self:drawVisibleText("[F4] Miscellaneous (FPS, level data, etc.)", Vec2(10, 85), 15)
 		self:drawVisibleText("[F5] FPS Counter", Vec2(10, 100), 15)
 		self:drawVisibleText("[F6] Chain debug", Vec2(10, 115), 15)
+		self:drawVisibleText("[F7] Hide board", Vec2(10, 130), 15)
 	end
 
 	-- Console
@@ -188,6 +190,7 @@ function Debug:keypressed(key)
 		if key == "f4" then self.gameDebugVisible = not self.gameDebugVisible end
 		if key == "f5" then self.fpsDebugVisible = not self.fpsDebugVisible end
 		if key == "f6" then self.chainDebug = not self.chainDebug end
+		if key == "f7" then self.hideBoard = not self.hideBoard end
 		if key == "kp-" and self.profPage > 1 then self.profPage = self.profPage - 1 end
 		if key == "kp+" and self.profPage < #self.profPages then self.profPage = self.profPage + 1 end
 		if key == "pagedown" then self.uiDebugOffset = self.uiDebugOffset + 300 end

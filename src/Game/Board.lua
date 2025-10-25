@@ -713,7 +713,7 @@ function Board:handleMatches()
                 --    self.level:addToBombMeter(1)
                 --end
                 -- New (power meter)
-                if not self.level:isPowerFull() then
+                if not self.level:isPowerFull() or self.level.powerColor == 0 then
                     self.level:addToPowerMeter(self.level.combo > 1 and 2 or 1, powerColor or 0, playerMade)
                     if self.level.powerColor == chain:getColor() or (not playerMade and self.level.powerColor == 0) then
                         chain:spawnPowerParticles(9)

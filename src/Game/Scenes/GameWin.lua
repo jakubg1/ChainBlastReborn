@@ -35,7 +35,7 @@ end
 ---@param dt number Time delta in seconds.
 function GameWin:update(dt)
     self.time = self.time + dt
-    if not self.chimePlayed and self.time >= 1 then
+    if not self.chimePlayed and self.time >= 0.5 then
         _Game:playSound("sound_events/game_win.json")
         self.chimePlayed = true
     end
@@ -50,8 +50,8 @@ function GameWin:draw()
             alpha = math.min((9 - self.time) / 2, 1)
         end
         _DrawFillRect(Vec2(), _Game:getNativeResolution(), _Utils.getRainbowColor(math.min((self.time - 2) / 2, 1.3)), alpha)
-        self.font:draw("YOU", natRes / 2, Vec2(0.5, 1), Color(0, 0, 0), 1, 5)
-        self.font:draw("WIN!", natRes / 2, Vec2(0.5, 0), Color(0, 0, 0), 1, 5)
+        self.font:draw("YOU", natRes / 2, Vec2(0.5, 1), Color(0, 0, 0), 1, 6)
+        self.font:draw("WIN!", natRes / 2, Vec2(0.5, 0), Color(0, 0, 0), 1, 6)
     elseif self.time > 9 then
         local alpha = math.min(math.max((self.time - 9) * 2, 0), 1)
         self.font:draw("Congratulations!", Vec2(160, 10), Vec2(0.5), Color(1, 1, 0), alpha)

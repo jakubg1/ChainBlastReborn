@@ -16,7 +16,7 @@ function LevelResults:new(game)
 	self.font = _Game.resourceManager:getFont("fonts/standard.json")
     self.time = 0
     self.soundStep = 1
-    self.SOUND_STEPS = {1.2, 1.6, 2, 2.4, 2.8, 3.8}
+    self.SOUND_STEPS = {0.6, 1.0, 1.4, 1.8, 2.2, 3.2}
 end
 
 ---Returns whether this scene should accept any input.
@@ -29,7 +29,7 @@ end
 ---@private
 ---@return boolean
 function LevelResults:isFinished()
-    return self.time > 4.5
+    return self.time > 4
 end
 
 ---Skips the level results animation.
@@ -43,7 +43,8 @@ end
 ---@param dt number Time delta in seconds.
 function LevelResults:update(dt)
     self.time = self.time + dt
-    self.level.ui:setHUDAlpha(0)
+    self.level.ui:setHUDAlpha(0, true)
+    self.level.background:setVisible(false)
     local threshold = self.SOUND_STEPS[self.soundStep]
     if threshold and self.time >= threshold then
         _Game:playSound("sound_events/ui_stats.json")
@@ -56,35 +57,35 @@ function LevelResults:draw()
     local xLeft = 60
     local xMid = 160
     local xRight = 260
-    local alpha = math.min(math.max((self.time - 0.5) * 2, 0), 1)
+    local alpha = _Utils.mapc(self.time, 0, 0.5, 0, 1)
     self.font:draw(string.format("Level %s", self.level.config.name), Vec2(xMid, 15), Vec2(0.5), nil, alpha)
     if self.level.lost then
         self.font:draw("Failed!", Vec2(xMid, 25), Vec2(0.5), Color(1, 0, 0), alpha)
     else
         self.font:draw("Complete!", Vec2(xMid, 25), Vec2(0.5), Color(0, 1, 0), alpha)
     end
-    if self.time > 1.2 then
+    if self.time > self.SOUND_STEPS[1] then
         self.font:draw("Time Elapsed:", Vec2(xLeft, 50), Vec2(0, 0.5))
     end
-    if self.time > 1.3 then
+    if self.time > self.SOUND_STEPS[1] + 0.1 then
         self.font:draw(string.format("%.1d:%.2d", self.level.timeElapsed / 60, self.level.timeElapsed % 60), Vec2(xRight, 50), Vec2(1, 0.5), Color(1, 1, 0))
     end
-    if self.time > 1.6 then
+    if self.time > self.SOUND_STEPS[2] then
         self.font:draw("Max Combo:", Vec2(xLeft, 60), Vec2(0, 0.5))
     end
-    if self.time > 1.7 then
+    if self.time > self.SOUND_STEPS[2] + 0.1 then
         self.font:draw(tostring(self.level.maxCombo), Vec2(xRight, 60), Vec2(1, 0.5), Color(1, 1, 0))
     end
-    if self.time > 2 then
+    if self.time > self.SOUND_STEPS[3] then
         self.font:draw("Largest Link:", Vec2(xLeft, 70), Vec2(0, 0.5))
     end
-    if self.time > 2.1 then
+    if self.time > self.SOUND_STEPS[3] + 0.1 then
         self.font:draw(tostring(self.level.largestGroup), Vec2(xRight, 70), Vec2(1, 0.5), Color(1, 1, 0))
     end
-    if self.time > 2.4 then
+    if self.time > self.SOUND_STEPS[4] then
         self.font:draw("Time Bonus:", Vec2(xLeft, 80), Vec2(0, 0.5))
     end
-    if self.time > 2.5 then
+    if self.time > self.SOUND_STEPS[4] + 0.1 then
         local bonus = self.level.givenTimeBonus
         local text = "No Bonus!"
         if bonus > 0 then
@@ -92,19 +93,19 @@ function LevelResults:draw()
         end
         self.font:draw(text, Vec2(xRight, 80), Vec2(1, 0.5), Color(1, 1, 0))
     end
-    if self.time > 2.8 then
+    if self.time > self.SOUND_STEPS[5] then
         self.font:draw("Level Score:", Vec2(xLeft, 90), Vec2(0, 0.5))
     end
-    if self.time > 2.9 then
+    if self.time > self.SOUND_STEPS[5] + 0.1 then
         self.font:draw(tostring(self.level.score), Vec2(xRight, 90), Vec2(1, 0.5), Color(1, 1, 0))
     end
-    if self.time > 3.4 then
+    if self.time > self.SOUND_STEPS[6] - 0.4 then
         self.font:draw("Total Score:", Vec2(xLeft, 120), Vec2(0, 0.5))
     end
-    if self.time > 3.8 then
+    if self.time > self.SOUND_STEPS[6] then
         self.font:draw(tostring(self.game.player.score), Vec2(xRight, 120), Vec2(1, 0.5), Color(1, 1, 0))
     end
-    if self.time > 4.5 then
+    if self.time > 4 then
         local text = "Click anywhere to start next level!"
         if self.level.lost then
             text = "Click anywhere to try again!"

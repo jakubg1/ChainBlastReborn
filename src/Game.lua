@@ -238,6 +238,15 @@ end
 
 
 ---Callback from `main.lua`.
+---@param x integer X movement of the mouse wheel.
+---@param y integer Y movement of the mouse wheel.
+function Game:wheelmoved(x, y)
+	self.game:wheelmoved(x, y)
+end
+
+
+
+---Callback from `main.lua`.
 ---@param key string The pressed key code.
 function Game:keypressed(key)
 	--self.uiManager:keypressed(key)

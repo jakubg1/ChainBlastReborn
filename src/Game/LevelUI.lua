@@ -87,8 +87,12 @@ end
 
 ---Sets the desired HUD alpha.
 ---@param alpha number Desired alpha. `1` - HUD visible, `0` - HUD hidden.
-function LevelUI:setHUDAlpha(alpha)
+---@param instant boolean? If set, the change will be instant.
+function LevelUI:setHUDAlpha(alpha, instant)
     self.hudAlphaTarget = alpha
+    if instant then
+        self.hudAlpha = alpha
+    end
 end
 
 ---Updates the level UI.

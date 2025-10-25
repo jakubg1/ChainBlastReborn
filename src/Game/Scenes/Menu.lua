@@ -2,6 +2,7 @@ local class = require "com.class"
 local MenuMain = require("src.Game.Scenes.MenuMain")
 local MenuSettings = require("src.Game.Scenes.MenuSettings")
 local MenuCredits = require("src.Game.Scenes.MenuCredits")
+local NormalmapTest = require("src.Game.Scenes.NormalmapTest")
 local MenuStar = require("src.Game.Scenes.MenuStar")
 
 ---@class Menu
@@ -39,7 +40,7 @@ end
 
 ---Goes to the credits screen.
 function Menu:goToCredits()
-    self.screen = MenuCredits(self)
+    self.screen = NormalmapTest(self)
 end
 
 ---Ends this scene and starts a level.
@@ -128,6 +129,15 @@ end
 ---@param button integer The mouse button which was released.
 function Menu:mousereleased(x, y, button)
     self.screen:mousereleased(x, y, button)
+end
+
+---Callback from `main.lua`.
+---@param x integer X movement of the mouse wheel.
+---@param y integer Y movement of the mouse wheel.
+function Menu:wheelmoved(x, y)
+    if self.screen.wheelmoved then
+        self.screen:wheelmoved(x, y)
+    end
 end
 
 ---Callback from `main.lua`.

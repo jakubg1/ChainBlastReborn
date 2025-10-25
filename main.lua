@@ -205,6 +205,7 @@ function love.mousereleased(x, y, button)
 end
 
 function love.wheelmoved(x, y)
+	if _Game then _Game:wheelmoved(x, y) end
 	_Debug:wheelmoved(x, y)
 end
 
