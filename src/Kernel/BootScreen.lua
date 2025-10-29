@@ -119,6 +119,10 @@ function BootScreen:mousereleased(x, y, button)
 	self.scene:mousereleased(x, y, button)
 end
 
+function BootScreen:mousemoved(x, y, dx, dy)
+	-- STUB
+end
+
 function BootScreen:keypressed(key)
 	-- STUB
 end

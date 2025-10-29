@@ -1453,6 +1453,7 @@ function Board:mousepressed(x, y, button)
             else
                 -- Cancel the power if we were in a power mode.
                 self.mode = "select"
+                _Game:playSound("sound_events/no.json")
             end
         end
     end

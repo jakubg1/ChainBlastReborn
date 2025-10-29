@@ -47,7 +47,7 @@
             "type": "chain_blue"
         },
         {
-            "weight": 70,
+            "weight": 100,
             "type": "chain_yellow"
         }
     ]

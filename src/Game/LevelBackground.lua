@@ -11,7 +11,22 @@ local LevelBackground = class:derive("LevelBackground")
 ---@param level Level The level which owns this background.
 function LevelBackground:new(level)
     self.level = level
+    self:prepareTilemaps()
+    self:prepareNormalmap()
 
+    self.stars = {}
+    for i = 1, 1500 do
+        --self.stars[i] = LevelStar(true)
+    end
+
+    self.visible = true
+    self.flashAlpha = nil
+    self.flashDecay = nil
+end
+
+---Prepares the tilemaps. This should be done in the constructor.
+---@private
+function LevelBackground:prepareTilemaps()
     self.sprites = {
         _Game.resourceManager:getSprite("sprites/background_1.json"),
         _Game.resourceManager:getSprite("sprites/background_2.json"),
@@ -31,15 +46,39 @@ function LevelBackground:new(level)
             end
         end
     end
+end
 
-    self.stars = {}
-    for i = 1, 1500 do
-        --self.stars[i] = LevelStar(true)
-    end
+---Prepares assets and buffers required to make the normalmapped background work.
+---@private
+function LevelBackground:prepareNormalmap()
+    self.t_diffuse = _Game.resourceManager:getSprite("sprites/normalmap_test/diffuse.json")
+    self.t_normal = _Game.resourceManager:getSprite("sprites/normalmap_test/normal.json")
+    self.s_pointlight = _Game.resourceManager:getShader("shaders/l_pointlight.glsl")
+    self.s_diffuse = _Game.resourceManager:getShader("shaders/l_diffuse.glsl")
 
-    self.visible = true
-    self.flashAlpha = nil
-    self.flashDecay = nil
+    local natRes = _Game:getNativeResolution()
+    self.lightmap = love.graphics.newCanvas(natRes.x, natRes.y)
+    self.lightStrength = 0.55
+    self.lightRange = 300
+end
+
+---Generates the lightmap.
+---@private
+function LevelBackground:generateLightmap()
+    local natRes = _Game:getNativeResolution()
+    local oldCanvas = love.graphics.getCanvas()
+    love.graphics.setCanvas(self.lightmap)
+    local oldShader = love.graphics.getShader()
+    love.graphics.setShader(self.s_pointlight.shader)
+    self.s_pointlight.shader:send("x", _MousePos.x)
+    self.s_pointlight.shader:send("y", _MousePos.y)
+    self.s_pointlight.shader:send("strength", self.lightStrength)
+    self.s_pointlight.shader:send("range", self.lightRange)
+    love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
+    love.graphics.setShader(oldShader)
+    -- VERY DIRTY HACK!!!! We are doing the same thing Game.lua does when setting the main display canvas.
+    -- This should be handled by a canvas stack instead!!!
+    love.graphics.setCanvas({oldCanvas, stencil = true})
 end
 
 ---Flashes the background white.
@@ -86,18 +125,42 @@ function LevelBackground:draw()
     love.graphics.setColor(0.05, 0.08, 0.13)
     love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
     -- Stars
-    for i, star in ipairs(self.stars) do
-        star:draw()
-    end
+    --for i, star in ipairs(self.stars) do
+        --star:draw()
+    --end
     -- Tilemaps
-    for i = 3, 1, -1 do
-        self.maps[i]:draw(Vec2(-8))
-    end
+    --for i = 3, 1, -1 do
+        --self.maps[i]:draw(Vec2(-8))
+    --end
+    -- Normalmapped tiled background
+    self:drawNormalmap()
     -- Flash
     if self.flashAlpha then
         love.graphics.setColor(1, 1, 1, self.flashAlpha * _Game.runtimeManager.options:getSetting("screenFlashStrength"))
         love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
     end
+end
+
+---Draws the normalmapped background.
+---@private
+function LevelBackground:drawNormalmap()
+    -- Generate the lightmap.
+    self:generateLightmap()
+
+    -- Set the shader and draw the diffuse.
+    local oldShader = love.graphics.getShader()
+    love.graphics.setShader(self.s_diffuse.shader)
+    self.s_diffuse.shader:send("lightmap", self.lightmap)
+    self.s_diffuse.shader:send("lightmap_size", {self.lightmap:getDimensions()})
+    self.s_diffuse.shader:send("normal", self.t_normal.config.image.img)
+    for x = 0, 19 do
+        for y = 0, 11 do
+            self.t_diffuse:draw(Vec2(x * 16, y * 16))
+        end
+    end
+    -- Restore the previous shader.
+    -- TODO: Shader and canvas stacks should be added to OpenSMCE and handled by the Display class.
+    love.graphics.setShader(oldShader)
 end
 
 return LevelBackground

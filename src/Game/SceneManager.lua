@@ -161,6 +161,17 @@ function SceneManager:mousereleased(x, y, button)
 end
 
 ---Callback from `main.lua`.
+---@param x integer The X coordinate of mouse position.
+---@param y integer The Y coordinate of mouse position.
+---@param dx integer The X movement, in pixels.
+---@param dy integer The Y movement, in pixels.
+function SceneManager:mousemoved(x, y, dx, dy)
+	if self:isSceneActive() and self.scene.mousemoved then
+		self.scene:mousemoved(x, y, dx, dy)
+	end
+end
+
+---Callback from `main.lua`.
 ---@param x integer X movement of the mouse wheel.
 ---@param y integer Y movement of the mouse wheel.
 function SceneManager:wheelmoved(x, y)

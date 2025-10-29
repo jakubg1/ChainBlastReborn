@@ -224,8 +224,6 @@ function Game:mousepressed(x, y, button)
 	self.game:mousepressed(x, y, button)
 end
 
-
-
 ---Callback from `main.lua`.
 ---@param x integer The X coordinate of mouse position.
 ---@param y integer The Y coordinate of mouse position.
@@ -235,7 +233,14 @@ function Game:mousereleased(x, y, button)
 	self.game:mousereleased(x, y, button)
 end
 
-
+---Callback from `main.lua`.
+---@param x integer The X coordinate of mouse position.
+---@param y integer The Y coordinate of mouse position.
+---@param dx integer The X movement, in pixels.
+---@param dy integer The Y movement, in pixels.
+function Game:mousemoved(x, y, dx, dy)
+	self.game:mousemoved(x, y, dx, dy)
+end
 
 ---Callback from `main.lua`.
 ---@param x integer X movement of the mouse wheel.
@@ -244,8 +249,6 @@ function Game:wheelmoved(x, y)
 	self.game:wheelmoved(x, y)
 end
 
-
-
 ---Callback from `main.lua`.
 ---@param key string The pressed key code.
 function Game:keypressed(key)
@@ -253,14 +256,10 @@ function Game:keypressed(key)
 	self.game:keypressed(key)
 end
 
-
-
 ---Callback from `main.lua`.
 ---@param key string The released key code.
 function Game:keyreleased(key)
 end
-
-
 
 ---Callback from `main.lua`.
 ---@param t string Something which makes text going.

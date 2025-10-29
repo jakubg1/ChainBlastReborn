@@ -177,6 +177,7 @@ function Particle2:update(dt)
                 local level = _Game.game.sceneManager:getLevel()
                 if level then
                     level.ui:flashPowerCrystal()
+                    _Game:playSound("sound_events/power_crystal_flash.json")
                 end
             end
         end

@@ -36,11 +36,11 @@
             "type": "chain_blue"
         },
         {
-            "weight": 70,
+            "weight": 100,
             "type": "chain_yellow"
         },
         {
-            "weight": 10,
+            "weight": 12,
             "type": "rock"
         }
     ]

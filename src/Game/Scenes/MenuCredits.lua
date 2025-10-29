@@ -20,7 +20,14 @@ function MenuCredits:new(scene)
     -- Build UI.
     self.texts = {
         header = Text(Vec2(160, 10), {text = "Credits", textAlign = Vec2(0.5, 0), color = Color("#4cff4c"), gradientWaveColor = Color("#199919"), gradientWaveFrequency = 200, gradientWaveSpeed = 100, shadowOffset = Vec2(1)}),
-        description = Text(Vec2(160, 35), {text = "Work in Progress!!", textAlign = Vec2(0.5, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
+        progArtHeader = Text(Vec2(160, 35), {text = "Lead, Programming & Art", textAlign = Vec2(0.5, 0), color = Color("#ffff00"), shadowOffset = Vec2(1)}),
+        progArt = Text(Vec2(160, 47), {text = "jakubg1", textAlign = Vec2(0.5, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
+        musicHeader = Text(Vec2(70, 65), {text = "Music", textAlign = Vec2(0.5, 0), color = Color("#ffff00"), shadowOffset = Vec2(1)}),
+        music = Text(Vec2(70, 77), {text = "Crisps", textAlign = Vec2(0.5, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
+        levelDHeader = Text(Vec2(250, 65), {text = "Level Design", textAlign = Vec2(0.5, 0), color = Color("#ffff00"), shadowOffset = Vec2(1)}),
+        levelD = Text(Vec2(250, 77), {text = "Stage13-10", textAlign = Vec2(0.5, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
+        basedOnHeader = Text(Vec2(160, 95), {text = "Inspired by the game 'Chainz' by", textAlign = Vec2(0.5, 0), color = Color("#ffff00"), shadowOffset = Vec2(1)}),
+        basedOn = Text(Vec2(160, 107), {text = "MumboJumbo", textAlign = Vec2(0.5, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
         back = Text(Vec2(160, 155), {text = "Back to Menu", textAlign = Vec2(0.5, 0), color = Color("#aaaaaa"), shadowOffset = Vec2(1)})
     }
 end

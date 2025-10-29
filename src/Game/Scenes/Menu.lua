@@ -40,7 +40,7 @@ end
 
 ---Goes to the credits screen.
 function Menu:goToCredits()
-    self.screen = NormalmapTest(self)
+    self.screen = MenuCredits(self)
 end
 
 ---Ends this scene and starts a level.
@@ -132,6 +132,17 @@ function Menu:mousereleased(x, y, button)
 end
 
 ---Callback from `main.lua`.
+---@param x integer The X coordinate of mouse position.
+---@param y integer The Y coordinate of mouse position.
+---@param dx integer The X movement, in pixels.
+---@param dy integer The Y movement, in pixels.
+function Menu:mousemoved(x, y, dx, dy)
+    if self.screen.mousemoved then
+        self.screen:mousemoved(x, y, dx, dy)
+    end
+end
+
+---Callback from `main.lua`.
 ---@param x integer X movement of the mouse wheel.
 ---@param y integer Y movement of the mouse wheel.
 function Menu:wheelmoved(x, y)
@@ -143,6 +154,9 @@ end
 ---Callback from `main.lua`.
 ---@param key string The pressed key code.
 function Menu:keypressed(key)
+    if self.screen.keypressed then
+        self.screen:keypressed(key)
+    end
 end
 
 return Menu

@@ -1,0 +1,6 @@
+{
+    "$schema": "../../../schemas/sound_event.json",
+    "sound": "sounds/ui_hover.wav",
+    "pitch": "${random() * 0.2 + 0.6}",
+    "volume": 0.3
+}

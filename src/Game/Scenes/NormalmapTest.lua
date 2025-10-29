@@ -31,7 +31,7 @@ end
 ---Draws the normalmap test on the screen.
 function NormalmapTest:draw()
     -- Generate the lightmap.
-    self:drawLightmap()
+    self:generateLightmap()
 
     -- Set the shader and draw the diffuse.
     local oldShader = love.graphics.getShader()
@@ -47,8 +47,8 @@ function NormalmapTest:draw()
     love.graphics.setShader(oldShader)
 end
 
----Draws the lightmap.
-function NormalmapTest:drawLightmap()
+---Generates the lightmap.
+function NormalmapTest:generateLightmap()
     local natRes = _Game:getNativeResolution()
     local oldCanvas = love.graphics.getCanvas()
     love.graphics.setCanvas(self.lightmap)
@@ -61,10 +61,12 @@ function NormalmapTest:drawLightmap()
     love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
     love.graphics.setShader(oldShader)
     love.graphics.setCanvas(oldCanvas)
+end
 
-    -- Peek the lightmap
-    --love.graphics.setColor(1, 1, 1)
-    --love.graphics.draw(self.lightmap, 0, 0)
+---Draws the lightmap on the screen. This is purely a debug measure.
+function NormalmapTest:drawLightmap()
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(self.lightmap, 0, 0)
 end
 
 ---Callback from `main.lua`.

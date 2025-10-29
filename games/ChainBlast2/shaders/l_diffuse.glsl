@@ -11,16 +11,16 @@ vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
 	// Calculate brightness based on the light power at that pixel.
 	float brightness = color_light.g;
 	// Check the difference in angles between the light direction and the normalmap.
-	// The lightmap assumes the light direction is already normalized.
-	float angle = 1 - acos(dot(color_light.rb * 2 - 1, normalize(color_normal.rb - 0.5))) / 3.1415;
-	if (angle != angle)
-		angle = 0.5; // TODO: Figure out the number. This NaN check is dirty.
+	float angle = 1 - acos(dot(normalize(color_light.rb * 2 - 1), normalize(color_normal.rb - 0.5))) / 3.1415;
 	// The resulting angle is in the range 0..1.
 	// <= 0.5: darken (down to 0x), > 0.5: brighten (up to 2x).
 	// This is further multiplied by the normalmap strength.
 	float normal_strength = length(color_normal.rb - 0.5) * 2;
 	float multiplier = (angle - 0.5) * normal_strength * 2 + 1;
-	brightness *= multiplier;
+	// For brightness <= 0.5, the multiplier is naturally applied.
+	// For brightness > 0.5 however, we still want to brighten even if the multiplication would result in zero
+	// (so for brightness = 1, final brightness is also 1 even if multiplier = 0).
+	brightness = brightness * multiplier + max((brightness - 0.5) * 2, 0);
 	// Return final pixel value.
 	if (brightness <= 0.5) {
 		// brightness <= 0.5: Darken by how far it is from 0.5.
