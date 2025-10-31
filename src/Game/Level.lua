@@ -38,7 +38,7 @@ function Level:new(game)
     self.powerMeter = 0
     self.powerColor = 0
     self.powerCombo = 0
-    self.maxPowerMeter = 75
+    self.maxPowerMeter = 100
 
     self.laserPowerShots = 0
     self.laserPowerTime = nil

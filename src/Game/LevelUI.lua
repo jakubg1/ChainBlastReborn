@@ -13,11 +13,15 @@ function LevelUI:new(level)
     self.game = level.game
 
 	self.font = _Game.resourceManager:getFont("fonts/standard.json")
+	self.fontSmall = _Game.resourceManager:getFont("fonts/small.json")
     self.timerSprite = _Game.resourceManager:getSprite("sprites/hud_timer.json")
     self.timerSpriteBg = _Game.resourceManager:getSprite("sprites/hud_timer_background.json")
     self.powerSprite = _Game.resourceManager:getSprite("sprites/hud_power.json")
     self.powerSpriteBg = _Game.resourceManager:getSprite("sprites/hud_power_background.json")
     self.powerCrystalSprite = _Game.resourceManager:getSprite("sprites/hud_power_crystal.json")
+    self.bossbarFullSprite = _Game.resourceManager:getSprite("sprites/bossbar_full.json")
+    self.bossbarEmptySprite = _Game.resourceManager:getSprite("sprites/bossbar_empty.json")
+    self.bossbarDrainSprite = _Game.resourceManager:getSprite("sprites/bossbar_drain.json")
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
 
     self.scoreDisplay = self.game.player.score
@@ -274,6 +278,12 @@ function LevelUI:drawHUD()
         frame = 2
     end
     self.powerCrystalSprite:draw(Vec2(278, 39 + offset), nil, nil, frame, nil, nil, self.hudAlpha, nil, shader)
+
+    -- Boss bar
+    if self.level.config.boss then
+        self.fontSmall:drawWithShadow("Boss Health", Vec2(93, 166), Vec2(), Color(1, 0.1, 0.1), self.hudAlpha)
+        self.bossbarFullSprite:drawWithShadow(Vec2(90, 174), nil, nil, nil, nil, nil, self.hudAlpha)
+    end
 
     -- Multiplier
     if self.level.config.multiplierEnabled then

@@ -94,6 +94,7 @@ function Particle2:new(game, pos, type, color, pos2)
         self.acceleration = Vec2()
         self.decceleration = 480
         self.sprite = _Game.resourceManager:getSprite("sprites/spark2.json")
+        self.alpha = 0.8
         self.colorGrading = {
             {t = 0, color = Color(1.0, 1.0, 1.0)},
             {t = 0.2, color = color},

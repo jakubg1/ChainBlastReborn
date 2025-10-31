@@ -55,6 +55,8 @@ function MenuMain:animateIntro(t)
         for i, option in ipairs(self.menuOptions) do
             option:setProp("alpha", 1)
         end
+        -- Immediately hover whatever happens to be at the mouse cursor.
+        self:hoverOptionAtCursor()
     end
 end
 
@@ -75,6 +77,18 @@ function MenuMain:hoverOption(index)
     self.hoveredOption = index
     if index then
         _Game:playSound("sound_events/ui_hover.json")
+    end
+end
+
+---Hovers the option that is currently under the mouse cursor, or unhovers the options if none of them is hovered.
+function MenuMain:hoverOptionAtCursor()
+    for i, option in ipairs(self.menuOptions) do
+        local pos = option:getPos()
+        local w = 100
+        if _Utils.isPointInsideBox(_MousePos.x, _MousePos.y, 160 - w / 2, pos.y, w, 12) then
+            self:hoverOption(i)
+            return
+        end
     end
 end
 
@@ -173,17 +187,7 @@ end
 ---@param dx integer The X movement, in pixels.
 ---@param dy integer The Y movement, in pixels.
 function MenuMain:mousemoved(x, y, dx, dy)
-    -- Menu options
-    local hover = nil
-    for i, option in ipairs(self.menuOptions) do
-        local pos = option:getPos()
-        local w = 100
-        if _Utils.isPointInsideBox(_MousePos.x, _MousePos.y, 160 - w / 2, pos.y, w, 12) then
-            hover = i
-            break
-        end
-    end
-    self:hoverOption(hover)
+    self:hoverOptionAtCursor()
 end
 
 ---Callback from `main.lua`.

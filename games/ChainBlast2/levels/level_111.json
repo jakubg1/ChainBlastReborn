@@ -1,7 +1,9 @@
 {
     "$schema": "../../schemas/level.json",
-    "name": "10",
-    "time": 70,
+    "name": "11",
+    "time": 50,
+    "boss": true,
+    "final": true,
     "multiplierEnabled": false,
     "enablePowerups": false,
     "key": {
@@ -40,14 +42,15 @@
         }
     },
     "layout": [
-        "        ###",
-        "    ### ###",
-        "### #D# #D#",
-        "#D# #D# #D#",
-        "#D#!#D#!#D#",
-        "#D#X#D#X#D#",
-        "DDDXDDDXDDD",
-        "/DDXDDDXDD/"
+        " ######### ",
+        " ######### ",
+        " ######### ",
+        " ###   ### ",
+        " ###   ### ",
+        " ###   ### ",
+        " ######### ",
+        " ######### ",
+        " ######### "
     ],
     "spawns": [
         {
@@ -61,10 +64,6 @@
         {
             "weight": 100,
             "type": "chain_yellow"
-        },
-        {
-            "weight": 12,
-            "type": "rock"
         }
     ]
 }

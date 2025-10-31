@@ -28,14 +28,14 @@ end
 ---@private
 ---@return boolean
 function GameWin:isFinished()
-    return self.time > 11.5
+    return self.time > 12
 end
 
 ---Updates the Game Win animation.
 ---@param dt number Time delta in seconds.
 function GameWin:update(dt)
     self.time = self.time + dt
-    if not self.chimePlayed and self.time >= 0.5 then
+    if not self.chimePlayed and self.time >= 1 then
         _Game:playSound("sound_events/game_win.json")
         self.chimePlayed = true
     end
@@ -44,18 +44,18 @@ end
 ---Draws the Game Win animation.
 function GameWin:draw()
     local natRes = _Game:getNativeResolution()
-    if self.time > 0.5 and self.time <= 9 then
-        local alpha = math.max(self.time * 2 - 0.5, 0)
-        if self.time > 7 then
-            alpha = math.min((9 - self.time) / 2, 1)
+    if self.time > 1 and self.time <= 9.5 then
+        local alpha = math.max(self.time * 2 - 1.5, 0)
+        if self.time > 7.5 then
+            alpha = math.min((9.5 - self.time) / 2, 1)
         end
-        _DrawFillRect(Vec2(), _Game:getNativeResolution(), _Utils.getRainbowColor(math.min((self.time - 2) / 2, 1.3)), alpha)
+        _DrawFillRect(Vec2(), _Game:getNativeResolution(), _Utils.getRainbowColor(math.min((self.time - 2.5) / 2, 1.3)), alpha)
         self.font:draw("YOU", natRes / 2, Vec2(0.5, 1), Color(0, 0, 0), 1, 6)
         self.font:draw("WIN!", natRes / 2, Vec2(0.5, 0), Color(0, 0, 0), 1, 6)
-    elseif self.time > 9 then
-        local alpha = math.min(math.max((self.time - 9) * 2, 0), 1)
+    elseif self.time > 9.5 then
+        local alpha = math.min(math.max((self.time - 9.5) * 2, 0), 1)
         self.font:draw("Congratulations!", Vec2(160, 10), Vec2(0.5), Color(1, 1, 0), alpha)
-        local yOffset = math.max((11 - self.time) * 150, 0)
+        local yOffset = math.max((11.5 - self.time) * 150, 0)
         local text = {
             "You just won!",
             "This is a very early build!",
@@ -71,7 +71,7 @@ function GameWin:draw()
             self.font:draw(line, Vec2(160, 30 + i * 10 + yOffset), Vec2(0.5))
         end
     end
-    if self.time > 11.5 then
+    if self:isFinished() then
         local text = "Click anywhere to continue!"
         local alpha = 0.5 + (self.time % 2) * 0.5
         if self.time % 2 > 1 then

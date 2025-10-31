@@ -58,7 +58,7 @@ function LevelBackground:prepareNormalmap()
 
     local natRes = _Game:getNativeResolution()
     self.lightmap = love.graphics.newCanvas(natRes.x, natRes.y)
-    self.lightStrength = 0.55
+    self.lightStrength = 0.35
     self.lightRange = 300
 end
 
