@@ -8,10 +8,11 @@ local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
 local Tile = require("src.Game.Tile")
 local Chain = require("src.Game.Chain")
-local Bomb = require("src.Game.Bomb")
-local Missile = require("src.Game.Missile")
 local Tilemap = require("src.Game.Tilemap")
 local BoardSelection = require("src.Game.BoardSelection")
+local Boss = require("src.Game.Boss")
+local Bomb = require("src.Game.Bomb")
+local Missile = require("src.Game.Missile")
 
 ---Constructs the Board.
 ---@param level Level The level instance this Board belongs to.
@@ -36,6 +37,10 @@ function Board:new(level)
     self.chains = {}
     for i = 1, self.size.x do
         self.chains[i] = {}
+    end
+
+    if self.level.config.boss then
+        self.boss = Boss(self)
     end
 
     self.bombs = {}
@@ -113,7 +118,7 @@ function Board:update(dt)
         primedObjects = self:countPrimedObjects()
         if fallingObjects == 0 and shufflingObjects == 0 and primedObjects == 0 then
             -- Nothing happened, grant the control to the player.
-            if self:isTargetReached() then
+            if self:isComplete() then
                 self:releaseChains()
                 self.level:win()
                 self.won = true
@@ -336,6 +341,7 @@ function Board:assertGetChain(coords)
 end
 
 ---Impacts the tile/object at the provided coordinates, for example by damaging a crate or destroying a chain (and creating gold under it).
+---This is currently used only by Lasers.
 ---@param coords Vector2 Tile coordinates.
 function Board:impactTile(coords)
     local tile = self:assertGetTile(coords)
@@ -852,6 +858,7 @@ end
 
 
 ---Explodes a Tile at given coordinates and destroys the Chain that is on it.
+---If the tile belongs to a boss, that boss gets hurt.
 ---@param coords Vector2 The coordinates of the exploded chain.
 function Board:explodeChain(coords)
     local tile = self:getTile(coords)
@@ -862,6 +869,9 @@ function Board:explodeChain(coords)
             chain:destroy()
             self.level:addScore(100)
         end
+    end
+    if self.boss and self.boss:matchCoords(coords.x, coords.y) then
+        self.boss:damage(5)
     end
 end
 
@@ -1018,12 +1028,17 @@ end
 
 
 
----Returns `true` if all tiles on the board are gold (or if `forcedWin` on the level is set).
+---Returns `true` if the board is complete:
+--- - All tiles on the board must be gold.
+--- - The boss (if it exists) must be dead.
+---
+---If `forcedWin` on the level is set via the debug command, this function always returns `true`.
 ---@return boolean
-function Board:isTargetReached()
+function Board:isComplete()
     if self.level.forcedWin then
         return true
     end
+    -- Check the gold tiles.
     for i = 1, self.size.x do
         for j = 1, self.size.y do
             local coords = Vec2(i, j)
@@ -1032,6 +1047,41 @@ function Board:isTargetReached()
                 return false
             end
         end
+    end
+    -- Check the boss.
+    if self.boss and not self.boss.dead then
+        return false
+    end
+    return true
+end
+
+---Returns `true` if the board is almost complete:
+--- - At most two tiles are not gold yet.
+--- - The boss (if it exists) must have no more than 25% of its maximum health.
+---
+---This is used to check whether an alternative fail message should be displayed.
+---@return boolean
+function Board:isAlmostComplete()
+    if self.level.forcedWin then
+        return true
+    end
+    local nonGoldTiles = 0
+    -- Check the gold tiles.
+    for i = 1, self.size.x do
+        for j = 1, self.size.y do
+            local coords = Vec2(i, j)
+            local tile = self:getTile(coords)
+            if tile and tile:preventsWin() then
+                nonGoldTiles = nonGoldTiles + 1
+                if nonGoldTiles > 2 then
+                    return false
+                end
+            end
+        end
+    end
+    -- Check the boss.
+    if self.boss and self.boss:getHealthPercentage() > 0.25 then
+        return false
     end
     return true
 end

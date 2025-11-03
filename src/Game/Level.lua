@@ -277,6 +277,12 @@ function Level:startLevelResults()
     self.game.sceneManager:changeScene("level_results", false, true)
 end
 
+---Returns the boss on this level's board, if it exists.
+---@return Boss?
+function Level:getBoss()
+    return self.board and self.board.boss
+end
+
 ---Adds score to this level.
 ---@param amount integer The amount of score to be added.
 function Level:addScore(amount)

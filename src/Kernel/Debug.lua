@@ -346,12 +346,16 @@ function Debug:getDebugParticle()
 	return s
 end
 
+---Gets debug information about a Board.
+---@param board Board The board to get information from.
+---@return string
 function Debug:getDebugBoard(board)
 	local s = ""
 
-	s = s .. "FallingObjectCount = " .. tostring(board.fallingObjectCount) .. "\n"
-	s = s .. "ShufflingChainCount = " .. tostring(board.shufflingChainCount) .. "\n"
-	s = s .. "PrimedObjectCount = " .. tostring(board.primedObjectCount) .. "\n"
+	s = s .. "HoverCoords = " .. tostring(board.hoverCoords) .. "\n"
+	if board.hoverCoords and board.boss and board.boss:matchCoords(board.hoverCoords.x, board.hoverCoords.y) then
+		s = s .. "(Boss)\n"
+	end
 
 	return s
 end

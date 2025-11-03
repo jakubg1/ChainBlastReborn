@@ -50,6 +50,10 @@ function LevelUI:new(level)
     self.powerCrystalFlashTime = nil
     self.powerCrystalBopProgress = 0 -- Counts from 0 to 1
     self.powerChargeSound = nil
+
+    self.bossbarFill = 0
+    self.bossbarDrainFill = nil
+    self.bossbarDrainDelay = nil
 end
 
 ---Notifies the UI that extra time has been added to the timer.
@@ -161,6 +165,39 @@ function LevelUI:updateHUD(dt)
         self.powerCrystalFlashTime = self.powerCrystalFlashTime - dt
         if self.powerCrystalFlashTime <= 0 then
             self.powerCrystalFlashTime = nil
+        end
+    end
+
+    -- Bossbar
+    local boss = self.level:getBoss()
+    if boss and self.hudAlpha == 1 then
+        local targetFill = boss:getHealthPercentage()
+        if self.bossbarFill < targetFill then
+            -- Regeneration/initial fill: just gradually animate the increase
+            self.bossbarFill = math.min(self.bossbarFill + dt * 1, targetFill)
+        elseif self.bossbarFill > targetFill then
+            if not self.bossbarDrainFill then
+                -- First frame after draining: mark the current health as the health that we will start draining from.
+                self.bossbarDrainFill = self.bossbarFill
+                self.bossbarDrainDelay = 0.5
+            end
+            -- Drain the actual health bar quickly.
+            self.bossbarFill = math.max(self.bossbarFill - dt * 3, targetFill)
+        end
+        -- Animate the health drain.
+        if self.bossbarDrainFill then
+            -- Update the drain.
+            if self.bossbarDrainDelay then
+                self.bossbarDrainDelay = self.bossbarDrainDelay - dt
+                if self.bossbarDrainDelay <= 0 then
+                    self.bossbarDrainDelay = nil
+                end
+            else
+                self.bossbarDrainFill = math.max(self.bossbarDrainFill - dt * 1, self.bossbarFill)
+                if self.bossbarDrainFill == self.bossbarFill then
+                    self.bossbarDrainFill = nil
+                end
+            end
         end
     end
 
@@ -281,8 +318,20 @@ function LevelUI:drawHUD()
 
     -- Boss bar
     if self.level.config.boss then
+        -- Header
         self.fontSmall:drawWithShadow("Boss Health", Vec2(93, 166), Vec2(), Color(1, 0.1, 0.1), self.hudAlpha)
-        self.bossbarFullSprite:drawWithShadow(Vec2(90, 174), nil, nil, nil, nil, nil, self.hudAlpha)
+        -- Background
+        self.bossbarEmptySprite:drawWithShadow(Vec2(90, 174), nil, nil, nil, nil, nil, self.hudAlpha)
+        -- White drain part (if applicable)
+        if self.bossbarDrainFill then
+            love.graphics.setScissor(90, 174, 140 * self.bossbarDrainFill, 5)
+            self.bossbarDrainSprite:draw(Vec2(90, 174), nil, nil, nil, nil, nil, self.hudAlpha)
+            love.graphics.setScissor()
+        end
+        -- Red part (the actual health)
+        love.graphics.setScissor(90, 174, 140 * self.bossbarFill, 5)
+        self.bossbarFullSprite:draw(Vec2(90, 174), nil, nil, nil, nil, nil, self.hudAlpha)
+        love.graphics.setScissor()
     end
 
     -- Multiplier

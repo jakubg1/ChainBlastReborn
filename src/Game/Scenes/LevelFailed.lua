@@ -55,7 +55,10 @@ function LevelFailed:draw()
     if self.time >= 11 then
         textAlpha = math.min(12 - self.time, 1)
     end
-    local text = "Level Failed!"
+    local text = "You did not make it this time..."
+    if self.level.board:isAlmostComplete() then
+        text = "You were so close... :("
+    end
     self.font:drawWithShadow(text, natRes / 2, Vec2(0.5), Color(1, 0, 0), textAlpha)
 end
 
