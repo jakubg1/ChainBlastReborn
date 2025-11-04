@@ -20,6 +20,9 @@ function LevelConfig:new(data, path)
     self.final = u.parseBooleanOpt(data.final, path, "final")
     self.multiplierEnabled = u.parseBoolean(data.multiplierEnabled, path, "multiplierEnabled")
     self.enablePowerups = u.parseBoolean(data.enablePowerups, path, "enablePowerups")
+    self.music = u.parseMusic(data.music, path, "music")
+    self.dangerMusic = u.parseMusicOpt(data.dangerMusic, path, "dangerMusic")
+    self.winSound = u.parseSoundEventOpt(data.winSound or "sound_events/level_win.json", path, "winSound")
 
     self.key = {}
     for n, _ in pairs(data.key) do

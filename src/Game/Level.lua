@@ -51,8 +51,8 @@ function Level:new(game)
     self.dangerMusicFlag = false
     self.forcedWin = false
 
-    self.levelMusic = _Game.resourceManager:getMusic("music_tracks/level_music.json")
-    self.dangerMusic = _Game.resourceManager:getMusic("music_tracks/danger_music.json")
+    self.levelMusic = self.config.music
+    self.dangerMusic = self.config.dangerMusic
 
     _Game:playSound("sound_events/level_start.json")
     self.game.player.levelsStarted = self.game.player.levelsStarted + 1
@@ -218,13 +218,18 @@ end
 ---Updates the level music (fade between level and danger music).
 ---@param dt number Time delta in seconds.
 function Level:updateMusic(dt)
-    if not self.dangerMusicFlag and self.time < 10 and self:isTimerTicking() then
+    -- Do not fade between the music tracks if there is no danger track or the timer hasn't started yet.
+    if not self:isTimerTicking() or not self.dangerMusic then
+        return
+    end
+
+    if not self.dangerMusicFlag and self.time < 10 then
         self.dangerMusicFlag = true
         self.levelMusic:play(0, 0.5)
         self.dangerMusic:play()
     end
 
-    if self.dangerMusicFlag and self.time > 15 and self:isTimerTicking() then
+    if self.dangerMusicFlag and self.time > 15 then
         self.dangerMusicFlag = false
         self.levelMusic:play(1, 2)
         self.dangerMusic:stop(1)
@@ -330,7 +335,9 @@ function Level:togglePause()
     if self:canPause() then
         if self.pause then
             self.levelMusic:play(0, 1)
-            self.dangerMusic:play(0, 1)
+            if self.dangerMusic then
+                self.dangerMusic:play(0, 1)
+            end
         else
             if self.dangerMusicFlag then
                 self.dangerMusic:play(1, 0.5)
@@ -461,9 +468,11 @@ end
 
 ---Wins this Level by stopping the music, playing the level win sound and starting the win animation.
 function Level:win()
-    _Game:playSound("sound_events/level_win.json")
+    _Game:playSound(self.config.winSound)
     self.levelMusic:stop(0.25)
-    self.dangerMusic:stop(0.25)
+    if self.dangerMusic then
+        self.dangerMusic:stop(0.25)
+    end
     self.game.sceneManager:changeScene("level_complete", true, true)
     self.game.player.levelsCompleted = self.game.player.levelsCompleted + 1
 end
@@ -476,7 +485,9 @@ function Level:lose()
 
     _Game:playSound("sound_events/level_lose.json")
     self.levelMusic:stop(0.25)
-    self.dangerMusic:stop(0.25)
+    if self.dangerMusic then
+        self.dangerMusic:stop(0.25)
+    end
     self.game.sceneManager:changeScene("level_failed", true, true)
 end
 

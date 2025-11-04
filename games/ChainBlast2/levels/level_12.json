@@ -4,6 +4,8 @@
     "time": 60,
     "multiplierEnabled": true,
     "enablePowerups": false,
+    "music": "music_tracks/level_music.json",
+    "dangerMusic": "music_tracks/danger_music.json",
     "key": {
         "X": {
             "tile": {

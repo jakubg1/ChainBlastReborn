@@ -38,7 +38,7 @@ end
 
 ---Explodes the Missile.
 function Missile:explode()
-    self.board:explodeChain(self.targetCoords)
+    self.board:explodeTile(self.targetCoords)
     _Game:playSound("sound_events/missile_explosion.json")
     self.delQueue = true
 end

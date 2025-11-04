@@ -1,0 +1,5 @@
+{
+    "$schema": "../../../schemas/sound_event.json",
+    "sound": "sounds/level_win_boss.wav",
+    "volumeCategory": "musicCue"
+}

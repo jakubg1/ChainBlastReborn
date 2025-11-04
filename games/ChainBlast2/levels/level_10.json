@@ -5,6 +5,8 @@
     "final": true,
     "multiplierEnabled": false,
     "enablePowerups": false,
+    "music": "music_tracks/level_music.json",
+    "dangerMusic": "music_tracks/danger_music.json",
     "key": {
         "X": {
             "tile": {

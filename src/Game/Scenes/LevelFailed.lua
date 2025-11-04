@@ -16,6 +16,8 @@ function LevelFailed:new(game)
 	self.font = _Game.resourceManager:getFont("fonts/standard.json")
     self.time = 1
     self.boardNuked = false
+
+    self.rareMessage = math.random() < 1/69
 end
 
 ---Returns whether this scene should accept any input.
@@ -55,9 +57,9 @@ function LevelFailed:draw()
     if self.time >= 11 then
         textAlpha = math.min(12 - self.time, 1)
     end
-    local text = "You did not make it this time..."
+    local text = "You did not make it..."
     if self.level.board:isAlmostComplete() then
-        text = "You were so close... :("
+        text = self.rareMessage and "Boo-womp :(" or "You were so close... :("
     end
     self.font:drawWithShadow(text, natRes / 2, Vec2(0.5), Color(1, 0, 0), textAlpha)
 end

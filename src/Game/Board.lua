@@ -356,6 +356,24 @@ function Board:impactTile(coords)
     end
 end
 
+---Explodes a Tile at given coordinates and destroys the Chain that is on it.
+---If the tile belongs to a boss, that boss gets hurt.
+---@param coords Vector2 The coordinates of the exploded chain.
+function Board:explodeTile(coords)
+    local tile = self:getTile(coords)
+    if tile then
+        tile:explode()
+        local chain = self:getChain(coords)
+        if chain and not chain.shuffleTarget and not chain.fallTarget then
+            chain:destroy()
+            self.level:addScore(100)
+        end
+    end
+    if self.boss and self.boss:matchCoords(coords.x, coords.y) then
+        self.boss:damage(5)
+    end
+end
+
 ---Returns the board size from level data.
 ---@return Vector2
 function Board:getSizeFromData()
@@ -857,32 +875,12 @@ end
 
 
 
----Explodes a Tile at given coordinates and destroys the Chain that is on it.
----If the tile belongs to a boss, that boss gets hurt.
----@param coords Vector2 The coordinates of the exploded chain.
-function Board:explodeChain(coords)
-    local tile = self:getTile(coords)
-    if tile then
-        tile:explode()
-        local chain = self:getChain(coords)
-        if chain and not chain.shuffleTarget and not chain.fallTarget then
-            chain:destroy()
-            self.level:addScore(100)
-        end
-    end
-    if self.boss and self.boss:matchCoords(coords.x, coords.y) then
-        self.boss:damage(5)
-    end
-end
-
-
-
 ---Creates an explosion which destroys objects in a 3x3 area centered around the given coordinates.
 ---@param coords Vector2 The coordinates of the explosion center.
 function Board:explodeBomb(coords)
     for i = -1, 1 do
         for j = -1, 1 do
-            self:explodeChain(coords + Vec2(i, j))
+            self:explodeTile(coords + Vec2(i, j))
         end
     end
     local pos = self:getTileCenterPos(coords)
@@ -902,7 +900,7 @@ function Board:explodeLightning(coords, horizontal, vertical)
     if horizontal then
         local left, right = self:getHorizontalLightningRange(coords.x, coords.y)
         for i = left, right do
-            self:explodeChain(Vec2(i, coords.y))
+            self:explodeTile(Vec2(i, coords.y))
         end
         local p1 = self:getTileCenterPos(Vec2(left, coords.y))
         local p2 = self:getTileCenterPos(Vec2(right, coords.y))
@@ -911,7 +909,7 @@ function Board:explodeLightning(coords, horizontal, vertical)
     if vertical then
         local top, bottom = self:getVerticalLightningRange(coords.x, coords.y)
         for i = top, bottom do
-            self:explodeChain(Vec2(coords.x, i))
+            self:explodeTile(Vec2(coords.x, i))
         end
         local p1 = self:getTileCenterPos(Vec2(coords.x, top))
         local p2 = self:getTileCenterPos(Vec2(coords.x, bottom))
