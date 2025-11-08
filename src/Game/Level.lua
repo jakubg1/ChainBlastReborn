@@ -13,7 +13,7 @@ local LevelBackground = require("src.Game.LevelBackground")
 ---@param game GameMain The main game class instance this Level belongs to.
 function Level:new(game)
     self.game = game
-    self.config = _Game.resourceManager:getLevelConfig("levels/level_" .. tostring(self.game.player.level) .. ".json")
+    self.config = _Game.resourceManager:getLevelConfig("levels/level_" .. tostring(self.game.player.session.level) .. ".json")
 
     self.board = nil
     self.ui = LevelUI(self)
@@ -55,7 +55,7 @@ function Level:new(game)
     self.dangerMusic = self.config.dangerMusic
 
     _Game:playSound("sound_events/level_start.json")
-    self.game.player.levelsStarted = self.game.player.levelsStarted + 1
+    self.game.player.session:incrementLevelsStarted()
     self.levelMusic:stop()
     self.levelMusic:play()
 end
@@ -292,7 +292,7 @@ end
 ---@param amount integer The amount of score to be added.
 function Level:addScore(amount)
     self.score = self.score + amount
-    self.game.player.score = self.game.player.score + amount
+    self.game.player.session:addScore(amount)
 end
 
 ---Adds time to this level's timer.
@@ -375,23 +375,26 @@ end
 ---If the current power color is 0 (any), the power gauge takes on that color.
 ---If the given color is different to the current power color, the power points are added (1 per chain).
 ---@param amount integer The amount of the chains destroyed.
----@param color integer Color of the power.
----@param playerMatch boolean Whether the match has been made by the player. If not and the power charge is colorless, it stays colorless and a x3 charge multiplier is applied regardless.
-function Level:addToPowerMeter(amount, color, playerMatch)
-    local multiplier = 3 + self.powerCombo
-    if self.powerColor ~= 0 and color ~= 0 and self.powerColor ~= color then
-        multiplier = 1
-    end
-    if self.powerColor == 0 and playerMatch then
+---@param color integer? Color of the power. If provided and the power crystal's charge does not have any color, the charge will take this color.
+function Level:addToPowerMeter(amount, color)
+    if self.powerColor == 0 and color then
         self.powerColor = color
     end
     local oldMeter = self.powerMeter
-    --_Debug.console:print("Added " .. (amount * multiplier) .. " power")
-    self.powerMeter = self.powerMeter + amount * multiplier
+    --_Debug.console:print("Added " .. amount .. " power")
+    self.powerMeter = self.powerMeter + amount
     -- Play a sound if enough power has been charged to do something with it.
     if oldMeter < self.maxPowerMeter and self.powerMeter >= self.maxPowerMeter then
         _Game:playSound("sound_events/power_ready.json")
     end
+end
+
+---Returns `true` if the provided color matches the current power color, or `false` otherwise.
+---In order for the colors to match, they must be either same, or either of them must be 0 (colorless/rainbow).
+---@param color integer Color of the power to check against.
+---@return boolean
+function Level:powerColorMatches(color)
+    return self.powerColor == 0 or color == 0 or self.powerColor == color
 end
 
 ---Sets the power level to zero and resets the power color.
@@ -474,7 +477,7 @@ function Level:win()
         self.dangerMusic:stop(0.25)
     end
     self.game.sceneManager:changeScene("level_complete", true, true)
-    self.game.player.levelsCompleted = self.game.player.levelsCompleted + 1
+    self.game.player.session:incrementLevelsCompleted()
 end
 
 ---Loses this Level by stopping the music, playing the level lose sound, starting the lose animation and panicking the board.
@@ -503,9 +506,9 @@ end
 
 ---Submits the level statistics to the Player, and upates the game records and statistics.
 function Level:submitLevelStats()
-    self.game.player:submitLargestGroup(self.largestGroup)
-    self.game.player:submitMaxCombo(self.maxCombo)
-    self.game.player:submitTimeElapsed(self.timeElapsed)
+    self.game.player.session:submitLargestGroup(self.largestGroup)
+    self.game.player.session:submitMaxCombo(self.maxCombo)
+    self.game.player.session:submitTimeElapsed(self.timeElapsed)
 end
 
 ---Draws the Level.

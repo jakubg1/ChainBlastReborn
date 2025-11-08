@@ -17,6 +17,8 @@ function LevelResults:new(game)
     self.time = 0
     self.soundStep = 1
     self.SOUND_STEPS = {0.6, 1.0, 1.4, 1.8, 2.2, 3.2}
+    self.NEW_RECORD_TIME = 2.4
+    self.newRecordDisplayed = false
 end
 
 ---Returns whether this scene should accept any input.
@@ -30,6 +32,13 @@ end
 ---@return boolean
 function LevelResults:isFinished()
     return self.time > 4
+end
+
+---Returns whether the new record badge should be displayed on the results screen.
+---@private
+---@return boolean
+function LevelResults:shouldDisplayNewRecord()
+    return not self.level.lost
 end
 
 ---Skips the level results animation.
@@ -49,6 +58,10 @@ function LevelResults:update(dt)
     if threshold and self.time >= threshold then
         _Game:playSound("sound_events/ui_stats.json")
         self.soundStep = self.soundStep + 1
+    end
+    if self:shouldDisplayNewRecord() and not self.newRecordDisplayed and self.time >= self.NEW_RECORD_TIME then
+        _Game:playSound("sound_events/new_record.json")
+        self.newRecordDisplayed = true
     end
 end
 
@@ -99,20 +112,21 @@ function LevelResults:draw()
     if self.time > self.SOUND_STEPS[5] + 0.1 then
         self.font:draw(tostring(self.level.score), Vec2(xRight, 90), Vec2(1, 0.5), Color(1, 1, 0))
     end
+    if self.newRecordDisplayed then
+        self.font:draw("New Record!", Vec2(xRight, 100), Vec2(1, 0.5), _Utils.getRainbowColor(_TotalTime / 4))
+    end
     if self.time > self.SOUND_STEPS[6] - 0.4 then
         self.font:draw("Total Score:", Vec2(xLeft, 120), Vec2(0, 0.5))
     end
     if self.time > self.SOUND_STEPS[6] then
-        self.font:draw(tostring(self.game.player.score), Vec2(xRight, 120), Vec2(1, 0.5), Color(1, 1, 0))
+        self.font:draw(tostring(self.game.player.session.score), Vec2(xRight, 120), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > 4 then
         local text = "Click anywhere to start next level!"
         if self.level.lost then
             text = "Click anywhere to try again!"
-        else
-            if self.level.config.final then
-                text = "Click anywhere to continue!"
-            end
+        elseif self.level.config.final then
+            text = "Click anywhere to continue!"
         end
         --local alpha = (math.sin((self.time - 4.5) * math.pi) + 2) / 3
         local alpha = 0.5 + (self.time % 2) * 0.5
@@ -135,9 +149,9 @@ function LevelResults:mousepressed(x, y, button)
                 self.game.sceneManager:changeScene("game_win", true, true)
             else
                 if not self.level.lost then
-                    self.game.player:advanceLevel()
+                    self.game.player.session:advanceLevel()
                 else
-                    self.game.player:restartLevel()
+                    self.game.player.session:restartLevel()
                 end
                 self.game.sceneManager:startLevel()
                 self.game.sceneManager:changeScene("level_intro", true, true)

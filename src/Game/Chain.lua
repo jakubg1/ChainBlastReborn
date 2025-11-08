@@ -108,7 +108,8 @@ local CHAIN_TYPES = {
             sound = "sound_events/rock_destroy.json",
             particle = "rock_destroy",
             screenShake = {power = 4, frequency = 15, duration = 0.15},
-            fragmentParticles = {}
+            fragmentParticles = {},
+            powerCharge = 10
         }
     }
 }
@@ -517,7 +518,7 @@ function Chain:spawnPowerParticles(amount)
     -- TODO: Better way to store power colors and crystal position?
     local pos = self:getCenterPos()
     local pos2 = self.board.level.ui.POWER_CRYSTAL_CENTER_POS
-    local color = self.board.level.ui.POWER_METER_COLORS[self.config.color]
+    local color = self.board.level.ui.POWER_METER_COLORS[self.config.color or 0]
     for i = 1, amount do
         -- Because the amount of particles in particle effect data is constant, we have to spawn them one by one.
         _Game.game:spawnParticles("power_spark", pos, pos2, color)
@@ -552,7 +553,11 @@ function Chain:dispatchEffects(effects)
         _Game.game:shakeScreen(effects.screenShake.power, effects.screenShake.direction, effects.screenShake.frequency, effects.screenShake.duration)
     end
     if effects.countChainDestroyed then
-        _Game.game.player.chainsDestroyed = _Game.game.player.chainsDestroyed + 1
+        _Game.game.player.session:incrementChainsDestroyed()
+    end
+    if effects.powerCharge then
+        self.board.level:addToPowerMeter(effects.powerCharge)
+        self:spawnPowerParticles(effects.powerCharge)
     end
 end
 

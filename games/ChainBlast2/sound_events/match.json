@@ -3,6 +3,24 @@
     "sounds": [
         {
             "sound": "sounds/chain_destroy.wav"
+        },
+        {
+            "sound": "sounds/chime8.wav",
+            "conditions": [
+                "${[playerMade] && [length] == 4}"
+            ]
+        },
+        {
+            "sound": "sounds/chime8_2.wav",
+            "conditions": [
+                "${[playerMade] && [length] == 5}"
+            ]
+        },
+        {
+            "sound": "sounds/chime8_3.wav",
+            "conditions": [
+                "${[playerMade] && [length] >= 6}"
+            ]
         }
     ]
 }

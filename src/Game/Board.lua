@@ -701,9 +701,9 @@ function Board:handleMatches()
 
     for i, match in ipairs(matchGroups) do
 		local colors = self:countGroupColors(match)
+        local playerMade = _Utils.isValueInTable(match, self.lastSelectStart)
         local modifiedMatch = self:rearrangeMatchGroup(match, self.lastSelectStart, true)
         for j, group in ipairs(modifiedMatch) do
-            local playerMade = _Utils.isValueInTable(group, self.lastSelectStart)
             local powerColor = nil
             -- If there is only one color in a match, use it.
             -- Otherwise, treat this as a wild match (color 0 - neutral).
@@ -738,12 +738,12 @@ function Board:handleMatches()
                 --end
                 -- New (power meter)
                 if not self.level:isPowerFull() or self.level.powerColor == 0 then
-                    self.level:addToPowerMeter(self.level.combo > 1 and 2 or 1, powerColor or 0, playerMade)
-                    if self.level.powerColor == chain:getColor() or (not playerMade and self.level.powerColor == 0) then
-                        chain:spawnPowerParticles(9)
-                    else
-                        chain:spawnPowerParticles(3)
-                    end
+                    local color = playerMade and (powerColor or 0) or nil
+                    local colorMatches = color and self.level:powerColorMatches(color)
+                    -- Combo (x2) x matching color or not (1 or 3) x bonus for player-made 4-or-more chains (+x1 starting from 4 for each chain)
+                    local charges = (self.level.combo > 1 and 2 or 1) * (colorMatches and 3 or 1) * (playerMade and math.max(#match - 2, 1) or 1)
+                    self.level:addToPowerMeter(charges, color)
+                    chain:spawnPowerParticles(charges * 3)
                 end
                 tile:impact()
                 -- Remove all adjacent crates.
@@ -764,13 +764,17 @@ function Board:handleMatches()
         end
         self.level:capTimerAtZero()
         self.level.largestGroup = math.max(self.level.largestGroup, #match)
+        _Vars:set("length", #match)
+        _Vars:set("playerMade", playerMade)
         _Game:playSound("sound_events/match.json")
+        _Vars:unset("length")
+        _Vars:unset("playerMade")
         -- Shake the screen on combos.
         _Game.game:shakeScreen(self.level.combo * 1, nil, 20, 0.15)
 
-		-- Add a powerup only if it's not us who have matched these chains (combo).
+		-- Add a powerup only if it's not us who have matched these chains.
         -- Powerups on user-made matches are dispatched in `:finishSelection()`.
-		if self.level.config.enablePowerups and self.level.combo > 1 then
+		if self.level.config.enablePowerups and not playerMade then
             local powerup = self:getPowerupFromColors(colors)
 			local powerupChain = self:getChain(modifiedMatch[#modifiedMatch][#modifiedMatch[#modifiedMatch]])
             if powerup and powerupChain then
@@ -1282,6 +1286,7 @@ function Board:draw()
     end
     self.dirtLayer:draw(self.pos - 7 + offset)
     self.brickLayer:draw(self.pos - 7 + offset)
+    self:drawBoss()
     self:resetStencil()
 
     self:drawObjects()
@@ -1346,6 +1351,15 @@ function Board:drawGrid()
         end
     end
     self:resetStencil()
+end
+
+---Draws the boss, if it is on the board.
+function Board:drawBoss()
+    if not self.boss then
+        return
+    end
+    local offset = _Game.game.screenShakeTotal
+    self.boss:draw(offset)
 end
 
 ---Draws all board objects on the screen.
@@ -1459,18 +1473,18 @@ function Board:mousepressed(x, y, button)
                 end
             elseif self.mode == "bomb" then
                 if self:getTile(self.hoverCoords) then
+                    self.level:resetPowerMeter()
                     self:explodeBomb(self.hoverCoords)
                     self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
-                    self.level:resetPowerMeter()
                     self.level:capTimerAtZero()
                     self:resetHint()
                     self.mode = "select"
                 end
             elseif self.mode == "lightning" then
                 if self:getChain(self.hoverCoords) then
+                    self.level:resetPowerMeter()
                     self:explodeLightning(self.hoverCoords, true, true)
                     self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
-                    self.level:resetPowerMeter()
                     self.level:capTimerAtZero()
                     self:resetHint()
                     self.mode = "select"
@@ -1487,8 +1501,8 @@ function Board:mousepressed(x, y, button)
                 local powerMode = self.level:getPowerMode()
                 if powerMode then
                     if powerMode == "laser" then
-                        self.level:spawnLasers(6)
                         self.level:resetPowerMeter()
+                        self.level:spawnLasers(6)
                         self.level:capTimerAtZero()
                         self:resetHint()
                     else

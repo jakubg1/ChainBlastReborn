@@ -61,39 +61,39 @@ function GameResults:draw()
         self.font:draw("Chains Destroyed:", Vec2(xLeft, 40), Vec2(0, 0.5))
     end
     if self.time > 1.3 then
-        self.font:draw(tostring(self.game.player.chainsDestroyed), Vec2(xRight, 40), Vec2(1, 0.5), Color(1, 1, 0))
+        self.font:draw(tostring(self.game.player.session.chainsDestroyed), Vec2(xRight, 40), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > 1.6 then
         self.font:draw("Largest Link:", Vec2(xLeft, 50), Vec2(0, 0.5))
     end
     if self.time > 1.7 then
-        self.font:draw(tostring(self.game.player.largestGroup), Vec2(xRight, 50), Vec2(1, 0.5), Color(1, 1, 0))
+        self.font:draw(tostring(self.game.player.session.largestGroup), Vec2(xRight, 50), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > 2 then
         self.font:draw("Max Combo:", Vec2(xLeft, 60), Vec2(0, 0.5))
     end
     if self.time > 2.1 then
-        self.font:draw(tostring(self.game.player.maxCombo), Vec2(xRight, 60), Vec2(1, 0.5), Color(1, 1, 0))
+        self.font:draw(tostring(self.game.player.session.maxCombo), Vec2(xRight, 60), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > 2.4 then
         self.font:draw("Attempts per Level:", Vec2(xLeft, 70), Vec2(0, 0.5))
     end
     if self.time > 2.5 then
-        local started = self.game.player.levelsStarted
-        local beaten = self.game.player.levelsCompleted
+        local started = self.game.player.session.levelsStarted
+        local beaten = self.game.player.session.levelsCompleted
         self.font:draw(string.format("%s / %s  %.2f", started, beaten, started / beaten), Vec2(xRight, 70), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > 2.8 then
         self.font:draw("Total Time:", Vec2(xLeft, 80), Vec2(0, 0.5))
     end
     if self.time > 2.9 then
-        self.font:draw(string.format("%.1d:%.2d", self.game.player.timeElapsed / 60, self.game.player.timeElapsed % 60), Vec2(xRight, 80), Vec2(1, 0.5), Color(1, 1, 0))
+        self.font:draw(string.format("%.1d:%.2d", self.game.player.session.timeElapsed / 60, self.game.player.session.timeElapsed % 60), Vec2(xRight, 80), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > 3.4 then
         self.font:draw("Final Score:", Vec2(xMid, 105), Vec2(0.5))
     end
     if self.time > 3.8 then
-        self.font:draw(tostring(self.game.player.score), Vec2(xMid, 125), Vec2(0.5), _Utils.getRainbowColor(_TotalTime / 4), nil, 3)
+        self.font:draw(tostring(self.game.player.session.score), Vec2(xMid, 125), Vec2(0.5), _Utils.getRainbowColor(_TotalTime / 4), nil, 3)
     end
     if self.time > 4.5 then
         local text = "Click anywhere to go to main menu!"

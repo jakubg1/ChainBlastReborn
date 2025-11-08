@@ -24,7 +24,7 @@ function LevelUI:new(level)
     self.bossbarDrainSprite = _Game.resourceManager:getSprite("sprites/bossbar_drain.json")
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
 
-    self.scoreDisplay = self.game.player.score
+    self.scoreDisplay = self.game.player.session.score
     self.powerMeterDisplay = 0
     self.multiplierProgressDisplay = 0
     self.pauseAnimation = 0
@@ -131,8 +131,8 @@ function LevelUI:updateHUD(dt)
     end
 
     -- Score animation
-    if self.scoreDisplay < self.game.player.score then
-        self.scoreDisplay = self.scoreDisplay + math.ceil((self.game.player.score - self.scoreDisplay) / 8)
+    if self.scoreDisplay < self.game.player.session.score then
+        self.scoreDisplay = self.scoreDisplay + math.ceil((self.game.player.session.score - self.scoreDisplay) / 8)
     end
 
     -- Power meter gradual increase
@@ -144,7 +144,7 @@ function LevelUI:updateHUD(dt)
     end
     -- Power meter charge sound
     local progress = math.min((self.powerMeterDisplay / self.level.maxPowerMeter) ^ 3, 1)
-    if self.powerMeterDisplay < self.level.powerMeter then
+    if self.powerMeterDisplay < self.level.powerMeter and self.powerMeterDisplay < self.level.maxPowerMeter then
         if not self.powerChargeSound then
             self.powerChargeSound = _Game:playSound("sound_events/power_charge.json")
         end

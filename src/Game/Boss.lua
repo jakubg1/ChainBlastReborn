@@ -1,4 +1,5 @@
 local class = require "com.class"
+local Vec2 = require("src.Essentials.Vector2")
 
 ---@class Boss
 ---@overload fun(board):Boss
@@ -14,6 +15,8 @@ function Boss:new(board)
     self.maxHealth = 60
     self.health = self.maxHealth
     self.dead = false
+
+    self.sprite = _Game.resourceManager:getSprite("sprites/boss_1.json")
 end
 
 ---Hurts the boss by the given amount of health points.
@@ -48,6 +51,16 @@ end
 ---@return boolean
 function Boss:matchCoords(x, y)
     return _Utils.isPointInsideBox(x, y, self.x, self.y, self.w - 1, self.h - 1)
+end
+
+---Draws the Boss on the screen.
+---@param offset Vector2? If set, the offset from the actual draw position in pixels. Used for screen shake.
+function Boss:draw(offset)
+    local pos = self.board:getTilePos(Vec2(self.x, self.y))
+    if offset then
+        pos = pos + offset
+    end
+    self.sprite:draw(pos)
 end
 
 return Boss

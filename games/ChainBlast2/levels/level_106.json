@@ -22,14 +22,14 @@
         }
     },
     "layout": [
-        "####   ####",
-        "####   ####",
-        "####   ####",
-        "####   ####",
+        "  #######  ",
+        " ######### ",
         "###########",
-        "RRRRRRRRRRR",
-        " RRRRRRRRR ",
-        "  RRRRRRR  "
+        "R#R#   #R#R",
+        "#R#R   R#R#",
+        "R#R#R#R#R#R",
+        " R#R#R#R#R ",
+        "  R#R#R#R  "
     ],
     "spawns": [
         {
@@ -43,10 +43,6 @@
         {
             "weight": 100,
             "type": "chain_yellow"
-        },
-        {
-            "weight": 12,
-            "type": "rock"
         }
     ]
 }
