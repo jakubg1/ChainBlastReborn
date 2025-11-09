@@ -13,6 +13,7 @@ local BoardSelection = require("src.Game.BoardSelection")
 local Boss = require("src.Game.Boss")
 local Bomb = require("src.Game.Bomb")
 local Missile = require("src.Game.Missile")
+local BossFireball = require("src.Game.BossFireball")
 
 ---Constructs the Board.
 ---@param level Level The level instance this Board belongs to.
@@ -243,6 +244,11 @@ function Board:update(dt)
         self:fillHoles()
         self:fillHolesUp()
     end
+    
+    -- Update the boss.
+    if self.boss then
+        self.boss:update(dt)
+    end
 
     -- Bombs
     for i, bomb in ipairs(self.bombs) do
@@ -369,8 +375,22 @@ function Board:explodeTile(coords)
             self.level:addScore(100)
         end
     end
+    -- Damage the boss if this is a boss tile.
     if self.boss and self.boss:matchCoords(coords.x, coords.y) then
+        if not self.boss.dead then
+            self.boss:flash(0.1)
+        end
         self.boss:damage(5)
+        self.boss:stun()
+    end
+end
+
+---Explodes a Tile at given coordinates with the boss effect. Does not affect chains.
+---@param coords Vector2 The coordinates of the exploded chain.
+function Board:bossExplodeTile(coords)
+    local tile = self:getTile(coords)
+    if tile then
+        tile:bossExplode()
     end
 end
 
@@ -698,6 +718,9 @@ function Board:handleMatches()
     _Game:playSound("sound_events/combo.json")
     self:resetHint()
     self.level:startTimer()
+    if self.boss then
+        self.boss:activate()
+    end
 
     for i, match in ipairs(matchGroups) do
 		local colors = self:countGroupColors(match)
@@ -877,6 +900,22 @@ function Board:spawnBomb(targetCoords)
     table.insert(self.bombs, Bomb(self, targetCoords))
 end
 
+---Spawns a Missile on the given tile coordinates, that will move towards the specified target.
+---@param coords Vector2 The coordinates of a tile the Missile will spawn on.
+---@param targetCoords Vector2? The target coordinates the Missile will go towards. If not specified, the tile will be selected automatically.
+function Board:spawnMissile(coords, targetCoords)
+    targetCoords = targetCoords or self:getRandomNonGoldTileCoords() or self:getRandomTileCoords()
+    table.insert(self.bombs, Missile(self, coords, targetCoords))
+end
+
+---Spawns a Boss Fireball on the given tile coordinates, that will move towards the specified target.
+---@param coords Vector2 The coordinates of a tile the Missile will spawn on.
+---@param targetCoords Vector2? The target coordinates the Missile will go towards. If not specified, the tile will be selected automatically.
+function Board:spawnBossFireball(coords, targetCoords)
+    targetCoords = targetCoords or self:getRandomGoldTileCoords() or self:getRandomTileCoords()
+    table.insert(self.bombs, BossFireball(self, coords, targetCoords))
+end
+
 
 
 ---Creates an explosion which destroys objects in a 3x3 area centered around the given coordinates.
@@ -963,18 +1002,6 @@ function Board:getVerticalLightningRange(x, y)
         bottom = bottom + 1
     end
     return top, bottom
-end
-
-
-
----Spawns a Missile on the given tile coordinates, that will move towards the specified target.
----@param coords Vector2 The coordinates of a tile the Missile will spawn on.
----@param targetCoords Vector2? The target coordinates the Missile will go towards. If not specified, the tile will be selected automatically.
-function Board:spawnMissile(coords, targetCoords)
-    if not targetCoords then
-        targetCoords = self:getRandomNonGoldTileCoords()
-    end
-    table.insert(self.bombs, Missile(self, coords, targetCoords))
 end
 
 
@@ -1102,6 +1129,29 @@ function Board:getRandomNonGoldTileCoords(excludedCoords)
             if not excludedCoords or not _Utils.isValueInTable(excludedCoords, coords) then
                 local tile = self:getTile(coords)
                 if tile and tile:preventsWin() then
+                    table.insert(tiles, coords)
+                end
+            end
+        end
+    end
+    if #tiles == 0 then
+        return
+    end
+    return tiles[love.math.random(#tiles)]
+end
+
+---Returns coordinates of a random tile on the board that is gold.
+---If none of the tiles are gold, returns `nil`.
+---@param excludedCoords table? A list of excluded coordinates (Vector2's) which are guaranteed to not be returned by this function.
+---@return Vector2?
+function Board:getRandomGoldTileCoords(excludedCoords)
+    local tiles = {}
+    for i = 1, self.size.x do
+        for j = 1, self.size.y do
+            local coords = Vec2(i, j)
+            if not excludedCoords or not _Utils.isValueInTable(excludedCoords, coords) then
+                local tile = self:getTile(coords)
+                if tile and not tile:preventsWin() then
                     table.insert(tiles, coords)
                 end
             end
@@ -1265,10 +1315,10 @@ end
 
 ---Draws the Board.
 function Board:draw()
-    local offset = _Game.game.screenShakeTotal
+    local offset = _Game.game:getScreenshakeOffset()
 
-    self:drawBackground()
-    self:drawGrid()
+    self:drawBackground(offset)
+    self:drawGrid(offset)
     -- Tiles
     for i = 1, self.size.x do
         for j = 1, self.size.y do
@@ -1286,21 +1336,22 @@ function Board:draw()
     end
     self.dirtLayer:draw(self.pos - 7 + offset)
     self.brickLayer:draw(self.pos - 7 + offset)
-    self:drawBoss()
+    self:drawBoss(offset)
     self:resetStencil()
 
-    self:drawObjects()
-    self:drawTileHighlights()
-    self:drawHint()
-    self:drawCursor()
+    self:drawObjects(offset)
+    self:drawTileHighlights(offset)
+    self:drawProjectiles(offset)
+    self:drawHint(offset)
+    self:drawCursor(offset)
 end
 
 ---Draws the board background.
-function Board:drawBackground()
+---@param offset Vector2 Offset used for screenshakes.
+function Board:drawBackground(offset)
     if not self.background then
         return
     end
-    local offset = _Game.game.screenShakeTotal
     if self.startAnimation then
         self:setDiamondStencil(self.startAnimation * 100)
     elseif self.endAnimation then
@@ -1311,8 +1362,8 @@ function Board:drawBackground()
 end
 
 ---Draws the board grid.
-function Board:drawGrid()
-    local offset = _Game.game.screenShakeTotal
+---@param offset Vector2 Offset used for screenshakes.
+function Board:drawGrid(offset)
 	local lineColor = Color(0.5, 0.5, 0.7)
     local lineShadowColor = Color(0, 0, 0)
 
@@ -1354,17 +1405,17 @@ function Board:drawGrid()
 end
 
 ---Draws the boss, if it is on the board.
-function Board:drawBoss()
+---@param offset Vector2 Offset used for screenshakes.
+function Board:drawBoss(offset)
     if not self.boss then
         return
     end
-    local offset = _Game.game.screenShakeTotal
     self.boss:draw(offset)
 end
 
 ---Draws all board objects on the screen.
-function Board:drawObjects()
-    local offset = _Game.game.screenShakeTotal
+---@param offset Vector2 Offset used for screenshakes.
+function Board:drawObjects(offset)
     for i = 1, self.size.x do
         for j = 1, self.size.y do
             local chain = self:getChain(Vec2(i, j))
@@ -1377,8 +1428,8 @@ end
 
 ---Draws tile highlights.
 ---The tile highlights show up when a powerup is active and the player is choosing its deployment position.
-function Board:drawTileHighlights()
-    local offset = _Game.game.screenShakeTotal
+---@param offset Vector2 Offset used for screenshakes.
+function Board:drawTileHighlights(offset)
     for i = 1, self.size.x do
         for j = 1, self.size.y do
             local highlighted = false
@@ -1405,12 +1456,22 @@ function Board:drawTileHighlights()
     end
 end
 
+---Draws the projectiles on the board.
+---@param offset Vector2 Offset used for screenshakes.
+function Board:drawProjectiles(offset)
+    for i, projectile in ipairs(self.bombs) do
+        if projectile.draw then
+            projectile:draw(offset)
+        end
+    end
+end
+
 ---Draws the hint indicator, if it is currently present.
-function Board:drawHint()
+---@param offset Vector2 Offset used for screenshakes.
+function Board:drawHint(offset)
     if not self.hintCoords then
         return
     end
-    local offset = _Game.game.screenShakeTotal
     local pos = self:getTilePos(self.hintCoords) - 2 + offset
     local frame = math.floor((_TotalTime * 15) % 10) + 1
     local color = self.hintPalette:getColor(_TotalTime * 60)
@@ -1418,11 +1479,11 @@ function Board:drawHint()
 end
 
 ---Draws the cursor at the currently hovered tile position.
-function Board:drawCursor()
+---@param offset Vector2 Offset used for screenshakes.
+function Board:drawCursor(offset)
     if not self.visualHoverCoords then
         return
     end
-    local offset = _Game.game.screenShakeTotal
     local pos = self:getTilePos(self.visualHoverCoords) - 5 + offset
     local frame = math.floor(math.sin(_TotalTime * 3) * 2 + 2) + 1
     self.hoverSprite:draw(pos, nil, 1, frame)

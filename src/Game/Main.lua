@@ -10,6 +10,7 @@ local Player = require("src.Game.Player")
 local SceneManager = require("src.Game.SceneManager")
 local Particle2 = require("src.Game.Particle2")
 local ChainFragment = require("src.Game.ChainFragment")
+local Shaker = require("src.Game.Shaker")
 
 -- TODO: Extract particle effects to a separate class.
 local PARTICLE_EFFECT_TYPES = {
@@ -66,8 +67,7 @@ function GameMain:new(game)
 	self.sceneManager = SceneManager(self)
 
 	self.particles = {}
-	self.screenShakes = {}
-	self.screenShakeTotal = Vec2()
+	self.screenShaker = Shaker()
 end
 
 ---Updates the game.
@@ -90,24 +90,7 @@ end
 ---Updates the screenshake animations.
 ---@param dt number Time delta in seconds.
 function GameMain:updateScreenshake(dt)
-	self.screenShakeTotal = Vec2()
-	for i, shake in ipairs(self.screenShakes) do
-		-- Count shake power.
-		local decayFactor = _Utils.map(shake.time, 0, shake.maxTime, 1, 0)
-		-- The following is a quadratic falloff, personally I feel like it is much more headache-inducing
-		--local decayFactor = 1 - _Utils.map(shake.time, 0, shake.maxTime, 0, 1) ^ 2
-		local t = math.sin((shake.time * shake.frequency) * math.pi * 2) * decayFactor
-		self.screenShakeTotal = self.screenShakeTotal + shake.vector * t
-		-- Count time.
-		shake.time = shake.time + dt
-		if shake.time >= shake.maxTime then
-			shake.delQueue = true
-		end
-	end
-	-- Remove all finished shakes.
-	_Utils.removeDeadObjects(self.screenShakes)
-	-- Round the screen shake value.
-	self.screenShakeTotal = (self.screenShakeTotal + 0.5):floor() * _Game.runtimeManager.options:getSetting("screenShakeStrength")
+	self.screenShaker:update(dt)
 end
 
 ---Spawns a new Particle.
@@ -167,24 +150,19 @@ function GameMain:spawnParticleFragments(pos, type, sprite, state, frame, maxPar
 end
 
 ---Shakes the screen. A few screen shakes can be active at once.
----The offset is calculated once per frame and is stored in the `screenShakeTotal` field.
+---The offset is calculated once per frame and can be retrieved with `:getScreenshakeOffset()`.
 ---@param power number The power of the shake, in pixels.
 ---@param direction number? The direction of the shake, in radians. 0 is left. If omitted, a random angle will be chosen for this shake, but horizontal direction will be preferred.
 ---@param frequency number The frequency of the shake, in 1/s.
 ---@param duration number How long will the shake persist until it is removed, in seconds.
 function GameMain:shakeScreen(power, direction, frequency, duration)
-	if not direction then
-		-- Prefer horizontal shake because it is said that people tolerate it better
-		-- (bias towards 0 or math.pi)
-		direction = math.random() < 0.5 and 0 or math.pi
-		direction = direction + love.math.randomNormal(math.pi / 8, 0)
-	end
-	table.insert(self.screenShakes, {
-		vector = Vec2(power, 0):rotate(direction),
-		frequency = frequency,
-		maxTime = duration,
-		time = 0
-	})
+	self.screenShaker:shake(power, direction, frequency, duration)
+end
+
+---Returns the current screenshake offset.
+---@return Vector2
+function GameMain:getScreenshakeOffset()
+	return self.screenShaker:getOffset()
 end
 
 ---Draws the game.

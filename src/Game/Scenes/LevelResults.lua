@@ -19,6 +19,8 @@ function LevelResults:new(game)
     self.SOUND_STEPS = {0.6, 1.0, 1.4, 1.8, 2.2, 3.2}
     self.NEW_RECORD_TIME = 2.4
     self.newRecordDisplayed = false
+
+    self.newRecordCalculation = nil
 end
 
 ---Returns whether this scene should accept any input.
@@ -38,7 +40,7 @@ end
 ---@private
 ---@return boolean
 function LevelResults:shouldDisplayNewRecord()
-    return not self.level.lost
+    return self.newRecordCalculation == true
 end
 
 ---Skips the level results animation.
@@ -62,6 +64,11 @@ function LevelResults:update(dt)
     if self:shouldDisplayNewRecord() and not self.newRecordDisplayed and self.time >= self.NEW_RECORD_TIME then
         _Game:playSound("sound_events/new_record.json")
         self.newRecordDisplayed = true
+    end
+    -- First frame: Calculate the new record value and submit the level record.
+    -- TODO: Do this in a better way.
+    if self.newRecordCalculation == nil and not self.level.lost then
+        self.newRecordCalculation = self.game.player:checkAndSaveLevelHighscore(self.level, self.level.score)
     end
 end
 

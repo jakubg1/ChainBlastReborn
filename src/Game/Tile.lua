@@ -26,7 +26,10 @@ local TILE_TYPES = {
     gold = {
         sprite = {state = 2, stateAlt = 3, frame = "gold"},
         preventsWin = false,
-        hostsChain = true
+        hostsChain = true,
+        onBossExplode = {
+            transformTo = "normal"
+        }
     },
     flip = {
         sprite = {state = 4, frame = 1},
@@ -262,6 +265,11 @@ end
 ---Explodes this Tile. Typically this is used when a powerup reaches this tile.
 function Tile:explode()
     self:dispatchEffects(self.config.onExplode)
+end
+
+---Boss-explodes this Tile. Typically this is used when a boss' fireball impacts this tile.
+function Tile:bossExplode()
+    self:dispatchEffects(self.config.onBossExplode)
 end
 
 function Tile:select()

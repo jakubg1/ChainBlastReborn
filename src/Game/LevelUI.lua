@@ -1,6 +1,7 @@
 local class = require "com.class"
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
+local Shaker = require("src.Game.Shaker")
 
 ---@class LevelUI
 ---@overload fun(level):LevelUI
@@ -54,6 +55,7 @@ function LevelUI:new(level)
     self.bossbarFill = 0
     self.bossbarDrainFill = nil
     self.bossbarDrainDelay = nil
+    self.bossbarShaker = Shaker()
 end
 
 ---Notifies the UI that extra time has been added to the timer.
@@ -180,6 +182,7 @@ function LevelUI:updateHUD(dt)
                 -- First frame after draining: mark the current health as the health that we will start draining from.
                 self.bossbarDrainFill = self.bossbarFill
                 self.bossbarDrainDelay = 0.5
+                self.bossbarShaker:shake(3.5, math.random() * math.pi, 20, 0.5)
             end
             -- Drain the actual health bar quickly.
             self.bossbarFill = math.max(self.bossbarFill - dt * 3, targetFill)
@@ -199,6 +202,7 @@ function LevelUI:updateHUD(dt)
                 end
             end
         end
+        self.bossbarShaker:update(dt)
     end
 
     -- Multiplier animation
@@ -318,19 +322,20 @@ function LevelUI:drawHUD()
 
     -- Boss bar
     if self.level.config.boss then
+        local barOffset = self.bossbarShaker:getOffset()
         -- Header
-        self.fontSmall:drawWithShadow("Boss Health", Vec2(93, 166), Vec2(), Color(1, 0.1, 0.1), self.hudAlpha)
+        self.fontSmall:drawWithShadow("Boss Health", Vec2(93, 166) + barOffset, Vec2(), Color(1, 0.1, 0.1), self.hudAlpha)
         -- Background
-        self.bossbarEmptySprite:drawWithShadow(Vec2(90, 174), nil, nil, nil, nil, nil, self.hudAlpha)
+        self.bossbarEmptySprite:drawWithShadow(Vec2(90, 174) + barOffset, nil, nil, nil, nil, nil, self.hudAlpha)
         -- White drain part (if applicable)
         if self.bossbarDrainFill then
-            love.graphics.setScissor(90, 174, 140 * self.bossbarDrainFill, 5)
-            self.bossbarDrainSprite:draw(Vec2(90, 174), nil, nil, nil, nil, nil, self.hudAlpha)
+            love.graphics.setScissor(90 + barOffset.x, 174 + barOffset.y, 140 * self.bossbarDrainFill, 5)
+            self.bossbarDrainSprite:draw(Vec2(90, 174) + barOffset, nil, nil, nil, nil, nil, self.hudAlpha)
             love.graphics.setScissor()
         end
         -- Red part (the actual health)
-        love.graphics.setScissor(90, 174, 140 * self.bossbarFill, 5)
-        self.bossbarFullSprite:draw(Vec2(90, 174), nil, nil, nil, nil, nil, self.hudAlpha)
+        love.graphics.setScissor(90 + barOffset.x, 174 + barOffset.y, 140 * self.bossbarFill, 5)
+        self.bossbarFullSprite:draw(Vec2(90, 174) + barOffset, nil, nil, nil, nil, nil, self.hudAlpha)
         love.graphics.setScissor()
     end
 
