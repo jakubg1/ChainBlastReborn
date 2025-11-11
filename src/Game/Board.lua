@@ -365,7 +365,8 @@ end
 ---Explodes a Tile at given coordinates and destroys the Chain that is on it.
 ---If the tile belongs to a boss, that boss gets hurt.
 ---@param coords Vector2 The coordinates of the exploded chain.
-function Board:explodeTile(coords)
+---@param bossDamage integer? The damage dealt to the boss, if this tile belongs to it.
+function Board:explodeTile(coords, bossDamage)
     local tile = self:getTile(coords)
     if tile then
         tile:explode()
@@ -380,7 +381,7 @@ function Board:explodeTile(coords)
         if not self.boss.dead then
             self.boss:flash(0.1)
         end
-        self.boss:damage(5)
+        self.boss:damage(bossDamage or 5)
         self.boss:stun()
     end
 end
@@ -929,7 +930,7 @@ function Board:explodeBomb(coords)
     local pos = self:getTileCenterPos(coords)
 	_Game.game:spawnParticles("power_bomb", pos)
     _Game:playSound("sound_events/explosion2.json")
-    _Game.game:shakeScreen(9, nil, 35, 0.35)
+    _Game.game:shakeScreen(9, nil, 10, 0.35)
     self.level.background:flash(0.5, 0.35)
 end
 
@@ -943,7 +944,7 @@ function Board:explodeLightning(coords, horizontal, vertical)
     if horizontal then
         local left, right = self:getHorizontalLightningRange(coords.x, coords.y)
         for i = left, right do
-            self:explodeTile(Vec2(i, coords.y))
+            self:explodeTile(Vec2(i, coords.y), 15)
         end
         local p1 = self:getTileCenterPos(Vec2(left, coords.y))
         local p2 = self:getTileCenterPos(Vec2(right, coords.y))
@@ -952,7 +953,7 @@ function Board:explodeLightning(coords, horizontal, vertical)
     if vertical then
         local top, bottom = self:getVerticalLightningRange(coords.x, coords.y)
         for i = top, bottom do
-            self:explodeTile(Vec2(coords.x, i))
+            self:explodeTile(Vec2(coords.x, i), 15)
         end
         local p1 = self:getTileCenterPos(Vec2(coords.x, top))
         local p2 = self:getTileCenterPos(Vec2(coords.x, bottom))
@@ -969,7 +970,13 @@ end
 ---@return boolean
 function Board:tileBlocksLightning(x, y)
     local tile = self:getTile(Vec2(x, y))
-    return tile and tile:blocksLightning() or false
+    if tile and tile:blocksLightning() then
+        return true
+    end
+    if self.boss and self.boss:matchCoords(x, y) then
+        return true
+    end
+    return false
 end
 
 ---Returns the first and last X coordinate the lightning strike will span.

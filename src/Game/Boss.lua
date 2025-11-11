@@ -12,12 +12,13 @@ function Boss:new(board)
 
     self.x, self.y = 5, 4
     self.w, self.h = 3, 3
-    self.maxHealth = 60
+    self.maxHealth = 50
     self.health = self.maxHealth
     self.active = false
     self.dead = false
     self.maxShootTime = 10
     self.shootTime = self.maxShootTime
+    self.shotCharged = false
     self.stunTime = nil
     self.flashTime = nil
 
@@ -56,6 +57,7 @@ end
 ---Stuns the boss for a moment and resets the shooting time.
 function Boss:stun()
     self.shootTime = self.maxShootTime
+    self.shotCharged = false
     self.stunTime = 5
 end
 
@@ -115,9 +117,18 @@ function Boss:updateShoot(dt)
         return
     end
     self.shootTime = self.shootTime - dt
+    if self.shootTime <= 2 and not self.shotCharged then
+        self.shotCharged = true
+        _Game:playSound("sound_events/boss_charge.json")
+    end
     if self.shootTime <= 0 then
         self.shootTime = self.shootTime + self.maxShootTime
-        self.board:spawnBossFireball(Vec2(self.x + 1, self.y + 1))
+        self.shotCharged = false
+        local shotPos = Vec2(self.x + 1, self.y + 1)
+        self.board:spawnBossFireball(shotPos)
+        self.board.level.game:spawnParticles("boss_shoot", self.board:getTileCenterPos(shotPos))
+        self.board.level.game:shakeScreen(2, nil, 5, 0.2)
+        _Game:playSound("sound_events/boss_shoot.json")
     end
 end
 
@@ -142,7 +153,7 @@ function Boss:getSprite()
         return self.sprites.dead
     elseif self.stunTime then
         return self.sprites.stunned
-    elseif self.shootTime < 2 then
+    elseif self.shotCharged then
         return self.sprites.ready
     end
     return self.sprites.idle

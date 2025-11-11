@@ -9,6 +9,7 @@ local Shaker = class:derive("Shaker")
 ---Shaker is an entity which can be shaked by any number of shakes, and returns the result of shaking as a single vector.
 function Shaker:new()
 	self.shakes = {}
+    self.cachedOffset = nil
 end
 
 ---Shakes the Shaker. A few shakes can be active at once.
@@ -32,8 +33,12 @@ function Shaker:shake(power, direction, frequency, duration)
 end
 
 ---Returns the current offset of the Shaker. If no shakes are active, returns `(0, 0)`.
+---This function is safe against multiple calls; the calculated value will be cached until next frame.
 ---@return Vector2
 function Shaker:getOffset()
+    if self.cachedOffset then
+        return self.cachedOffset
+    end
 	local total = Vec2()
 	for i, shake in ipairs(self.shakes) do
 		-- Count shake power.
@@ -44,12 +49,16 @@ function Shaker:getOffset()
 		total = total + shake.vector * t
 	end
 	-- Round the final value.
-	return (total + 0.5):floor()
+	total = (total + 0.5):floor()
+    -- Cache the final value and return it.
+    self.cachedOffset = total
+    return total
 end
 
 ---Updates the Shaker.
 ---@param dt number Time delta in seconds.
 function Shaker:update(dt)
+    self.cachedOffset = nil
 	for i, shake in ipairs(self.shakes) do
 		shake.time = shake.time + dt
 		if shake.time >= shake.maxTime then

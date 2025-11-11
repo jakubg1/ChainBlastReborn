@@ -306,7 +306,7 @@ function LevelUI:drawHUD()
     -- Bar
     local color = (self.powerMeterDisplay >= self.level.maxPowerMeter and _TotalTime % 0.3 < 0.15) and Color(1, 1, 1) or self.POWER_METER_COLORS[self.level.powerColor]
     local progress = math.min(self.powerMeterDisplay / self.level.maxPowerMeter, 1)
-    _DrawFillRect(Vec2(282, 65 + 80 * (1 - progress)), Vec2(5, 80 * progress), color, self.hudAlpha)
+    _DrawFillRect(Vec2(282, 66 + 79 * (1 - progress)), Vec2(5, 79 * progress), color, self.hudAlpha)
     -- Power box
     self.powerSprite:draw(Vec2(268, 33), nil, nil, nil, nil, nil, self.hudAlpha)
     -- Power crystal

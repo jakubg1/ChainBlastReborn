@@ -15,7 +15,8 @@ local Shaker = require("src.Game.Shaker")
 -- TODO: Extract particle effects to a separate class.
 local PARTICLE_EFFECT_TYPES = {
 	power_bomb = {
-		{type = "lavalamp", amount = 15, rangeMean = 0, rangeDev = 4}
+		{type = "explosion_flame", amount = 25, rangeMean = 0, rangeDev = 4},
+		{type = "explosion2"}
 	},
 	power_lightning = {
 		{type = "lightning", amount = 7}
@@ -49,6 +50,13 @@ local PARTICLE_EFFECT_TYPES = {
 	},
 	spark_trail = {
 		{type = "spark_trail"}
+	},
+	boss_shoot = {
+		{type = "chain_explosion"}
+	},
+	boss_fireball_explode = {
+		{type = "explosion_flame", amount = 25, rangeMean = 0, rangeDev = 4},
+		{type = "explosion2"}
 	},
 	debug = {
 		{type = "lavalamp", amount = 15, rangeMean = 0, rangeDev = 4}

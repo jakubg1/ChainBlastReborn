@@ -38,7 +38,8 @@ function BossFireball:explode()
     end
     -- An effect.
     _Game:playSound("sound_events/missile_explosion.json")
-    _Game.game:shakeScreen(9, nil, 35, 0.35)
+    self.board.level.game:spawnParticles("boss_fireball_explode", self.pos)
+    _Game.game:shakeScreen(9, nil, 10, 0.35)
     self.delQueue = true
 end
 
@@ -59,7 +60,7 @@ end
 ---Draws the BossFireball.
 ---@param offset Vector2 Offset used for screenshakes.
 function BossFireball:draw(offset)
-    self.sprite:draw(self.pos + offset, Vec2(0.5), nil, math.floor(self.time * 5 % 2) + 1)
+    self.sprite:draw(self.pos + offset, Vec2(0.5), nil, math.floor(self.time * 10 % 2) + 1)
 end
 
 return BossFireball

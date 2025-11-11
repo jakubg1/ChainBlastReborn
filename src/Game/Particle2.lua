@@ -54,6 +54,12 @@ function Particle2:new(game, pos, type, color, pos2)
         self.sprite = _Game.resourceManager:getSprite("sprites/chain_explosion.json")
         self.spriteAnimationSpeed = 20
         self.lifetime = 0.45
+    elseif self.type == "explosion2" then
+        self.speed = Vec2()
+        self.acceleration = Vec2()
+        self.sprite = _Game.resourceManager:getSprite("sprites/explosion2.json")
+        self.spriteAnimationSpeed = 30
+        self.lifetime = 0.5
     elseif self.type == "chip" then
         self.speed = Vec2(love.math.randomNormal(40, 100), 0):rotate(love.math.random() * math.pi * 2)
         self.acceleration = Vec2(0, 200)
@@ -89,6 +95,15 @@ function Particle2:new(game, pos, type, color, pos2)
         self.color = Color(1, shade, 0)
         self.radius = love.math.randomNormal(0.6, 4)
         self.radiusDecay = 1.5
+    elseif self.type == "explosion_flame" then
+        self.speed = Vec2(love.math.randomNormal(10, 80), 0):rotate(math.random() * math.pi * 2)
+        self.acceleration = Vec2()
+        self.decceleration = 80
+        local shade = love.math.randomNormal(0.2, 0.4)
+        self.color = Color(1, shade, 0)
+        self.radius = love.math.randomNormal(1, 7)
+        self.radiusDecay = 0
+        self.radiusDecayAcceleration = math.max(love.math.randomNormal(5, 15), 5)
     elseif self.type == "power_spark" then
         self.speed = Vec2(love.math.randomNormal(30, 100), 0):rotate(math.random() * math.pi * 2)
         self.acceleration = Vec2()
@@ -165,8 +180,11 @@ function Particle2:update(dt)
             self.delQueue = true
         end
     end
+    if self.radiusDecayAcceleration then
+        self.radiusDecay = self.radiusDecay + self.radiusDecayAcceleration * dt
+    end
     if self.radiusDecay then
-        self.radius = self.radius - dt * self.radiusDecay
+        self.radius = self.radius - self.radiusDecay * dt
         if self.radius <= 0 then
             self.delQueue = true
         end
@@ -261,7 +279,7 @@ function Particle2:draw()
         _DrawLine(p1, p2, self.color, nil, 2)
         local colorVector = Vec2(0, 0.5):rotate(self.angle)
         _DrawLine(p1 + colorVector, p2 + colorVector, self.darkColor, nil)
-    elseif self.type == "explosion" or self.type == "lavalamp" then
+    elseif self.type == "lavalamp" or self.type == "explosion_flame" then
         love.graphics.setColor(self.color.r, self.color.g, self.color.b, self.alpha)
         love.graphics.circle("fill", self.pos.x, self.pos.y, self.radius)
     elseif self.type == "lightning" or self.type == "laser" then
