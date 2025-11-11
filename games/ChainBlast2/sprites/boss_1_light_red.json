@@ -1,9 +1,9 @@
 {
     "$schema": "../../../schemas/sprite.json",
-    "path": "images/boss_1_dead.png",
+    "path": "images/boss_1_light_red.png",
     "frameSize": {
-        "x": 44,
-        "y": 44
+        "x": 4,
+        "y": 4
     },
     "states": [
         {

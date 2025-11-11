@@ -12,7 +12,7 @@ function Boss:new(board)
 
     self.x, self.y = 5, 4
     self.w, self.h = 3, 3
-    self.maxHealth = 50
+    self.maxHealth = 55
     self.health = self.maxHealth
     self.active = false
     self.dead = false
@@ -21,14 +21,15 @@ function Boss:new(board)
     self.shotCharged = false
     self.stunTime = nil
     self.flashTime = nil
+    self.lightAnimationProgress = 0
 
-    self.sprites = {
-        dead = _Game.resourceManager:getSprite("sprites/boss_1_dead.json"),
-        disarmed = _Game.resourceManager:getSprite("sprites/boss_1_disarmed.json"),
-        dormant = _Game.resourceManager:getSprite("sprites/boss_1_dormant.json"),
-        idle = _Game.resourceManager:getSprite("sprites/boss_1_idle.json"),
-        ready = _Game.resourceManager:getSprite("sprites/boss_1_ready.json"),
-        stunned = _Game.resourceManager:getSprite("sprites/boss_1_stunned.json")
+    self.sprite = _Game.resourceManager:getSprite("sprites/boss_1_idle.json")
+    self.lightSprites = {
+        _Game.resourceManager:getSprite("sprites/boss_1_light.json"),
+        _Game.resourceManager:getSprite("sprites/boss_1_light_red.json")
+    }
+    self.lightSpriteOffsets = {
+        Vec2(20, 8), Vec2(29, 11), Vec2(32, 20), Vec2(29, 29), Vec2(20, 32), Vec2(11, 29), Vec2(8, 20), Vec2(11, 11)
     }
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
 end
@@ -95,9 +96,11 @@ function Boss:update(dt)
     self:updateStun(dt)
     self:updateShoot(dt)
     self:updateFlash(dt)
+    self:updateLights(dt)
 end
 
 ---Updates the stun logic for this Boss.
+---@private
 ---@param dt number Time delta in seconds.
 function Boss:updateStun(dt)
     if not self.stunTime then
@@ -110,6 +113,7 @@ function Boss:updateStun(dt)
 end
 
 ---Updates the shooting logic for this Boss, only when it is active and alive.
+---@private
 ---@param dt number Time delta in seconds.
 function Boss:updateShoot(dt)
     -- The boss will not attempt to shoot if it is dormant, dead or stunned.
@@ -133,6 +137,7 @@ function Boss:updateShoot(dt)
 end
 
 ---Updates the flashing timer for this Boss.
+---@private
 ---@param dt number Time delta in seconds.
 function Boss:updateFlash(dt)
     if not self.flashTime then
@@ -144,19 +149,43 @@ function Boss:updateFlash(dt)
     end
 end
 
+---Updates the light animation.
+---@private
+---@param dt number Time delta in seconds.
+function Boss:updateLights(dt)
+    local speed = (self.maxShootTime - self.shootTime) ^ 1.2 * 2
+    self.lightAnimationProgress = (self.lightAnimationProgress + dt * speed) % 4
+end
+
 ---Returns the sprite this Boss should be using right now.
+---@private
 ---@return Sprite
 function Boss:getSprite()
+    return self.sprite
+end
+
+---Returns whether the light at the provided index should be lit at this moment and which color.
+---`0` means the light should be off. `1` means the light should be lit yellow. `2` means the light should be lit red.
+---@private
+---@param index integer The light index, corresponding to the `lightSpriteOffsets` field.
+---@return 0|1|2
+function Boss:getLightState(index)
     if not self.active then
-        return self.sprites.dormant
+        -- Dormant (off)
+        return 0
     elseif self.dead then
-        return self.sprites.dead
+        -- Disarmed (off)
+        return 0
     elseif self.stunTime then
-        return self.sprites.stunned
+        -- Stunned (flash red)
+        return _TotalTime % 0.2 < 0.1 and 2 or 0
     elseif self.shotCharged then
-        return self.sprites.ready
+        -- Charged (flash yellow)
+        if _TotalTime % 0.1 < 0.05 then
+            return 1
+        end
     end
-    return self.sprites.idle
+    return index % 4 == math.floor(self.lightAnimationProgress) and 1 or 0
 end
 
 ---Draws the Boss on the screen.
@@ -168,6 +197,12 @@ function Boss:draw(offset)
     end
     local shader = self.flashTime and self.flashShader
     self:getSprite():draw(pos, nil, nil, nil, nil, nil, nil, nil, shader)
+    for i, lightOffset in ipairs(self.lightSpriteOffsets) do
+        local state = self:getLightState(i)
+        if state > 0 then
+            self.lightSprites[state]:draw(pos + lightOffset, nil, nil, nil, nil, nil, nil, nil, shader)
+        end
+    end
 end
 
 return Boss
