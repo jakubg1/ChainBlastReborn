@@ -379,14 +379,4 @@ function Tile:draw(offset)
     end
 end
 
----Draws this Tile's highlight on the screen. Used to highlight tiles which will be affected when a powerup is deployed from a power.
----@param offset Vector2? If set, the offset from the actual draw position in pixels. Used for screen shake.
-function Tile:drawHighlight(offset)
-    local pos = self:getPos()
-    if offset then
-        pos = pos + offset
-    end
-    _DrawFillRect(pos, Vec2(14, 14), Color(1, 1, 1), 0.7)
-end
-
 return Tile

@@ -364,6 +364,7 @@ end
 
 ---Explodes a Tile at given coordinates and destroys the Chain that is on it.
 ---If the tile belongs to a boss, that boss gets hurt.
+---If the boss considers that tile a special attack tile, the boss' special attack routine is done.
 ---@param coords Vector2 The coordinates of the exploded chain.
 ---@param bossDamage integer? The damage dealt to the boss, if this tile belongs to it.
 function Board:explodeTile(coords, bossDamage)
@@ -383,6 +384,9 @@ function Board:explodeTile(coords, bossDamage)
         end
         self.boss:damage(bossDamage or 5)
         self.boss:stun()
+        if self.boss:coordsIsSpecialAttack(coords.x, coords.y) then
+            self.boss:trySpecialAttack()
+        end
     end
 end
 
@@ -944,7 +948,7 @@ function Board:explodeLightning(coords, horizontal, vertical)
     if horizontal then
         local left, right = self:getHorizontalLightningRange(coords.x, coords.y)
         for i = left, right do
-            self:explodeTile(Vec2(i, coords.y), 15)
+            self:explodeTile(Vec2(i, coords.y), 5)
         end
         local p1 = self:getTileCenterPos(Vec2(left, coords.y))
         local p2 = self:getTileCenterPos(Vec2(right, coords.y))
@@ -953,7 +957,7 @@ function Board:explodeLightning(coords, horizontal, vertical)
     if vertical then
         local top, bottom = self:getVerticalLightningRange(coords.x, coords.y)
         for i = top, bottom do
-            self:explodeTile(Vec2(coords.x, i), 15)
+            self:explodeTile(Vec2(coords.x, i), 5)
         end
         local p1 = self:getTileCenterPos(Vec2(coords.x, top))
         local p2 = self:getTileCenterPos(Vec2(coords.x, bottom))
@@ -973,7 +977,7 @@ function Board:tileBlocksLightning(x, y)
     if tile and tile:blocksLightning() then
         return true
     end
-    if self.boss and self.boss:matchCoords(x, y) then
+    if self.boss and self.boss:blocksLightning(x, y) then
         return true
     end
     return false
@@ -1439,6 +1443,7 @@ end
 function Board:drawTileHighlights(offset)
     for i = 1, self.size.x do
         for j = 1, self.size.y do
+            local coords = Vec2(i, j)
             local highlighted = false
             if self.hoverCoords then
                 if self.mode == "bomb" then
@@ -1452,12 +1457,9 @@ function Board:drawTileHighlights(offset)
                     end
                 end
             end
-            if highlighted then
-                local coords = Vec2(i, j)
-                local tile = self:getTile(coords)
-                if tile then
-                    tile:drawHighlight(offset)
-                end
+            if highlighted and (self:getTile(coords) or (self.boss and self.boss:matchCoords(i, j))) then
+                local pos = self:getTilePos(coords) + offset
+                _DrawFillRect(pos, Vec2(14, 14), Color(1, 1, 1), 0.7)
             end
         end
     end

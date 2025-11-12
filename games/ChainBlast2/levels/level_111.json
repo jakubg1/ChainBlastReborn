@@ -1,7 +1,7 @@
 {
     "$schema": "../../schemas/level.json",
     "name": "11",
-    "time": 50,
+    "time": 80,
     "boss": true,
     "final": true,
     "multiplierEnabled": false,

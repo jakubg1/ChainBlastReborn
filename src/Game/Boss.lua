@@ -12,7 +12,7 @@ function Boss:new(board)
 
     self.x, self.y = 5, 4
     self.w, self.h = 3, 3
-    self.maxHealth = 55
+    self.maxHealth = 70
     self.health = self.maxHealth
     self.active = false
     self.dead = false
@@ -22,6 +22,8 @@ function Boss:new(board)
     self.stunTime = nil
     self.flashTime = nil
     self.lightAnimationProgress = 0
+    self.doorAnimation = 0
+    self.doorAnimationTarget = false
 
     self.sprite = _Game.resourceManager:getSprite("sprites/boss_1_idle.json")
     self.lightSprites = {
@@ -31,6 +33,8 @@ function Boss:new(board)
     self.lightSpriteOffsets = {
         Vec2(20, 8), Vec2(29, 11), Vec2(32, 20), Vec2(29, 29), Vec2(20, 32), Vec2(11, 29), Vec2(8, 20), Vec2(11, 11)
     }
+    self.doorSprite = _Game.resourceManager:getSprite("sprites/boss_1_door.json")
+    self.coreSprite = _Game.resourceManager:getSprite("sprites/boss_1_core.json")
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
 end
 
@@ -58,7 +62,6 @@ end
 ---Stuns the boss for a moment and resets the shooting time.
 function Boss:stun()
     self.shootTime = self.maxShootTime
-    self.shotCharged = false
     self.stunTime = 5
 end
 
@@ -84,6 +87,36 @@ function Boss:matchCoords(x, y)
     return _Utils.isPointInsideBox(x, y, self.x, self.y, self.w - 1, self.h - 1)
 end
 
+---Returns `true` if the provided coordinates are occupied by this boss and block lightning.
+---@param x integer The X tile coordinate on the board.
+---@param y integer The Y tile coordinate on the board.
+---@return boolean
+function Boss:blocksLightning(x, y)
+    return x == self.x + 1 and y == self.y + 1
+end
+
+---Returns `true` if the provided coordinates are considered to have a special attack attempted when damaged.
+---@param x integer The X tile coordinate on the board.
+---@param y integer The Y tile coordinate on the board.
+---@return boolean
+function Boss:coordsIsSpecialAttack(x, y)
+    return x == self.x + 1 and y == self.y + 1
+end
+
+---Attempts a special attack on this Boss.
+---Currently, it is hardcoded to explode the fireball inside the boss which deals massive damage when the boss is ready to shoot its fireball.
+function Boss:trySpecialAttack()
+    if not self.shotCharged then
+        return
+    end
+    self.shotCharged = false
+    local pos = self.board:getTileCenterPos(Vec2(self.x + 1, self.y + 1))
+    _Game:playSound("sound_events/missile_explosion.json")
+    self.board.level.game:spawnParticles("boss_fireball_explode", pos)
+    _Game.game:shakeScreen(9, nil, 10, 0.35)
+    self:damage(25)
+end
+
 ---Flashes the Boss for the provided amount of time.
 ---@param duration number The flash duration in seconds.
 function Boss:flash(duration)
@@ -97,6 +130,7 @@ function Boss:update(dt)
     self:updateShoot(dt)
     self:updateFlash(dt)
     self:updateLights(dt)
+    self:updateDoor(dt)
 end
 
 ---Updates the stun logic for this Boss.
@@ -109,6 +143,7 @@ function Boss:updateStun(dt)
     self.stunTime = self.stunTime - dt
     if self.stunTime <= 0 then
         self.stunTime = nil
+        self.shotCharged = false
     end
 end
 
@@ -157,6 +192,23 @@ function Boss:updateLights(dt)
     self.lightAnimationProgress = (self.lightAnimationProgress + dt * speed) % 4
 end
 
+---Updates the door animation.
+---@private
+---@param dt number Time delta in seconds.
+function Boss:updateDoor(dt)
+    if self.doorAnimationTarget then
+        -- Door is open.
+        self.doorAnimation = math.min(self.doorAnimation + dt / 0.35, 1)
+        -- Close the door: The moment the animation finishes
+        self.doorAnimationTarget = self.doorAnimation < 1 or self.dead
+    else
+        -- Door is closed.
+        self.doorAnimation = math.max(self.doorAnimation - dt / 0.35, 0)
+        -- Open the door: 0.25 seconds before the shot (or when the boss is disarmed)
+        self.doorAnimationTarget = self.shootTime <= 0.25 or self.dead
+    end
+end
+
 ---Returns the sprite this Boss should be using right now.
 ---@private
 ---@return Sprite
@@ -188,6 +240,13 @@ function Boss:getLightState(index)
     return index % 4 == math.floor(self.lightAnimationProgress) and 1 or 0
 end
 
+---Returns the frame to be used by the door, an integer from 1 to 6.
+---@private
+---@return integer
+function Boss:getDoorFrame()
+    return _Utils.clamp(math.floor(self.doorAnimation * 8), 1, 5)
+end
+
 ---Draws the Boss on the screen.
 ---@param offset Vector2? If set, the offset from the actual draw position in pixels. Used for screen shake.
 function Boss:draw(offset)
@@ -196,12 +255,22 @@ function Boss:draw(offset)
         pos = pos + offset
     end
     local shader = self.flashTime and self.flashShader
+    -- Base
     self:getSprite():draw(pos, nil, nil, nil, nil, nil, nil, nil, shader)
+    -- Lights
     for i, lightOffset in ipairs(self.lightSpriteOffsets) do
         local state = self:getLightState(i)
         if state > 0 then
             self.lightSprites[state]:draw(pos + lightOffset, nil, nil, nil, nil, nil, nil, nil, shader)
         end
+    end
+    -- Core
+    if self.dead then
+        self.coreSprite:draw(pos + Vec2(19, 19), nil, nil, _TotalTime % 0.2 < 0.1 and 1 or 2)
+    end
+    -- Door
+    if not self.dead then
+        self.doorSprite:draw(pos + Vec2(18, 18), nil, nil, self:getDoorFrame(), nil, nil, nil, nil, shader)
     end
 end
 
