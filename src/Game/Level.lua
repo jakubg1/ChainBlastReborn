@@ -258,6 +258,12 @@ function Level:getRandomSpawn(initial)
     return items[_Utils.weightedRandom(weights)].type
 end
 
+---Returns a random chain shape that can spawn in this level, dictated by `crossLinkChance` in the level configuration file.
+---@return 1|2
+function Level:getRandomChainShape()
+    return math.random() < self.config.crossLinkChance and 2 or 1
+end
+
 ---Creates a Board for this Level.
 function Level:startBoard()
     self.board = Board(self)

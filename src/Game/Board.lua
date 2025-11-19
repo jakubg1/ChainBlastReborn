@@ -244,7 +244,7 @@ function Board:update(dt)
         self:fillHoles()
         self:fillHolesUp()
     end
-    
+
     -- Update the boss.
     if self.boss then
         self.boss:update(dt)
@@ -373,15 +373,13 @@ function Board:explodeTile(coords, bossDamage)
         tile:explode()
         local chain = self:getChain(coords)
         if chain and not chain.shuffleTarget and not chain.fallTarget then
+            -- TODO: Add chain destruction causes and move the score giving part to chain data.
             chain:destroy()
             self.level:addScore(100)
         end
     end
     -- Damage the boss if this is a boss tile.
     if self.boss and self.boss:matchCoords(coords.x, coords.y) then
-        if not self.boss.dead then
-            self.boss:flash(0.1)
-        end
         self.boss:damage(bossDamage or 5)
         self.boss:stun()
         if self.boss:coordsIsSpecialAttack(coords.x, coords.y) then
@@ -479,7 +477,7 @@ function Board:initializeContents()
                 local cellData = self:getCellData(coords)
                 if cellData and cellData.tile and self.tiles[i][j]:hostsChain() then
                     local chainType = cellData.chain and cellData.chain.type or self.level:getRandomSpawn(true)
-                    self.chains[i][j] = Chain(self, coords, chainType)
+                    self.chains[i][j] = Chain(self, coords, chainType, self.level:getRandomChainShape())
                     if cellData.chain then
                         if cellData.chain.health then
                             self.chains[i][j].health = cellData.chain.health
@@ -494,7 +492,7 @@ function Board:initializeContents()
             for i, spawn in ipairs(self.level.config.extraSpawns) do
                 for j = 1, spawn.amount do
                     local coords = table.remove(specialSpawnPositions, math.random(1, #specialSpawnPositions))
-                    self.chains[coords.x][coords.y] = Chain(self, coords, spawn.type)
+                    self.chains[coords.x][coords.y] = Chain(self, coords, spawn.type, self.level:getRandomChainShape())
                 end
             end
         end
@@ -888,7 +886,8 @@ function Board:fillHolesUp()
                 local tile = self:getTile(coords)
                 local chain = self:getChain(coords)
                 if tile and tile:hostsChain() and not chain then
-                    local newChain = Chain(self, Vec2(coords.x, -((13 - self.size.y) / 2) - chainsPlaced), self.level:getRandomSpawn(false))
+                    local newCoords = Vec2(coords.x, -((13 - self.size.y) / 2) - chainsPlaced)
+                    local newChain = Chain(self, newCoords, self.level:getRandomSpawn(false), self.level:getRandomChainShape())
                     self:fallNewChain(newChain, coords)
                     chainsPlaced = chainsPlaced + 1
                 end

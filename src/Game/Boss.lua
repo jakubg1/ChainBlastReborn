@@ -5,6 +5,84 @@ local Vec2 = require("src.Essentials.Vector2")
 ---@overload fun(board):Boss
 local Boss = class:derive("Boss")
 
+-- TODO: Extract to a separate resource file.
+local BOSS_DATA = {
+    -- TODO: Waves (after Playtest 1)
+    health = 70,
+    attacks = {
+        {
+            type = "shoot",
+            delay = 10,
+            chargeThreshold = 2,
+            effects = {
+                sound = "sound_events/boss_shoot.json",
+                particle = "boss_shoot",
+                screenShake = {power = 2, frequency = 5, duration = 0.2}
+            },
+            chargeEffects = {
+                sound = "sound_events/boss_charge.json"
+            }
+        }
+    },
+    activate = {
+        effects = {
+            -- TODO: Sounds and perhaps something else too?
+        }
+    },
+    damage = {
+        effects = {
+            flash = 0.1
+        }
+    },
+    stun = {
+        duration = 5,
+        effects = {
+            -- TODO: Sounds and perhaps something else too?
+        },
+        lightning = {
+            delay = 0.1,
+            range = 20,
+            particle = "boss_stun_lightning",
+            minLength = 10
+        }
+    },
+    specialAttack = {
+        damage = 25,
+        effects = {
+            -- TODO: Dedicated sound for performing a special attack on the boss.
+            sound = "sound_events/missile_explosion.json",
+            particle = "boss_fireball_explode",
+            screenShake = {power = 9, frequency = 10, duration = 0.35}
+        }
+    },
+    disarm = {
+        effects = {
+            -- TODO: Sounds and perhaps something else too?
+        }
+    },
+    visualParts = {
+        body = {
+            sprite = "sprites/boss_1_idle.json",
+            disarmedSprite = "sprites/boss_1_idle.json"
+        },
+        lights = {
+            sprites = {
+                "sprites/boss_1_light.json",
+                "sprites/boss_1_light_red.json"
+            },
+            offsets = {Vec2(20, 8), Vec2(29, 11), Vec2(32, 20), Vec2(29, 29), Vec2(20, 32), Vec2(11, 29), Vec2(8, 20), Vec2(11, 11)}
+        },
+        door = {
+            sprite = "sprites/boss_1_door.json",
+            offset = Vec2(18, 18)
+        },
+        core = {
+            sprite = "sprites/boss_1_core.json",
+            offset = Vec2(19, 19)
+        }
+    }
+}
+
 ---Constructs a new Boss.
 ---@param board Board The board on which the boss is located.
 function Boss:new(board)
@@ -12,29 +90,28 @@ function Boss:new(board)
 
     self.x, self.y = 5, 4
     self.w, self.h = 3, 3
-    self.maxHealth = 70
-    self.health = self.maxHealth
+    self.health = BOSS_DATA.health
     self.active = false
     self.dead = false
-    self.maxShootTime = 10
-    self.shootTime = self.maxShootTime
+    self.shootTime = BOSS_DATA.attacks[1].delay
     self.shotCharged = false
     self.stunTime = nil
+    -- Visual
+    self.stunLightningTime = nil
     self.flashTime = nil
     self.lightAnimationProgress = 0
     self.doorAnimation = 0
     self.doorAnimationTarget = false
 
-    self.sprite = _Game.resourceManager:getSprite("sprites/boss_1_idle.json")
-    self.lightSprites = {
-        _Game.resourceManager:getSprite("sprites/boss_1_light.json"),
-        _Game.resourceManager:getSprite("sprites/boss_1_light_red.json")
-    }
-    self.lightSpriteOffsets = {
-        Vec2(20, 8), Vec2(29, 11), Vec2(32, 20), Vec2(29, 29), Vec2(20, 32), Vec2(11, 29), Vec2(8, 20), Vec2(11, 11)
-    }
-    self.doorSprite = _Game.resourceManager:getSprite("sprites/boss_1_door.json")
-    self.coreSprite = _Game.resourceManager:getSprite("sprites/boss_1_core.json")
+    self.sprite = _Game.resourceManager:getSprite(BOSS_DATA.visualParts.body.sprite)
+    self.disarmedSprite = _Game.resourceManager:getSprite(BOSS_DATA.visualParts.body.disarmedSprite)
+    self.lightSprites = {}
+    for i, path in ipairs(BOSS_DATA.visualParts.lights.sprites) do
+        self.lightSprites[i] = _Game.resourceManager:getSprite(path)
+    end
+    self.lightSpriteOffsets = BOSS_DATA.visualParts.lights.offsets
+    self.doorSprite = _Game.resourceManager:getSprite(BOSS_DATA.visualParts.door.sprite)
+    self.coreSprite = _Game.resourceManager:getSprite(BOSS_DATA.visualParts.core.sprite)
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
 end
 
@@ -45,6 +122,7 @@ function Boss:activate()
         return
     end
     self.active = true
+    self:dispatchEffects(BOSS_DATA.activate.effects)
 end
 
 ---Hurts the boss by the given amount of health points.
@@ -54,6 +132,7 @@ function Boss:damage(health)
         return
     end
     self.health = math.max(self.health - health, 0)
+    self:dispatchEffects(BOSS_DATA.damage.effects)
     if self.health == 0 then
         self:die()
     end
@@ -61,8 +140,9 @@ end
 
 ---Stuns the boss for a moment and resets the shooting time.
 function Boss:stun()
-    self.shootTime = self.maxShootTime
-    self.stunTime = 5
+    self.shootTime = BOSS_DATA.attacks[1].delay
+    self.stunTime = BOSS_DATA.stun.duration
+    self:dispatchEffects(BOSS_DATA.stun.effects)
 end
 
 ---Kills this boss. This function is automatically called when the boss' health reaches 0.
@@ -71,12 +151,13 @@ function Boss:die()
         return
     end
     self.dead = true
+    self:dispatchEffects(BOSS_DATA.disarm.effects)
 end
 
 ---Returns the percentage of health this Boss currently has.
 ---@return number
 function Boss:getHealthPercentage()
-    return self.health / self.maxHealth
+    return self.health / BOSS_DATA.health
 end
 
 ---Returns `true` if the provided coordinates are occupied by this boss.
@@ -110,11 +191,14 @@ function Boss:trySpecialAttack()
         return
     end
     self.shotCharged = false
-    local pos = self.board:getTileCenterPos(Vec2(self.x + 1, self.y + 1))
-    _Game:playSound("sound_events/missile_explosion.json")
-    self.board.level.game:spawnParticles("boss_fireball_explode", pos)
-    _Game.game:shakeScreen(9, nil, 10, 0.35)
-    self:damage(25)
+    self:dispatchEffects(BOSS_DATA.specialAttack.effects)
+    self:damage(BOSS_DATA.specialAttack.damage)
+end
+
+---Returns the center position of the Boss on the screen.
+---@return Vector2
+function Boss:getCenterPos()
+    return self.board:getTileCenterPos(Vec2(self.x + math.floor(self.w / 2), self.y + math.floor(self.h / 2)))
 end
 
 ---Flashes the Boss for the provided amount of time.
@@ -123,10 +207,33 @@ function Boss:flash(duration)
     self.flashTime = duration
 end
 
+---Dispatches effects from this boss being damaged or destroyed, by playing a sound, shaking the screen, spawning particles, etc.
+---@private
+---@param effects table? A table of effects to be executed.
+function Boss:dispatchEffects(effects)
+    if not effects then
+        return
+    end
+    local pos = self:getCenterPos()
+    if effects.flash then
+        self:flash(effects.flash)
+    end
+    if effects.particle then
+        _Game.game:spawnParticles(effects.particle, pos)
+    end
+    if effects.sound then
+        _Game:playSound(effects.sound)
+    end
+    if effects.screenShake then
+        _Game.game:shakeScreen(effects.screenShake.power, effects.screenShake.direction, effects.screenShake.frequency, effects.screenShake.duration)
+    end
+end
+
 ---Updates this Boss.
 ---@param dt number Time delta in seconds.
 function Boss:update(dt)
     self:updateStun(dt)
+    self:updateStunLightning(dt)
     self:updateShoot(dt)
     self:updateFlash(dt)
     self:updateLights(dt)
@@ -147,6 +254,26 @@ function Boss:updateStun(dt)
     end
 end
 
+---Updates the lightning animation for when this Boss is stunned.
+---@private
+---@param dt number Time delta in seconds.
+function Boss:updateStunLightning(dt)
+    -- End the stun lightning animation (or don't proceed) if the boss is no longer stunned.
+    if not self.stunTime then
+        self.stunLightningTime = nil
+        return
+    end
+    self.stunLightningTime = (self.stunLightningTime or BOSS_DATA.stun.lightning.delay) - dt
+    if self.stunLightningTime <= 0 then
+        self.stunLightningTime = self.stunLightningTime + BOSS_DATA.stun.lightning.delay
+        local pos1 = self:getCenterPos() + Vec2((math.random() * 2 - 1) * BOSS_DATA.stun.lightning.range, (math.random() * 2 - 1) * BOSS_DATA.stun.lightning.range)
+        local pos2 = self:getCenterPos() + Vec2((math.random() * 2 - 1) * BOSS_DATA.stun.lightning.range, (math.random() * 2 - 1) * BOSS_DATA.stun.lightning.range)
+        if (pos1 - pos2):len() > BOSS_DATA.stun.lightning.minLength then
+            self.board.level.game:spawnParticles(BOSS_DATA.stun.lightning.particle, pos1, pos2)
+        end
+    end
+end
+
 ---Updates the shooting logic for this Boss, only when it is active and alive.
 ---@private
 ---@param dt number Time delta in seconds.
@@ -158,16 +285,14 @@ function Boss:updateShoot(dt)
     self.shootTime = self.shootTime - dt
     if self.shootTime <= 2 and not self.shotCharged then
         self.shotCharged = true
-        _Game:playSound("sound_events/boss_charge.json")
+        self:dispatchEffects(BOSS_DATA.attacks[1].chargeEffects)
     end
     if self.shootTime <= 0 then
-        self.shootTime = self.shootTime + self.maxShootTime
+        self.shootTime = self.shootTime + BOSS_DATA.attacks[1].delay
         self.shotCharged = false
         local shotPos = Vec2(self.x + 1, self.y + 1)
         self.board:spawnBossFireball(shotPos)
-        self.board.level.game:spawnParticles("boss_shoot", self.board:getTileCenterPos(shotPos))
-        self.board.level.game:shakeScreen(2, nil, 5, 0.2)
-        _Game:playSound("sound_events/boss_shoot.json")
+        self:dispatchEffects(BOSS_DATA.attacks[1].effects)
     end
 end
 
@@ -188,7 +313,7 @@ end
 ---@private
 ---@param dt number Time delta in seconds.
 function Boss:updateLights(dt)
-    local speed = (self.maxShootTime - self.shootTime) ^ 1.2 * 2
+    local speed = (BOSS_DATA.attacks[1].delay - self.shootTime) ^ 1.2 * 2
     self.lightAnimationProgress = (self.lightAnimationProgress + dt * speed) % 4
 end
 
@@ -213,7 +338,7 @@ end
 ---@private
 ---@return Sprite
 function Boss:getSprite()
-    return self.sprite
+    return self.dead and self.disarmedSprite or self.sprite
 end
 
 ---Returns whether the light at the provided index should be lit at this moment and which color.
@@ -266,11 +391,11 @@ function Boss:draw(offset)
     end
     -- Core
     if self.dead then
-        self.coreSprite:draw(pos + Vec2(19, 19), nil, nil, _TotalTime % 0.2 < 0.1 and 1 or 2)
+        self.coreSprite:draw(pos + BOSS_DATA.visualParts.core.offset, nil, nil, _TotalTime % 0.2 < 0.1 and 1 or 2)
     end
     -- Door
     if not self.dead then
-        self.doorSprite:draw(pos + Vec2(18, 18), nil, nil, self:getDoorFrame(), nil, nil, nil, nil, shader)
+        self.doorSprite:draw(pos + BOSS_DATA.visualParts.door.offset, nil, nil, self:getDoorFrame(), nil, nil, nil, nil, shader)
     end
 end
 

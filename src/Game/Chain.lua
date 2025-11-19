@@ -1,7 +1,7 @@
 local class = require "com.class"
 
 ---@class Chain
----@overload fun(board, coords, type):Chain
+---@overload fun(board, coords, type, shape?):Chain
 local Chain = class:derive("Chain")
 
 local Vec2 = require("src.Essentials.Vector2")
@@ -118,15 +118,15 @@ local CHAIN_TYPES = {
 ---@param board Board The board this Chain belongs to.
 ---@param coords Vector2 The tile position where this Chain is on the board.
 ---@param type string The type of the Chain. Can be `"chain"` or `"crate"`.
-function Chain:new(board, coords, type)
+---@param shape 1|2? The shape of the Chain. `1` is a regular link, `2` is a cross link. Defaults to `1`.
+function Chain:new(board, coords, type, shape)
     self.board = board
     -- Logical position of the Chain. This is used for match calculation, etc.
     self.coords = coords
     self.type = type
     self.config = CHAIN_TYPES[type]
 
-    -- 1 = straight, 2 = cross
-    self.shape = math.random() < 1/15 and 2 or 1
+    self.shape = shape or 1
     self.health = 1
 
     -- 1 = vertical, 2 = horizontal
@@ -391,6 +391,7 @@ function Chain:canMakeMatch(directions)
         elseif self.shape == 2 then
             return self:canMakeMatch({1, 2, 3, 4})
         end
+        error(string.format("Unknown shape: %s", self.shape))
     end
     assert(directions)
 

@@ -16,6 +16,7 @@ function LevelConfig:new(data, path)
 
     self.name = u.parseString(data.name, path, "name")
     self.time = u.parseNumber(data.time, path, "time")
+    self.crossLinkChance = u.parseNumberOpt(data.crossLinkChance, path, "crossLinkChance") or 0.08
     self.boss = u.parseBooleanOpt(data.boss, path, "boss")
     self.final = u.parseBooleanOpt(data.final, path, "final")
     self.multiplierEnabled = u.parseBoolean(data.multiplierEnabled, path, "multiplierEnabled")

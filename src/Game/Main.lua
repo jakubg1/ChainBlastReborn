@@ -58,6 +58,9 @@ local PARTICLE_EFFECT_TYPES = {
 		{type = "explosion_flame", amount = 25, rangeMean = 0, rangeDev = 4},
 		{type = "explosion2"}
 	},
+	boss_stun_lightning = {
+		{type = "boss_stun", amount = 1}
+	},
 	debug = {
 		{type = "lavalamp", amount = 15, rangeMean = 0, rangeDev = 4}
 	}

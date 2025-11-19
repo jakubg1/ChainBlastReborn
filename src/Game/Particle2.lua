@@ -67,25 +67,41 @@ function Particle2:new(game, pos, type, color, pos2)
         self.darkColor = self.color * 0.75
         self.size = math.max(love.math.randomNormal(2, 3), 1)
         self.angle = love.math.random() * math.pi * 2
-    elseif self.type == "lightning" or self.type == "laser" then
+    elseif self.type == "lightning" or self.type == "laser" or self.type == "boss_stun" then
+        -- TODO: Have just the "lightning" type but with extra configuration done in the particle data (currently in Main.lua).
+        -- Or maybe just do away with types (almost) completely and just extract all of the components entirely?
         if self.type == "lightning" then
             self.time = math.min(love.math.randomNormal(0.15, -0.1), 0)
         end
         self.speed = Vec2()
         self.acceleration = Vec2()
-        self.alphaFadeDuration = math.max(love.math.randomNormal(0.1, 0.3), 0.1)
+        if self.type == "boss_stun" then
+            self.alphaFadeDelay = 0.8
+        end
+        self.alphaFadeDuration = math.max(love.math.randomNormal(0.1, self.type == "boss_stun" and 0.1 or 0.3), 0.1)
         if self.type == "lightning" then
             local shade = love.math.randomNormal(0.5, 0.5)
             self.color = Color(shade, shade * 0.1 + 0.9, 1)
         elseif self.type == "laser" then
             local shade = love.math.randomNormal(0.3, 0.8)
             self.color = Color(1, shade * 0.7 + 0.3, shade)
+        elseif self.type == "boss_stun" then
+            self.color = Color(1, 1, 0)
         end
         self.pos2 = pos2
-        self.sectionLength = 20
+        if self.type == "boss_stun" then
+            self.sectionLength = 8
+        else
+            self.sectionLength = 20
+        end
+        self.glow = self.type ~= "boss_stun"
         self.points = nil
         self.pointRegenTime = 0
         self.pointRegenInterval = 0
+        self.pointRegenIntervalMin = self.type == "boss_stun" and 0.04 or 0.02
+        self.pointRegenIntervalMax = self.type == "boss_stun" and 0.06 or 0.07
+        self.pointJiggleMean = 5
+        self.pointJiggleDev = self.type == "boss_stun" and 1.5 or 2.5
     elseif self.type == "lavalamp" then
         -- Failed explosion particle; could be used for lava spraying upwards though?
         self.speed = Vec2(love.math.randomNormal(30, 100), 0):rotate(math.random() * math.pi * 2)
@@ -174,7 +190,13 @@ function Particle2:update(dt)
     if self.lifetime and self.time >= self.lifetime then
         self.delQueue = true
     end
-    if self.alphaFadeDuration then
+    if self.alphaFadeDelay then
+        self.alphaFadeDelay = self.alphaFadeDelay - dt
+        if self.alphaFadeDelay <= 0 then
+            self.alphaFadeDelay = nil
+        end
+    end
+    if self.alphaFadeDuration and not self.alphaFadeDelay then
         self.alpha = self.alpha - dt / self.alphaFadeDuration
         if self.alpha <= 0 then
             self.delQueue = true
@@ -204,11 +226,11 @@ function Particle2:update(dt)
 
     if self.type == "spark" then
         self.game:spawnParticles("spark_trail", self.pos, nil, self:getColor())
-    elseif self.type == "lightning" or self.type == "laser" then
+    elseif self.type == "lightning" or self.type == "laser" or self.type == "boss_stun" then
         self.pointRegenTime = self.pointRegenTime + dt
         if self.pointRegenTime >= self.pointRegenInterval then
             self.pointRegenTime = self.pointRegenTime - self.pointRegenInterval
-            self.pointRegenInterval = 0.02 + math.random() * 0.05
+            self.pointRegenInterval = self.pointRegenIntervalMin + math.random() * (self.pointRegenIntervalMax - self.pointRegenIntervalMin)
             -- (Re)generate points for this lightning particle.
             self.points = {}
             -- Make a list of positions, by dividing a line into sections.
@@ -222,7 +244,7 @@ function Particle2:update(dt)
                 local roamN = 2
                 local roamFall = 0.4
                 local roam = 1 - (math.max(roamN + 1 - i, 0) + math.max(roamN + i - #self.points, 0)) * roamFall
-                self.points[i] = point + Vec2(love.math.randomNormal(self.sectionLength / 8, self.sectionLength / 4) * roam, 0):rotate(math.random() * math.pi * 2)
+                self.points[i] = point + Vec2(love.math.randomNormal(self.pointJiggleDev, self.pointJiggleMean) * roam, 0):rotate(math.random() * math.pi * 2)
             end
         end
     end
@@ -282,16 +304,17 @@ function Particle2:draw()
     elseif self.type == "lavalamp" or self.type == "explosion_flame" then
         love.graphics.setColor(self.color.r, self.color.g, self.color.b, self.alpha)
         love.graphics.circle("fill", self.pos.x, self.pos.y, self.radius)
-    elseif self.type == "lightning" or self.type == "laser" then
+    elseif self.type == "lightning" or self.type == "laser" or self.type == "boss_stun" then
         -- Draw the lines.
         if self.points then
-            for i = 1, 5 do
+            local start = self.glow and 1 or 4
+            for i = start, 5 do
                 local alpha = (i * 0.2) ^ 4
                 local width = (7 - i) * (6 - i) / 2
                 if self.type == "laser" then
                     width = width + 1
                 end
-                love.graphics.setColor(self.color.r, self.color.g, self.color.b, self.alpha * alpha)
+                love.graphics.setColor(self.color.r, self.color.g, self.color.b, math.min(self.alpha, 1) * alpha)
                 love.graphics.setLineWidth(width)
                 love.graphics.line(_Utils.vectorsToValueList(self.points))
             end
