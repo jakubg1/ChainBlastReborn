@@ -7,7 +7,6 @@ local Level = class:derive("Level")
 local Vec2 = require("src.Essentials.Vector2")
 local Board = require("src.Game.Board")
 local LevelUI = require("src.Game.LevelUI")
-local LevelBackground = require("src.Game.LevelBackground")
 
 ---Constructs a Level.
 ---@param game GameMain The main game class instance this Level belongs to.
@@ -17,7 +16,6 @@ function Level:new(game)
 
     self.board = nil
     self.ui = LevelUI(self)
-    self.background = LevelBackground(self)
 
     self.score = 0
     self.givenTimeBonus = 0
@@ -80,7 +78,6 @@ function Level:update(dt)
     self:updateSounds(dt)
     self:updateMusic(dt)
     self.ui:update(dt)
-    self.background:update(dt)
 end
 
 ---Updates timing on this level. Trips the loss flag if the timer reaches zero.
@@ -285,7 +282,8 @@ function Level:startLevelResults()
     self.bombMeterTime = nil
     self.givenTimeBonus = self:getTimeBonus()
     self:addScore(self.givenTimeBonus)
-    self.game.sceneManager:changeScene("level_results", false, true)
+	self.game.sceneManager:scheduleScene("level_results")
+    self.game.sceneManager:changeScene(true)
 end
 
 ---Returns the boss on this level's board, if it exists.
@@ -475,6 +473,13 @@ function Level:capTimerAtZero()
     self.minCoyoteTime = self.minCoyoteTime + 0.02
 end
 
+---Flashes the level background white.
+---@param intensity number Flash intensity, from 0 to 1.
+---@param duration number Duration of the flash, in seconds.
+function Level:flashBackground(intensity, duration)
+    self.game.sceneManager.backgroundScene:flash(intensity, duration)
+end
+
 ---Wins this Level by stopping the music, playing the level win sound and starting the win animation.
 function Level:win()
     _Game:playSound(self.config.winSound)
@@ -482,7 +487,8 @@ function Level:win()
     if self.dangerMusic then
         self.dangerMusic:stop(0.25)
     end
-    self.game.sceneManager:changeScene("level_complete", true, true)
+    self.game.sceneManager:scheduleScene("level_complete")
+    self.game.sceneManager:changeScene()
     self.game.player.session:incrementLevelsCompleted()
 end
 
@@ -497,7 +503,8 @@ function Level:lose()
     if self.dangerMusic then
         self.dangerMusic:stop(0.25)
     end
-    self.game.sceneManager:changeScene("level_failed", true, true)
+    self.game.sceneManager:scheduleScene("level_failed")
+    self.game.sceneManager:changeScene()
 end
 
 ---Returns the current total time bonus the player will get based on the current level state.
@@ -519,7 +526,6 @@ end
 
 ---Draws the Level.
 function Level:draw()
-    self.background:draw()
     if not _Debug.hideBoard then
         self:drawBoard()
         self.ui:draw()

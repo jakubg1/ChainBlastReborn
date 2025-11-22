@@ -34,7 +34,8 @@ function LevelIntro:update(dt)
         self.level.ui:setHUDAlpha(1)
     end
     if self.time >= 7.5 then
-        self.game.sceneManager:changeScene("level", true, true)
+        self.game.sceneManager:scheduleScene("level")
+        self.game.sceneManager:changeScene()
     end
 end
 

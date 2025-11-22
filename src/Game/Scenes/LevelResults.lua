@@ -55,7 +55,7 @@ end
 function LevelResults:update(dt)
     self.time = self.time + dt
     self.level.ui:setHUDAlpha(0, true)
-    self.level.background:setVisible(false)
+    self.game.sceneManager.backgroundScene:setVisible(false)
     local threshold = self.SOUND_STEPS[self.soundStep]
     if threshold and self.time >= threshold then
         _Game:playSound("sound_events/ui_stats.json")
@@ -153,7 +153,8 @@ function LevelResults:mousepressed(x, y, button)
         if self:isFinished() then
             self.level:submitLevelStats()
             if not self.level.lost and self.level.config.final then
-                self.game.sceneManager:changeScene("game_win", true, true)
+                self.game.sceneManager:scheduleScene("game_win")
+                self.game.sceneManager:changeScene()
             else
                 if not self.level.lost then
                     self.game.player.session:advanceLevel()
@@ -161,7 +162,8 @@ function LevelResults:mousepressed(x, y, button)
                     self.game.player.session:restartLevel()
                 end
                 self.game.sceneManager:startLevel()
-                self.game.sceneManager:changeScene("level_intro", true, true)
+                self.game.sceneManager:scheduleScene("level_intro")
+                self.game.sceneManager:changeScene()
             end
             _Game:playSound("sound_events/ui_select.json")
         else

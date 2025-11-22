@@ -4,13 +4,15 @@ local Tilemap = require("src.Game.Tilemap")
 local LevelStar = require("src.Game.LevelStar")
 
 ---@class LevelBackground
----@overload fun(level):LevelBackground
+---@overload fun(game):LevelBackground
 local LevelBackground = class:derive("LevelBackground")
 
 ---Creates a Level Background.
----@param level Level The level which owns this background.
-function LevelBackground:new(level)
-    self.level = level
+---@param game GameMain The main game class instance this Menu belongs to.
+function LevelBackground:new(game)
+    self.game = game
+    self.name = "level_background"
+
     self:prepareTilemaps()
     self:prepareNormalmap()
 

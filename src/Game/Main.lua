@@ -183,6 +183,7 @@ function GameMain:draw()
     love.graphics.setColor(0, 0, 0)
     love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
 
+	self.sceneManager:drawBackgroundScene()
 	self.sceneManager:drawLevel()
 	for i, particle in ipairs(self.particles) do
 		particle:draw()

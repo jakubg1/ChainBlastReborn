@@ -3,7 +3,6 @@ local MenuMain = require("src.Game.Scenes.MenuMain")
 local MenuSettings = require("src.Game.Scenes.MenuSettings")
 local MenuCredits = require("src.Game.Scenes.MenuCredits")
 local NormalmapTest = require("src.Game.Scenes.NormalmapTest")
-local MenuStar = require("src.Game.Scenes.MenuStar")
 
 ---@class Menu
 ---@overload fun(game):Menu
@@ -17,11 +16,6 @@ function Menu:new(game)
 
     self.music = _Game.resourceManager:getMusic("music_tracks/menu_music.json")
     self.screen = MenuMain(self)
-    self.stars = {}
-    -- Spawn initial stars.
-    for i = 1, 150 do
-        table.insert(self.stars, MenuStar(math.random()))
-    end
 
     self.introTime = 0
     self.introStep = 1
@@ -46,7 +40,9 @@ end
 ---Ends this scene and starts a level.
 function Menu:startLevel()
     self.game.sceneManager:startLevel()
-    self.game.sceneManager:changeScene("level_intro")
+    self.game.sceneManager:scheduleScene("level_intro")
+    self.game.sceneManager:scheduleBackgroundScene("level_background")
+    self.game.sceneManager:changeScene(true, true)
 end
 
 ---Returns whether this scene should accept any input.
@@ -64,8 +60,9 @@ function Menu:update(dt)
         if self.introStep == 1 then
             if self.introTime >= 1 then
                 self.introStep = 2
-                -- Play the explosion sound.
+                -- Play the explosion sound and show the starry background.
                 _Game:playSound("sound_events/explosion.json")
+                self.game.sceneManager:loadBackgroundScene("menu_background")
             end
         elseif self.introStep == 2 then
             if self.introTime >= 2 then
@@ -79,31 +76,11 @@ function Menu:update(dt)
     end
     -- Current screen
     self.screen:update(dt)
-    -- Stars
-    for i, star in ipairs(self.stars) do
-        star:update(dt)
-        if star.delQueue then
-            self.stars[i] = MenuStar()
-        end
-    end
 end
 
 ---Draws the Menu.
 function Menu:draw()
     local natRes = _Game:getNativeResolution()
-    -- Background
-    if self.introStep == 2 then
-        love.graphics.setColor(0.06, 0.02, 0.05)
-    else
-        love.graphics.setColor(0, 0, 0)
-    end
-    love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
-    -- Stars
-    if self.introStep == 2 and not _Game.runtimeManager.options:getSetting("reducedParticles") then
-        for i, star in ipairs(self.stars) do
-            star:draw()
-        end
-    end
     -- Scene
     self.screen:draw()
     -- Intro flash

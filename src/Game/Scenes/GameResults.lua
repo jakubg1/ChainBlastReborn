@@ -9,7 +9,7 @@ local GameResults = class:derive("GameResults")
 ---Creates a Game Results scene.
 ---@param game GameMain The main game class this scene belongs to.
 function GameResults:new(game)
-    self.name = "level_complete"
+    self.name = "game_results"
     self.game = game
     self.level = game.sceneManager:getLevel()
 
@@ -112,7 +112,8 @@ end
 function GameResults:mousepressed(x, y, button)
     if button == 1 then
         if self:isFinished() then
-            self.game.sceneManager:changeScene("menu", true, true)
+            self.game.sceneManager:scheduleScene("menu")
+            self.game.sceneManager:changeScene()
             self.game.sceneManager:endLevel()
             self.game.player:resetSession()
             _Game:playSound("sound_events/ui_select.json")

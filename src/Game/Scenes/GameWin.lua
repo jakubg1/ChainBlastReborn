@@ -88,7 +88,8 @@ end
 function GameWin:mousepressed(x, y, button)
     if button == 1 then
         if self:isFinished() then
-            self.game.sceneManager:changeScene("game_results", true, true)
+            self.game.sceneManager:scheduleScene("game_results")
+            self.game.sceneManager:changeScene()
             _Game:playSound("sound_events/ui_select.json")
         end
     end

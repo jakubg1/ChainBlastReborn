@@ -36,7 +36,8 @@ end
 ---@param button integer The mouse button which was pressed.
 function Intro:mousepressed(x, y, button)
     if button == 1 then
-        self.game.sceneManager:changeScene("menu")
+        self.game.sceneManager:scheduleScene("menu")
+        self.game.sceneManager:changeScene(true, true)
     end
 end
 

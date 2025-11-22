@@ -934,7 +934,7 @@ function Board:explodeBomb(coords)
 	_Game.game:spawnParticles("power_bomb", pos)
     _Game:playSound("sound_events/explosion2.json")
     _Game.game:shakeScreen(9, nil, 10, 0.35)
-    self.level.background:flash(0.5, 0.35)
+    self.level:flashBackground(0.5, 0.35)
 end
 
 
@@ -964,7 +964,7 @@ function Board:explodeLightning(coords, horizontal, vertical)
     end
     _Game:playSound("sound_events/powerup_lightning.json")
     _Game.game:shakeScreen(9, nil, 15, 0.25)
-    self.level.background:flash(0.5, 0.35)
+    self.level:flashBackground(0.5, 0.35)
 end
 
 ---Returns whether the tile at the given coordinates blocks lightning.

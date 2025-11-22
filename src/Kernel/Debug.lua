@@ -360,6 +360,22 @@ function Debug:getDebugBoard(board)
 	return s
 end
 
+---Gets debug information about a Scene Manager.
+---@param sceneManager SceneManager The scene manager to get information from.
+---@return string
+function Debug:getDebugSceneManager(sceneManager)
+	local s = ""
+
+	local sceneName = sceneManager.scene and sceneManager.scene.name or "----"
+	local nextSceneName = sceneManager.nextScene
+	s = s .. "Scene     = " .. sceneName .. (nextSceneName and "   ----> NEXT: " .. nextSceneName or "") .. "\n"
+	local bgSceneName = sceneManager.backgroundScene and sceneManager.backgroundScene.name or "----"
+	local nextBgSceneName = sceneManager.nextBackgroundScene
+	s = s .. "BgScene = " .. bgSceneName .. (nextBgSceneName and "   ----> NEXT: " .. nextBgSceneName or "") .. "\n"
+
+	return s
+end
+
 function Debug:getDebugOptions()
 	local s = ""
 
@@ -387,6 +403,11 @@ function Debug:getDebugInfo()
 	local level = _Game.game.sceneManager:getLevel()
 	if level and level.board then
 		s = s .. self:getDebugBoard(level.board)
+	end
+	s = s .. "\n===== SCENE =====\n"
+	local sceneManager = _Game.game.sceneManager
+	if sceneManager then
+		s = s .. self:getDebugSceneManager(sceneManager)
 	end
 	s = s .. "\n===== OPTIONS =====\n"
 	if _Game.runtimeManager then
