@@ -4,15 +4,16 @@ local Color = require("src.Essentials.Color")
 local Text = require("src.Game.Scenes.Text")
 local MenuCursor = require("src.Game.Scenes.MenuCursor")
 
----Main menu screen in the Menu scene.
+---Main menu scene.
 ---@class MenuMain
----@overload fun(scene):MenuMain
+---@overload fun(game):MenuMain
 local MenuMain = class:derive("MenuMain")
 
----Constructs a new Main Menu screen.
----@param scene Menu The owner of this screen.
-function MenuMain:new(scene)
-    self.scene = scene
+---Constructs a new Main Menu scene.
+---@param game GameMain The main game class instance this scene belongs to.
+function MenuMain:new(game)
+    self.game = game
+    self.name = "menu_main"
 
     self.font = _Game.resourceManager:getFont("fonts/standard.json")
     self.smallFont = _Game.resourceManager:getFont("fonts/small.json")
@@ -34,6 +35,14 @@ function MenuMain:new(scene)
     self.selectedOption = nil
     self.selectedTime = nil -- Starts counting up from 0 if a menu option has been selected.
     self.cursor = MenuCursor()
+
+    self.music = _Game.resourceManager:getMusic("music_tracks/menu_music.json")
+    self.introTime = 0
+    self.introStep = 1
+    -- Do not play the intro animation if we are not asked to do so.
+    if not self.game.sceneManager.playMenuIntro then
+        self:skipIntro()
+    end
 end
 
 ---Sets the widget positions and visibility depending on the current intro animation time.
@@ -60,6 +69,13 @@ function MenuMain:animateIntro(t)
     end
 end
 
+---Skips the intro animation.
+function MenuMain:skipIntro()
+    self.introTime = nil
+    self.introStep = 2
+    self:animateIntro()
+end
+
 ---Hovers the option at the provided index.
 ---@param index integer? The option index to be hovered. `nil` will unhover all options.
 function MenuMain:hoverOption(index)
@@ -69,7 +85,7 @@ function MenuMain:hoverOption(index)
     if self.hoveredOption == index then
         return
     end
-    if self.scene.introTime or self.selectedOption then
+    if self.introTime or self.selectedOption then
         -- Do not proceed if the user has currently no control over what is happening
         -- (an option has been already selected or the intro animation hasn't finished yet)
         return
@@ -113,13 +129,34 @@ function MenuMain:submitHoveredOption()
     _Game:playSound("sound_events/ui_select.json")
     if self.selectedOption == 1 then
         -- Stop the music if we're going to start a new game.
-        self.scene.music:stop(1)
+        self.music:stop(1)
     end
 end
 
 ---Updates the Main Menu.
 ---@param dt number Time delta in seconds.
 function MenuMain:update(dt)
+    -- Intro animation
+    if self.introTime then
+        self.introTime = self.introTime + dt
+        if self.introStep == 1 then
+            if self.introTime >= 1 then
+                self.introStep = 2
+                -- Play the explosion sound and show the starry background.
+                _Game:playSound("sound_events/explosion.json")
+                self.game.sceneManager:changeScene({background = "menu_background"})
+            end
+        elseif self.introStep == 2 then
+            if self.introTime >= 2 then
+                self.introTime = nil
+                self.game.sceneManager.playMenuIntro = false
+                -- Play the music.
+                self.music:stop()
+                self.music:play(1)
+            end
+        end
+        self:animateIntro(self.introTime)
+    end
     -- Highlight the hovered option.
     for i, option in ipairs(self.menuOptions) do
         option:setProp("color", self.hoveredOption == i and Color("#ffffff") or Color("#aaaaaa"))
@@ -137,11 +174,12 @@ function MenuMain:update(dt)
         if self.selectedTime >= 0.5 then
             self.selectedTime = nil
             if self.selectedOption == 1 then
-                self.scene:startLevel()
+                self.game.sceneManager:startLevel()
+                self.game.sceneManager:changeScene({foreground = "level_intro", background = "level_background"}, true, true)
             elseif self.selectedOption == 2 then
-                self.scene:goToSettings()
+                self.game.sceneManager:changeScene({foreground = "menu_settings"})
             elseif self.selectedOption == 3 then
-                self.scene:goToCredits()
+                self.game.sceneManager:changeScene({foreground = "menu_credits"})
             elseif self.selectedOption == 4 then
                 love.event.quit()
             end
@@ -161,6 +199,14 @@ function MenuMain:draw()
     end
     -- Rainbow cursor
     self.cursor:draw()
+    -- Intro flash
+    local natRes = _Game:getNativeResolution()
+    if self.introStep == 2 then
+        if self.introTime then
+            love.graphics.setColor(1, 1, 1, _Utils.clamp(2 - self.introTime) * _Game.runtimeManager.options:getSetting("screenFlashStrength"))
+            love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
+        end
+    end
 end
 
 ---Callback from `main.lua`.

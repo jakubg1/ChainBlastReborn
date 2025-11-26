@@ -20,7 +20,6 @@ end
 ---Updates the intro.
 ---@param dt number Time delta in seconds.
 function Intro:update(dt)
-    
 end
 
 ---Draws the intro.
@@ -36,8 +35,7 @@ end
 ---@param button integer The mouse button which was pressed.
 function Intro:mousepressed(x, y, button)
     if button == 1 then
-        self.game.sceneManager:scheduleScene("menu")
-        self.game.sceneManager:changeScene(true, true)
+        self.game.sceneManager:changeScene({foreground = "menu_main"}, true, true)
     end
 end
 

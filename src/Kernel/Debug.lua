@@ -366,12 +366,12 @@ end
 function Debug:getDebugSceneManager(sceneManager)
 	local s = ""
 
-	local sceneName = sceneManager.scene and sceneManager.scene.name or "----"
-	local nextSceneName = sceneManager.nextScene
-	s = s .. "Scene     = " .. sceneName .. (nextSceneName and "   ----> NEXT: " .. nextSceneName or "") .. "\n"
-	local bgSceneName = sceneManager.backgroundScene and sceneManager.backgroundScene.name or "----"
-	local nextBgSceneName = sceneManager.nextBackgroundScene
-	s = s .. "BgScene = " .. bgSceneName .. (nextBgSceneName and "   ----> NEXT: " .. nextBgSceneName or "") .. "\n"
+	s = s .. "Layers:\n"
+	for i, layer in ipairs(sceneManager.layerOrder) do
+		local sceneName = sceneManager.layers[layer] and sceneManager.layers[layer].name or "----"
+		local nextSceneName = sceneManager.nextLayers[layer]
+		s = s .. " - " .. layer .. " = " .. sceneName .. (nextSceneName and "   ----> NEXT: " .. nextSceneName or "") .. "\n"
+	end
 
 	return s
 end
@@ -618,7 +618,7 @@ function Debug:runCommand(command)
 		local level = _Game.game.sceneManager:getLevel()
 		if level then
 			level.forcedWin = true
-			self.console:print("Just one more move and you're done!")
+			self.console:print("Just one more move and the level is complete!")
 		else
 			self.console:print({_COLORS.red, "No level is currently present..."})
 		end

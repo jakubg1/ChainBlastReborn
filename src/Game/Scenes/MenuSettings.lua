@@ -4,15 +4,16 @@ local Color = require("src.Essentials.Color")
 local Text = require("src.Game.Scenes.Text")
 local MenuCursor = require("src.Game.Scenes.MenuCursor")
 
----Settings screen in the Menu scene.
+---Settings scene.
 ---@class MenuSettings
----@overload fun(scene):MenuSettings
+---@overload fun(game):MenuSettings
 local MenuSettings = class:derive("MenuSettings")
 
 ---Constructs a new Settings screen.
----@param scene Menu The owner of this screen.
-function MenuSettings:new(scene)
-    self.scene = scene
+---@param game GameMain The main game class instance this scene belongs to.
+function MenuSettings:new(game)
+    self.game = game
+    self.name = "menu_settings"
 
     self.settings = {
         {
@@ -250,7 +251,7 @@ function MenuSettings:updateBackToMenu(dt)
     end
     self.backToMenuTime = self.backToMenuTime + dt
     if self.backToMenuTime >= 0.5 then
-        self.scene:goToMain()
+        self.game.sceneManager:changeScene({foreground = "menu_main"})
     end
 end
 

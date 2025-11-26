@@ -1,14 +1,15 @@
 local class = require "com.class"
 
 ---@class Transition
----@overload fun():Transition
+---@overload fun(game):Transition
 local Transition = class:derive("Transition")
 
--- Place your imports here
-local Vec2 = require("src.Essentials.Vector2")
+---Constructs a Transition scene.
+---@param game GameMain The main game class instance this scene belongs to.
+function Transition:new(game)
+    self.game = game
+    self.name = "transition"
 
----Constructs a Transition.
-function Transition:new()
     self.time = nil
     self.state = false -- `false`: hidden/fading out, `true`: shown/fading in
 

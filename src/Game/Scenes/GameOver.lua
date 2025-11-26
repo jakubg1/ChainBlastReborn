@@ -33,8 +33,7 @@ function GameOver:update(dt)
         self.heSaid = true
     end
     if self.time >= 19 then
-        self.game.sceneManager:scheduleScene("level_results")
-        self.game.sceneManager:changeScene()
+        self.game.sceneManager:changeScene({foreground = "level_results"})
     end
 end
 

@@ -4,15 +4,16 @@ local Color = require("src.Essentials.Color")
 local Text = require("src.Game.Scenes.Text")
 local MenuCursor = require("src.Game.Scenes.MenuCursor")
 
----Credits screen in the Menu scene.
+---Credits scene.
 ---@class MenuCredits
----@overload fun(scene):MenuCredits
+---@overload fun(game):MenuCredits
 local MenuCredits = class:derive("MenuCredits")
 
 ---Constructs a new Credits screen.
----@param scene Menu The owner of this screen.
-function MenuCredits:new(scene)
-    self.scene = scene
+---@param game GameMain The main game class instance this scene belongs to.
+function MenuCredits:new(game)
+    self.game = game
+    self.name = "menu_credits"
 
     self.cursor = MenuCursor()
     self.backToMenuHovered = false
@@ -64,7 +65,7 @@ function MenuCredits:updateBackToMenu(dt)
     if self.backToMenuTime then
         self.backToMenuTime = self.backToMenuTime + dt
         if self.backToMenuTime >= 0.5 then
-            self.scene:goToMain()
+            self.game.sceneManager:changeScene({foreground = "menu_main"})
         end
     end
 end

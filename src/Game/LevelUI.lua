@@ -86,7 +86,7 @@ end
 ---Returns `true` if any UI animation is being played right now.
 ---@return boolean
 function LevelUI:isAnimationPlaying()
-    return self.game.sceneManager.scene:isActive()
+    return self.game.sceneManager:isSceneActive()
 end
 
 ---Returns `true` if the pause screen is visible in any capacity.

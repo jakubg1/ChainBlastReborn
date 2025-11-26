@@ -112,8 +112,8 @@ end
 function GameResults:mousepressed(x, y, button)
     if button == 1 then
         if self:isFinished() then
-            self.game.sceneManager:scheduleScene("menu")
-            self.game.sceneManager:changeScene()
+            self.game.sceneManager.playMenuIntro = true
+            self.game.sceneManager:changeScene({foreground = "menu_main"})
             self.game.sceneManager:endLevel()
             self.game.player:resetSession()
             _Game:playSound("sound_events/ui_select.json")

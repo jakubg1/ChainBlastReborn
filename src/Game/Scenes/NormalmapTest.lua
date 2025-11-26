@@ -1,15 +1,16 @@
 local class = require "com.class"
 local Vec2 = require("src.Essentials.Vector2")
 
----Normalmap test screen in the Menu scene.
+---Normalmap test scene.
 ---@class NormalmapTest
----@overload fun(scene):NormalmapTest
+---@overload fun(game):NormalmapTest
 local NormalmapTest = class:derive("NormalmapTest")
 
----Constructs a new normalmap test screen.
----@param scene Menu The owner of this screen.
-function NormalmapTest:new(scene)
-    self.scene = scene
+---Constructs a new normalmap test scene.
+---@param game GameMain The main game class instance this scene belongs to.
+function NormalmapTest:new(game)
+    self.game = game
+    self.name = "normalmap_test"
 
     -- Normalmap test
     self.t_diffuse = _Game.resourceManager:getSprite("sprites/normalmap_test/diffuse.json")
@@ -75,7 +76,7 @@ end
 ---@param button integer The mouse button which was pressed.
 function NormalmapTest:mousepressed(x, y, button)
     if button == 1 then
-        self.scene:goToMain()
+        self.game.sceneManager:changeScene({foreground = "menu_main"})
     end
 end
 

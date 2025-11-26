@@ -194,9 +194,10 @@ function GameMain:draw()
 	-- Debug
 	if _Debug.uiDebugVisible then
 		self.smallFont:draw("mouse: " .. _MousePos.x .. "," .. _MousePos.y, Vec2(), Vec2())
-		self.smallFont:draw("transition: " .. tostring(self.sceneManager.transition.time) .. "," .. tostring(self.sceneManager.transition.state), Vec2(0, 6), Vec2())
-		self.smallFont:draw("scene: " .. self.sceneManager.scene.name, Vec2(0, 12), Vec2())
-		self.smallFont:draw(" next: " .. (self.sceneManager.nextScene and self.sceneManager.nextScene.name or "----"), Vec2(0, 18), Vec2())
+		-- TODO: Move to Debug.lua
+		--self.smallFont:draw("transition: " .. tostring(self.sceneManager.transition.time) .. "," .. tostring(self.sceneManager.transition.state), Vec2(0, 6), Vec2())
+		--self.smallFont:draw("scene: " .. self.sceneManager.scene.name, Vec2(0, 12), Vec2())
+		--self.smallFont:draw(" next: " .. (self.sceneManager.nextScene and self.sceneManager.nextScene.name or "----"), Vec2(0, 18), Vec2())
 	end
 end
 
