@@ -1,19 +1,19 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
-local Text = require("src.Game.Scenes.Text")
-local MenuCursor = require("src.Game.Scenes.MenuCursor")
+local Text = require("src.Game.Text")
+local MenuCursor = require("src.Game.MenuCursor")
 
 ---Settings scene.
----@class MenuSettings
+---@class MenuSettings : Scene
 ---@overload fun(game):MenuSettings
-local MenuSettings = class:derive("MenuSettings")
+local MenuSettings = Scene:derive("MenuSettings")
 
 ---Constructs a new Settings screen.
 ---@param game GameMain The main game class instance this scene belongs to.
 function MenuSettings:new(game)
-    self.game = game
     self.name = "menu_settings"
+    self.game = game
 
     self.settings = {
         {

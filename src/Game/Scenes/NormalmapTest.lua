@@ -1,16 +1,16 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 
 ---Normalmap test scene.
----@class NormalmapTest
+---@class NormalmapTest : Scene
 ---@overload fun(game):NormalmapTest
-local NormalmapTest = class:derive("NormalmapTest")
+local NormalmapTest = Scene:derive("NormalmapTest")
 
 ---Constructs a new normalmap test scene.
 ---@param game GameMain The main game class instance this scene belongs to.
 function NormalmapTest:new(game)
-    self.game = game
     self.name = "normalmap_test"
+    self.game = game
 
     -- Normalmap test
     self.t_diffuse = _Game.resourceManager:getSprite("sprites/normalmap_test/diffuse.json")
@@ -78,13 +78,6 @@ function NormalmapTest:mousepressed(x, y, button)
     if button == 1 then
         self.game.sceneManager:changeScene({foreground = "menu_main"})
     end
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function NormalmapTest:mousereleased(x, y, button)
 end
 
 ---Callback from `main.lua`.

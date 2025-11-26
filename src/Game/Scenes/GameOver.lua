@@ -1,10 +1,10 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
 
----@class GameOver
+---@class GameOver : Scene
 ---@overload fun(game):GameOver
-local GameOver = class:derive("GameOver")
+local GameOver = Scene:derive("GameOver")
 
 ---Creates a Game Over scene.
 ---@param game GameMain The main game class this scene belongs to.
@@ -16,12 +16,6 @@ function GameOver:new(game)
 	self.font = _Game.resourceManager:getFont("fonts/standard.json")
     self.time = 0
     self.heSaid = false
-end
-
----Returns whether this scene should accept any input.
----@return boolean
-function GameOver:isActive()
-    return true
 end
 
 ---Updates the Game Over animation.
@@ -45,25 +39,6 @@ function GameOver:draw()
         self.font:draw("GAME", natRes / 2, Vec2(0.5, 1), Color(1, 0, 0), alpha, 5)
         self.font:draw("OVER", natRes / 2, Vec2(0.5, 0), Color(1, 0, 0), alpha, 5)
     end
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was pressed.
-function GameOver:mousepressed(x, y, button)
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function GameOver:mousereleased(x, y, button)
-end
-
----Callback from `main.lua`.
----@param key string The pressed key code.
-function GameOver:keypressed(key)
 end
 
 return GameOver

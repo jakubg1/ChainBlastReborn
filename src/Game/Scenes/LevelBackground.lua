@@ -1,17 +1,17 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Tilemap = require("src.Game.Tilemap")
 local LevelStar = require("src.Game.LevelStar")
 
----@class LevelBackground
+---@class LevelBackground : Scene
 ---@overload fun(game):LevelBackground
-local LevelBackground = class:derive("LevelBackground")
+local LevelBackground = Scene:derive("LevelBackground")
 
 ---Creates a Level Background.
 ---@param game GameMain The main game class instance this Menu belongs to.
 function LevelBackground:new(game)
-    self.game = game
     self.name = "level_background"
+    self.game = game
 
     self:prepareTilemaps()
     self:prepareNormalmap()

@@ -183,13 +183,7 @@ function GameMain:draw()
     love.graphics.setColor(0, 0, 0)
     love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
 
-	self.sceneManager:drawBackgroundScene()
-	self.sceneManager:drawLevel()
-	for i, particle in ipairs(self.particles) do
-		particle:draw()
-	end
-	self.sceneManager:drawScene()
-	self.sceneManager:drawTransition()
+	self.sceneManager:draw()
 
 	-- Debug
 	if _Debug.uiDebugVisible then
@@ -198,6 +192,13 @@ function GameMain:draw()
 		--self.smallFont:draw("transition: " .. tostring(self.sceneManager.transition.time) .. "," .. tostring(self.sceneManager.transition.state), Vec2(0, 6), Vec2())
 		--self.smallFont:draw("scene: " .. self.sceneManager.scene.name, Vec2(0, 12), Vec2())
 		--self.smallFont:draw(" next: " .. (self.sceneManager.nextScene and self.sceneManager.nextScene.name or "----"), Vec2(0, 18), Vec2())
+	end
+end
+
+---Draws all particles on the screen.
+function GameMain:drawParticles()
+	for i, particle in ipairs(self.particles) do
+		particle:draw()
 	end
 end
 

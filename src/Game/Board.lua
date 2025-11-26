@@ -1544,7 +1544,7 @@ function Board:mousepressed(x, y, button)
                 if self:getTile(self.hoverCoords) then
                     self.level:resetPowerMeter()
                     self:explodeBomb(self.hoverCoords)
-                    self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
+                    self.level:getHUD():shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
                     self.level:capTimerAtZero()
                     self:resetHint()
                     self.mode = "select"
@@ -1553,7 +1553,7 @@ function Board:mousepressed(x, y, button)
                 if self:getChain(self.hoverCoords) then
                     self.level:resetPowerMeter()
                     self:explodeLightning(self.hoverCoords, true, true)
-                    self.level.ui:shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
+                    self.level:getHUD():shootLaserFromPowerCrystal(self:getTileCenterPos(self.hoverCoords))
                     self.level:capTimerAtZero()
                     self:resetHint()
                     self.mode = "select"

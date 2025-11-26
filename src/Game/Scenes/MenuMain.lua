@@ -1,19 +1,19 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
-local Text = require("src.Game.Scenes.Text")
-local MenuCursor = require("src.Game.Scenes.MenuCursor")
+local Text = require("src.Game.Text")
+local MenuCursor = require("src.Game.MenuCursor")
 
 ---Main menu scene.
----@class MenuMain
+---@class MenuMain : Scene
 ---@overload fun(game):MenuMain
-local MenuMain = class:derive("MenuMain")
+local MenuMain = Scene:derive("MenuMain")
 
 ---Constructs a new Main Menu scene.
 ---@param game GameMain The main game class instance this scene belongs to.
 function MenuMain:new(game)
-    self.game = game
     self.name = "menu_main"
+    self.game = game
 
     self.font = _Game.resourceManager:getFont("fonts/standard.json")
     self.smallFont = _Game.resourceManager:getFont("fonts/small.json")
@@ -217,14 +217,6 @@ function MenuMain:mousepressed(x, y, button)
     if button == 1 then
         self:submitHoveredOption()
     end
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function MenuMain:mousereleased(x, y, button)
-    
 end
 
 ---Callback from `main.lua`.

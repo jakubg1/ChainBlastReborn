@@ -1,14 +1,14 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 
----@class Transition
+---@class Transition : Scene
 ---@overload fun(game):Transition
-local Transition = class:derive("Transition")
+local Transition = Scene:derive("Transition")
 
 ---Constructs a Transition scene.
 ---@param game GameMain The main game class instance this scene belongs to.
 function Transition:new(game)
-    self.game = game
     self.name = "transition"
+    self.game = game
 
     self.time = nil
     self.state = false -- `false`: hidden/fading out, `true`: shown/fading in

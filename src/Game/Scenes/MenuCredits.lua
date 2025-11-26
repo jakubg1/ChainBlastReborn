@@ -1,19 +1,19 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
-local Text = require("src.Game.Scenes.Text")
-local MenuCursor = require("src.Game.Scenes.MenuCursor")
+local Text = require("src.Game.Text")
+local MenuCursor = require("src.Game.MenuCursor")
 
 ---Credits scene.
----@class MenuCredits
+---@class MenuCredits : Scene
 ---@overload fun(game):MenuCredits
-local MenuCredits = class:derive("MenuCredits")
+local MenuCredits = Scene:derive("MenuCredits")
 
 ---Constructs a new Credits screen.
 ---@param game GameMain The main game class instance this scene belongs to.
 function MenuCredits:new(game)
-    self.game = game
     self.name = "menu_credits"
+    self.game = game
 
     self.cursor = MenuCursor()
     self.backToMenuHovered = false
@@ -91,13 +91,6 @@ function MenuCredits:mousepressed(x, y, button)
             _Game:playSound("sound_events/ui_select.json")
         end
     end
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function MenuCredits:mousereleased(x, y, button)
 end
 
 return MenuCredits

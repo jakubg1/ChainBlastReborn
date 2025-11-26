@@ -1,9 +1,9 @@
-local class = require "com.class"
-local MenuStar = require("src.Game.Scenes.MenuStar")
+local Scene = require("src.Game.Scenes.Scene")
+local MenuStar = require("src.Game.MenuStar")
 
----@class MenuBackground
+---@class MenuBackground : Scene
 ---@overload fun(game):MenuBackground
-local MenuBackground = class:derive("MenuBackground")
+local MenuBackground = Scene:derive("MenuBackground")
 
 ---Constructs a Menu Background scene.
 ---@param game GameMain The main game class instance this Menu belongs to.

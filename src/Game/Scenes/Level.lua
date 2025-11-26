@@ -1,49 +1,589 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 
----@class SceneLevel
----@overload fun(game):SceneLevel
-local SceneLevel = class:derive("SceneLevel")
+---@class Level : Scene
+---@overload fun(game):Level
+local Level = Scene:derive("Level")
 
----Constructs a Level Scene. This is an empty scene, which is active during gameplay.
----The actual level alongside with its HUD is handled separately. Check the Level class and the Scene Manager.
----@param game GameMain The main game class instance this Menu belongs to.
-function SceneLevel:new(game)
+local Vec2 = require("src.Essentials.Vector2")
+local Board = require("src.Game.Board")
+
+---Constructs a Level.
+---@param game GameMain The main game class instance this Level belongs to.
+function Level:new(game)
     self.name = "level"
     self.game = game
+
+    self.config = _Game.resourceManager:getLevelConfig("levels/level_" .. tostring(self.game.player.session.level) .. ".json")
+
+    self.board = nil
+
+    self.score = 0
+    self.givenTimeBonus = 0
+    self.maxTime = self.config.time
+    self.time = self.maxTime
+    self.timeCounting = false
+    self.minCoyoteTime = -1
+    self.combo = 0
+    self.multiplier = 1
+    self.multiplierProgress = 0
+    self.won = false
+    self.lost = false
+    self.pause = false
+
+    self.bombMeter = 0
+    self.bombMeterTime = nil
+    self.bombMeterCoords = {}
+
+    self.powerMeter = 0
+    self.powerColor = 0
+    self.powerCombo = 0
+    self.maxPowerMeter = 100
+
+    self.laserPowerShots = 0
+    self.laserPowerTime = nil
+
+    self.timeElapsed = 0
+    self.maxCombo = 0
+    self.largestGroup = 0
+
+    self.clockAlarm = nil
+    self.dangerMusicFlag = false
+    self.forcedWin = false
+
+    self.levelMusic = self.config.music
+    self.dangerMusic = self.config.dangerMusic
+
+    _Game:playSound("sound_events/level_start.json")
+    self.game.player.session:incrementLevelsStarted()
+    self.levelMusic:stop()
+    self.levelMusic:play()
 end
 
----Returns whether this scene should accept any input.
----@return boolean
-function SceneLevel:isActive()
-    return false
-end
-
----Updates the intro.
+---Updates the Level.
 ---@param dt number Time delta in seconds.
-function SceneLevel:update(dt)
+function Level:update(dt)
+    if self.board and not self.pause then
+        self.board:update(dt)
+        self:updateTime(dt)
+        self:updateInactivityPause(dt)
+        self:updateMultiplier(dt)
+        self:updateBombs(dt)
+        self:updateLasers(dt)
+
+        -- Delete the board if it is dead and start the results animation.
+        if self.board.delQueue then
+            self:startLevelResults()
+        end
+    end
+
+    self:updateSounds(dt)
+    self:updateMusic(dt)
 end
 
----Draws the intro.
-function SceneLevel:draw()
+---Updates timing on this level. Trips the loss flag if the timer reaches zero.
+---This same function is also counting IGT up to show on various stat screens.
+---@param dt number Time delta in seconds.
+function Level:updateTime(dt)
+    -- Tick the time.
+    if self:isTimerTicking() then
+        self.time = self.time - dt
+        if self.time < 10 and math.floor(self.time) ~= math.floor(self.time + dt) then
+            _Game:playSound("sound_events/clock.json")
+        end
+        if self.time <= self.minCoyoteTime then
+            self.time = self.minCoyoteTime
+            if not self.bombMeterTime then
+                self:lose()
+            end
+        end
+    end
+
+    -- Count IGT (In-Game Time).
+    if not self.board.startAnimation and not self.board.endAnimation then
+        self.timeElapsed = self.timeElapsed + dt
+    end
+end
+
+---Updates the inactivity pause mechanism.
+---@param dt number Time delta in seconds.
+function Level:updateInactivityPause(dt)
+    -- Halt the inactivity pausing when the timer is not ticking yet (level not started or a long combo),
+    -- when the player is currently dragging through chains,
+    -- or when the inactivity pause is disabled in settings.
+    if not self:isTimerTicking() or self.board:isSelectionActive() or not _Game.runtimeManager.options:getSetting("autoPause") then
+        return
+    end
+    -- Pause the game when 3 seconds from any mouse movement have passed.
+    if self.lastMousePos == _MousePos then
+        self.mouseIdleTime = self.mouseIdleTime + dt
+        if not self.pause and self.mouseIdleTime > 3 then
+            self:togglePause()
+            self.mouseIdleTime = 0
+        end
+    else
+        self.mouseIdleTime = 0
+    end
+    self.lastMousePos = _MousePos
+end
+
+---Updates the score multiplier (currently unused).
+---@param dt number Time delta in seconds.
+function Level:updateMultiplier(dt)
+    if not self.config.multiplierEnabled then
+        return
+    end
+    -- Decrease the value of the bar naturally.
+    if self.board.playerControl then
+        self.multiplierProgress = self.multiplierProgress - 0.05 * dt * self.multiplier
+    end
+    if self.multiplierProgress <= 0 then
+        -- Decrease the multiplier if the bar is empty.
+        self.multiplierProgress = 0
+        if self.multiplier > 1 then
+            self.multiplier = self.multiplier - 1
+            self.multiplierProgress = 1
+        end
+    end
+end
+
+---Updates the bombs (currently unused).
+---@param dt number Time delta in seconds.
+function Level:updateBombs(dt)
+    -- No bomb spawning happens when the bomb meter is not engaged or when a shuffle is in progress.
+    if not self.bombMeterTime or self.board:countShufflingObjects() > 0 then
+        return
+    end
+    -- Every 0.5 seconds, spawn a bomb (check if we moved into another interval).
+    local n = math.floor(self.bombMeterTime / 0.5)
+    self.bombMeterTime = self.bombMeterTime + dt
+    if n ~= math.floor(self.bombMeterTime / 0.5) and n < 3 then
+        local coords = self.board:getRandomNonGoldTileCoords(self.bombMeterCoords)
+        if coords then
+            self.board:spawnBomb(coords)
+            table.insert(self.bombMeterCoords, coords)
+        end
+    end
+    -- When all three intervals are finished, end the spawning process.
+    if self.bombMeterTime >= 1.5 and #self.board.bombs == 0 then
+        self.bombMeterTime = nil
+        self.bombMeterCoords = {}
+    end
+end
+
+---Updates lasers which strike from the power crystal.
+---@param dt number Time delta in seconds.
+function Level:updateLasers(dt)
+    if not self.laserPowerTime then
+        return
+    end
+    self.laserPowerTime = self.laserPowerTime - dt
+    if self.laserPowerTime <= 0 then
+        local targetCoords = self.board:getRandomLaserTarget()
+        self.board:impactTile(targetCoords)
+        local sideTargets = {targetCoords + Vec2(0, 1), targetCoords + Vec2(0, -1), targetCoords + Vec2(1, 0), targetCoords + Vec2(-1, 0)}
+        for i, sideTarget in ipairs(sideTargets) do
+            if self.board:tileExists(sideTarget) then
+                self.board:impactTile(sideTarget)
+            end
+        end
+        _Game:playSound("sound_events/missile_explosion.json")
+        _Game:playSound("sound_events/laser_shot.json")
+        _Game.game:shakeScreen(2.5, nil, 20, 0.15)
+        self:getHUD():shootLaserFromPowerCrystal(self.board:getTileCenterPos(targetCoords))
+        self.laserPowerShots = self.laserPowerShots - 1
+        if self.laserPowerShots > 0 then
+            self.laserPowerTime = self.laserPowerTime + 0.14
+        else
+            self.laserPowerTime = nil
+        end
+    end
+end
+
+---Updates the level sounds (alarm clock).
+---@param dt number Time delta in seconds.
+function Level:updateSounds(dt)
+    if not self.clockAlarm and self.time < 5 and self:isTimerTicking() then
+        self.clockAlarm = _Game:playSound("sound_events/clock_alarm.json")
+    end
+
+    if self.clockAlarm and (self.time > 5 or not self:isTimerTicking()) then
+        self.clockAlarm:stop()
+        self.clockAlarm = nil
+    end
+end
+
+---Updates the level music (fade between level and danger music).
+---@param dt number Time delta in seconds.
+function Level:updateMusic(dt)
+    -- Do not fade between the music tracks if there is no danger track or the timer hasn't started yet.
+    if not self:isTimerTicking() or not self.dangerMusic then
+        return
+    end
+
+    if not self.dangerMusicFlag and self.time < 10 then
+        self.dangerMusicFlag = true
+        self.levelMusic:play(0, 0.5)
+        self.dangerMusic:play()
+    end
+
+    if self.dangerMusicFlag and self.time > 15 then
+        self.dangerMusicFlag = false
+        self.levelMusic:play(1, 2)
+        self.dangerMusic:stop(1)
+    end
+end
+
+---Returns a random board object type that can spawn in this level, based on the level configuration.
+---@param initial boolean Whether the spawn is a part of the initial board fill.
+---@return string
+function Level:getRandomSpawn(initial)
+    local weights = {}
+    local items = {}
+    for i, item in ipairs(self.config.spawns) do
+        local cancel = false
+        if item.initialOnly and not initial then
+            cancel = true
+        end
+        if item.fillOnly and initial then
+            cancel = true
+        end
+        if not cancel then
+            table.insert(weights, item.weight)
+            table.insert(items, item)
+        end
+    end
+    return items[_Utils.weightedRandom(weights)].type
+end
+
+---Returns a random chain shape that can spawn in this level, dictated by `crossLinkChance` in the level configuration file.
+---@return 1|2
+function Level:getRandomChainShape()
+    return math.random() < self.config.crossLinkChance and 2 or 1
+end
+
+---Creates a Board for this Level.
+function Level:startBoard()
+    self.board = Board(self)
+end
+
+---Nukes all chains on the board for this level.
+function Level:nukeBoard()
+    self.board:nukeEverything()
+end
+
+---Starts a fadeout animation for this level's Board.
+function Level:finishBoard()
+    self.board:startEndAnimation()
+end
+
+---Removes the board, applies time bonus and starts the level results animation.
+function Level:startLevelResults()
+    self.board = nil
+    self.bombMeterTime = nil
+    self.givenTimeBonus = self:getTimeBonus()
+    self:addScore(self.givenTimeBonus)
+    self.game.sceneManager:changeScene({foreground = "level_results"}, true)
+end
+
+---Returns the boss on this level's board, if it exists.
+---@return Boss?
+function Level:getBoss()
+    return self.board and self.board.boss
+end
+
+---Adds score to this level.
+---@param amount integer The amount of score to be added.
+function Level:addScore(amount)
+    self.score = self.score + amount
+    self.game.player.session:addScore(amount)
+end
+
+---Adds time to this level's timer.
+---@param amount number The amount of seconds to be added to the clock.
+function Level:addTime(amount)
+    self.time = self.time + amount
+    self:getHUD():notifyExtraTime(amount)
+end
+
+---Starts counting time down in this level.
+function Level:startTimer()
+    if self.timeCounting or self:isTimerDisabled() then
+        return
+    end
+    self.timeCounting = true
+    _Game:playSound("sound_events/clock.json")
+end
+
+---Returns `true` if the timer has been disabled, either in the level itself, or in the handicap settings.
+---@return boolean
+function Level:isTimerDisabled()
+    return _Game.runtimeManager.options:getSetting("handicapTime")
+end
+
+---Returns `true` if the time in this level is ticking down.
+---@return boolean
+function Level:isTimerTicking()
+    return self.board and self.board.playerControl and self.timeCounting and self:canPause()
+end
+
+---Returns `true` if the game can be paused, `false` if only unpaused.
+---@return boolean
+function Level:canPause()
+    return not self.lost and not self.won and not self.game.sceneManager.layers.foreground
+end
+
+---Toggles the pause state on or off.
+function Level:togglePause()
+    self:setPause(not self.pause)
+end
+
+---Enables or disables the pause.
+---@param pause boolean `true` if the game should be paused, `false` if unpaused.
+function Level:setPause(pause)
+    -- Do not pause if we cannot do so.
+    if pause and not self:canPause() then
+        return
+    end
+    self.pause = pause
+    -- Update desired music volume and show/hide the pause screen.
+    if self.pause then
+        self.levelMusic:play(0, 1)
+        if self.dangerMusic then
+            self.dangerMusic:play(0, 1)
+        end
+        self.game.sceneManager:changeScene({foreground = "level_pause"})
+    else
+        if self.dangerMusicFlag then
+            self.dangerMusic:play(1, 0.5)
+        else
+            self.levelMusic:play(1, 1)
+        end
+        self.game.sceneManager:changeScene({foreground = ""})
+    end
+end
+
+---Increments the combo counter.
+function Level:addCombo()
+    self.combo = self.combo + 1
+    self.maxCombo = math.max(self.maxCombo, self.combo)
+end
+
+---Adds the given number of units to the power meter and triggers bombing if the meter has reached 100.
+---@param amount integer The amount of units to be added.
+function Level:addToBombMeter(amount)
+    -- Cooldown before next bombs
+    if self.bombMeterTime or self.lost then
+        return
+    end
+    self.bombMeter = self.bombMeter + amount
+    if self.bombMeter >= 100 then
+        self.bombMeter = 0
+        self.bombMeterTime = 0
+        _Game:playSound("sound_events/bomb_alarm.json")
+    end
+end
+
+---Adds the given amount of power points (x3 if the color matches) to the power gauge.
+---If the current power color is 0 (any), the power gauge takes on that color.
+---If the given color is different to the current power color, the power points are added (1 per chain).
+---@param amount integer The amount of the chains destroyed.
+---@param color integer? Color of the power. If provided and the power crystal's charge does not have any color, the charge will take this color.
+function Level:addToPowerMeter(amount, color)
+    if self.powerColor == 0 and color then
+        self.powerColor = color
+    end
+    local oldMeter = self.powerMeter
+    --_Debug.console:print("Added " .. amount .. " power")
+    self.powerMeter = self.powerMeter + amount
+    -- Play a sound if enough power has been charged to do something with it.
+    if oldMeter < self.maxPowerMeter and self.powerMeter >= self.maxPowerMeter then
+        _Game:playSound("sound_events/power_ready.json")
+    end
+end
+
+---Returns `true` if the provided color matches the current power color, or `false` otherwise.
+---In order for the colors to match, they must be either same, or either of them must be 0 (colorless/rainbow).
+---@param color integer Color of the power to check against.
+---@return boolean
+function Level:powerColorMatches(color)
+    return self.powerColor == 0 or color == 0 or self.powerColor == color
+end
+
+---Sets the power level to zero and resets the power color.
+function Level:resetPowerMeter()
+    self.powerColor = 0
+    self.powerMeter = 0
+    self.powerCombo = 0
+end
+
+---Fully charges the power crystal allowing for instant usage.
+---@param color integer Color of the power.
+function Level:chargeMaxPower(color)
+    self.powerColor = color
+    self.powerMeter = self.maxPowerMeter
+end
+
+---Returns whether the power crystal is fully charged.
+---@return boolean
+function Level:isPowerFull()
+    return self.powerMeter >= self.maxPowerMeter
+end
+
+---Returns a string depicting a board selection mode if a power can be activated.
+---Returns `nil` if the power cannot be activated.
+---@return "bomb"|"lightning"|"laser"?
+function Level:getPowerMode()
+    -- Must have full power bar charged.
+    if self.powerMeter < self.maxPowerMeter then
+        return
+    end
+    -- 2 = blue
+    if self.powerColor == 1 then
+        return "bomb"
+    elseif self.powerColor == 2 then
+        return "lightning"
+    elseif self.powerColor == 3 then
+        return "laser"
+    end
+end
+
+---Schedules some lasers which will strike non-gold tiles in quick succession.
+---@param shots integer The total amount of laser shots to be spawned.
+function Level:spawnLasers(shots)
+    self.laserPowerShots = shots
+    self.laserPowerTime = 0
+end
+
+---Adds the given amount to the multiplier progress. 1 is the full bar.
+---@param amount number The progress to be given.
+function Level:addToMultiplier(amount)
+    if not self.config.multiplierEnabled then
+        return
+    end
+    self.multiplierProgress = self.multiplierProgress + amount
+    if self.multiplierProgress >= 1 then
+        -- Increase the multiplier if the bar is full.
+        self.multiplier = self.multiplier + 1
+        self.multiplierProgress = 0.2
+        _Vars:set("multiplier", self.multiplier)
+        _Game:playSound("sound_events/multiplier_increase.json")
+        _Vars:unset("multiplier")
+    end
+end
+
+---Caps the timer at zero if the grace period (time < 0) was active. Typically you only want to do this when matches are made.
+---Each time the timer is capped, the minimum coyote time is decreased by 0.02 seconds to avoid infinite clutching.
+function Level:capTimerAtZero()
+    if self.time >= 0 then
+        return
+    end
+    self.time = 0
+    self.minCoyoteTime = self.minCoyoteTime + 0.02
+end
+
+---Flashes the level background white.
+---@param intensity number Flash intensity, from 0 to 1.
+---@param duration number Duration of the flash, in seconds.
+function Level:flashBackground(intensity, duration)
+    self.game.sceneManager.layers.background:flash(intensity, duration)
+end
+
+---Sets whether the background should be visible.
+---@param visible boolean `true` if the background should be visible, `false` if not.
+function Level:setBackgroundVisible(visible)
+    self.game.sceneManager.layers.background:setVisible(visible)
+end
+
+---Returns this level's HUD.
+---@return LevelUI
+function Level:getHUD()
+    return assert(self.game.sceneManager:getLevelHUD(), "There is a Level scene active without a corresponding HUD. Fix this!")
+end
+
+---Wins this Level by stopping the music, playing the level win sound and starting the win animation.
+function Level:win()
+    self.won = true
+
+    _Game:playSound(self.config.winSound)
+    self.levelMusic:stop(0.25)
+    if self.dangerMusic then
+        self.dangerMusic:stop(0.25)
+    end
+    self.game.sceneManager:changeScene({foreground = "level_complete"})
+    self.game.player.session:incrementLevelsCompleted()
+end
+
+---Loses this Level by stopping the music, playing the level lose sound, starting the lose animation and panicking the board.
+---Also, takes one attempt away from the player.
+function Level:lose()
+    self.lost = true
+    self.board.over = true
+
+    _Game:playSound("sound_events/level_lose.json")
+    self.levelMusic:stop(0.25)
+    if self.dangerMusic then
+        self.dangerMusic:stop(0.25)
+    end
+    self.game.sceneManager:changeScene({foreground = "level_failed"})
+end
+
+---Returns the current total time bonus the player will get based on the current level state.
+---@return integer
+function Level:getTimeBonus()
+    if self:isTimerDisabled() then
+        return 0
+    end
+    local value = (self.time / self.maxTime) * self.score * 2
+    return math.ceil(value / 10) * 10
+end
+
+---Submits the level statistics to the Player, and upates the game records and statistics.
+function Level:submitLevelStats()
+    self.game.player.session:submitLargestGroup(self.largestGroup)
+    self.game.player.session:submitMaxCombo(self.maxCombo)
+    self.game.player.session:submitTimeElapsed(self.timeElapsed)
+end
+
+---Draws the Level.
+function Level:draw()
+    if not _Debug.hideBoard then
+        self:drawBoard()
+    end
+end
+
+---Draws the level board.
+function Level:drawBoard()
+    if self.board then
+        self.board:draw()
+    end
 end
 
 ---Callback from `main.lua`.
 ---@param x integer The X coordinate of mouse position.
 ---@param y integer The Y coordinate of mouse position.
 ---@param button integer The mouse button which was pressed.
-function SceneLevel:mousepressed(x, y, button)
+function Level:mousepressed(x, y, button)
+    if self.board and not self.pause then
+    	self.board:mousepressed(x, y, button)
+    end
 end
 
 ---Callback from `main.lua`.
 ---@param x integer The X coordinate of mouse position.
 ---@param y integer The Y coordinate of mouse position.
 ---@param button integer The mouse button which was released.
-function SceneLevel:mousereleased(x, y, button)
+function Level:mousereleased(x, y, button)
+    if self.board then
+    	self.board:mousereleased(x, y, button)
+    end
 end
 
 ---Callback from `main.lua`.
 ---@param key string The pressed key code.
-function SceneLevel:keypressed(key)
+function Level:keypressed(key)
+    if key == "space" then
+        self:togglePause()
+    end
 end
 
-return SceneLevel
+return Level

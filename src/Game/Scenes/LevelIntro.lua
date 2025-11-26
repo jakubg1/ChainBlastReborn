@@ -1,10 +1,10 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
 
----@class LevelIntro
+---@class LevelIntro : Scene
 ---@overload fun(game):LevelIntro
-local LevelIntro = class:derive("LevelIntro")
+local LevelIntro = Scene:derive("LevelIntro")
 
 ---Creates a Level Intro scene.
 ---@param game GameMain The main game class this scene belongs to.
@@ -17,12 +17,6 @@ function LevelIntro:new(game)
     self.time = 0
 end
 
----Returns whether this scene should accept any input.
----@return boolean
-function LevelIntro:isActive()
-    return false
-end
-
 ---Updates the Level Intro animation.
 ---@param dt number Time delta in seconds.
 function LevelIntro:update(dt)
@@ -31,10 +25,10 @@ function LevelIntro:update(dt)
         self.level:startBoard()
     end
     if self.time >= 3.5 then
-        self.level.ui:setHUDAlpha(1)
+        self.game.sceneManager:getLevelHUD():setHUDAlpha(1)
     end
     if self.time >= 7.5 then
-        self.game.sceneManager:changeScene({foreground = "level"})
+        self.game.sceneManager:changeScene({foreground = ""})
     end
 end
 
@@ -46,25 +40,6 @@ function LevelIntro:draw()
         alpha = math.min(7.5 - self.time, 1)
     end
     self.font:drawWithShadow(string.format("Level %s", self.level.config.name), natRes / 2, Vec2(0.5), nil, alpha)
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was pressed.
-function LevelIntro:mousepressed(x, y, button)
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function LevelIntro:mousereleased(x, y, button)
-end
-
----Callback from `main.lua`.
----@param key string The pressed key code.
-function LevelIntro:keypressed(key)
 end
 
 return LevelIntro

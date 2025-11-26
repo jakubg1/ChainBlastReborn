@@ -1,10 +1,10 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
 
----@class GameWin
+---@class GameWin : Scene
 ---@overload fun(game):GameWin
-local GameWin = class:derive("GameWin")
+local GameWin = Scene:derive("GameWin")
 
 ---Constructs a Game Win scene.
 ---@param game GameMain The main game class this Menu belongs to.
@@ -16,12 +16,6 @@ function GameWin:new(game)
 	self.font = _Game.resourceManager:getFont("fonts/standard.json")
     self.time = 0
     self.chimePlayed = false
-end
-
----Returns whether this scene should accept any input.
----@return boolean
-function GameWin:isActive()
-    return true
 end
 
 ---Returns whether the game win animation has finished.
@@ -92,18 +86,6 @@ function GameWin:mousepressed(x, y, button)
             _Game:playSound("sound_events/ui_select.json")
         end
     end
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function GameWin:mousereleased(x, y, button)
-end
-
----Callback from `main.lua`.
----@param key string The pressed key code.
-function GameWin:keypressed(key)
 end
 
 return GameWin

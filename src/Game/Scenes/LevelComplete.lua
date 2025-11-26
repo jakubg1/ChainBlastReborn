@@ -1,10 +1,10 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
 
----@class LevelComplete
+---@class LevelComplete : Scene
 ---@overload fun(game):LevelComplete
-local LevelComplete = class:derive("LevelComplete")
+local LevelComplete = Scene:derive("LevelComplete")
 
 ---Creates a Level Complete scene.
 ---@param game GameMain The main game class this scene belongs to.
@@ -15,12 +15,6 @@ function LevelComplete:new(game)
 
 	self.font = _Game.resourceManager:getFont("fonts/standard.json")
     self.time = 0
-end
-
----Returns whether this scene should accept any input.
----@return boolean
-function LevelComplete:isActive()
-    return true
 end
 
 ---Updates the Level Complete animation.
@@ -50,25 +44,6 @@ function LevelComplete:draw()
     local textPos = natRes / 2 + Vec2(math.max(1 - self.time / 0.5, 0) * 150, 0)
     local textAlpha = math.min(5 - self.time, 1)
     self.font:drawWithShadow("Level Complete!", textPos, Vec2(0.5), Color(0, 1, 0), textAlpha)
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was pressed.
-function LevelComplete:mousepressed(x, y, button)
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function LevelComplete:mousereleased(x, y, button)
-end
-
----Callback from `main.lua`.
----@param key string The pressed key code.
-function LevelComplete:keypressed(key)
 end
 
 return LevelComplete

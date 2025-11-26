@@ -1,10 +1,10 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
 
----@class LevelResults
+---@class LevelResults : Scene
 ---@overload fun(game):LevelResults
-local LevelResults = class:derive("LevelResults")
+local LevelResults = Scene:derive("LevelResults")
 
 ---Creates a Level Results scene.
 ---@param game GameMain The main game class this scene belongs to.
@@ -21,12 +21,6 @@ function LevelResults:new(game)
     self.newRecordDisplayed = false
 
     self.newRecordCalculation = nil
-end
-
----Returns whether this scene should accept any input.
----@return boolean
-function LevelResults:isActive()
-    return true
 end
 
 ---Returns whether the level results animation has finished.
@@ -54,7 +48,7 @@ end
 ---@param dt number Time delta in seconds.
 function LevelResults:update(dt)
     self.time = self.time + dt
-    self.level.ui:setHUDAlpha(0, true)
+    self.level:getHUD():setHUDAlpha(0, true)
     self.level:setBackgroundVisible(false)
     local threshold = self.SOUND_STEPS[self.soundStep]
     if threshold and self.time >= threshold then
@@ -168,18 +162,6 @@ function LevelResults:mousepressed(x, y, button)
             self:skip()
         end
     end
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function LevelResults:mousereleased(x, y, button)
-end
-
----Callback from `main.lua`.
----@param key string The pressed key code.
-function LevelResults:keypressed(key)
 end
 
 return LevelResults

@@ -1,10 +1,10 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
 
----@class LevelFailed
+---@class LevelFailed : Scene
 ---@overload fun(game):LevelFailed
-local LevelFailed = class:derive("LevelFailed")
+local LevelFailed = Scene:derive("LevelFailed")
 
 ---Creates a Level Failed scene.
 ---@param game GameMain The main game class this scene belongs to.
@@ -18,12 +18,6 @@ function LevelFailed:new(game)
     self.boardNuked = false
 
     self.rareMessage = math.random() < 1/69
-end
-
----Returns whether this scene should accept any input.
----@return boolean
-function LevelFailed:isActive()
-    return true
 end
 
 ---Updates the Level Failed animation.
@@ -62,25 +56,6 @@ function LevelFailed:draw()
         text = self.rareMessage and "Boo-womp :(" or "You were so close... :("
     end
     self.font:drawWithShadow(text, natRes / 2, Vec2(0.5), Color(1, 0, 0), textAlpha)
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was pressed.
-function LevelFailed:mousepressed(x, y, button)
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function LevelFailed:mousereleased(x, y, button)
-end
-
----Callback from `main.lua`.
----@param key string The pressed key code.
-function LevelFailed:keypressed(key)
 end
 
 return LevelFailed

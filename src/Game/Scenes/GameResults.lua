@@ -1,10 +1,10 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
 
----@class GameResults
+---@class GameResults : Scene
 ---@overload fun(game):GameResults
-local GameResults = class:derive("GameResults")
+local GameResults = Scene:derive("GameResults")
 
 ---Creates a Game Results scene.
 ---@param game GameMain The main game class this scene belongs to.
@@ -17,12 +17,6 @@ function GameResults:new(game)
     self.time = 0
     self.soundStep = 1
     self.SOUND_STEPS = {1.2, 1.6, 2, 2.4, 2.8, 3.8}
-end
-
----Returns whether this scene should accept any input.
----@return boolean
-function GameResults:isActive()
-    return true
 end
 
 ---Returns whether the game results animation has finished.
@@ -121,18 +115,6 @@ function GameResults:mousepressed(x, y, button)
             self:skip()
         end
     end
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function GameResults:mousereleased(x, y, button)
-end
-
----Callback from `main.lua`.
----@param key string The pressed key code.
-function GameResults:keypressed(key)
 end
 
 return GameResults

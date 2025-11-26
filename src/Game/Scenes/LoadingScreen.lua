@@ -1,10 +1,10 @@
-local class = require "com.class"
+local Scene = require("src.Game.Scenes.Scene")
 local Vec2 = require("src.Essentials.Vector2")
 local Color = require("src.Essentials.Color")
 
----@class LoadingScreen
+---@class LoadingScreen : Scene
 ---@overload fun(game):LoadingScreen
-local LoadingScreen = class:derive("LoadingScreen")
+local LoadingScreen = Scene:derive("LoadingScreen")
 
 ---Constructs the Loading Screen.
 ---@param game GameMain The main game class this scene belongs to.
@@ -17,12 +17,6 @@ function LoadingScreen:new(game)
 	self.spriteTime = 0
 	self.endTime = nil
     self.ending = false
-end
-
----Returns whether this scene should accept any input.
----@return boolean
-function LoadingScreen:isActive()
-    return true
 end
 
 ---Updates the Loading Screen.
@@ -52,25 +46,6 @@ function LoadingScreen:draw()
 	_DrawFillRect(Vec2(0, 0), Vec2(320, 180), Color(0, 0, 0), 1 - alpha)
 	self.sprite:drawWithShadow(Vec2(140, 90), Vec2(0.5), state, frame, nil, nil, alpha)
 	self.font:drawWithShadow("Loading...", Vec2(150, 90), Vec2(0, 0.5), nil, alpha)
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was pressed.
-function LoadingScreen:mousepressed(x, y, button)
-end
-
----Callback from `main.lua`.
----@param x integer The X coordinate of mouse position.
----@param y integer The Y coordinate of mouse position.
----@param button integer The mouse button which was released.
-function LoadingScreen:mousereleased(x, y, button)
-end
-
----Callback from `main.lua`.
----@param key string The pressed key code.
-function LoadingScreen:keypressed(key)
 end
 
 return LoadingScreen

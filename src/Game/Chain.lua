@@ -518,8 +518,8 @@ end
 function Chain:spawnPowerParticles(amount)
     -- TODO: Better way to store power colors and crystal position?
     local pos = self:getCenterPos()
-    local pos2 = self.board.level.ui.POWER_CRYSTAL_CENTER_POS
-    local color = self.board.level.ui.POWER_METER_COLORS[self.config.color or 0]
+    local pos2 = self.board.level:getHUD().POWER_CRYSTAL_CENTER_POS
+    local color = self.board.level:getHUD().POWER_METER_COLORS[self.config.color or 0]
     for i = 1, amount do
         -- Because the amount of particles in particle effect data is constant, we have to spawn them one by one.
         _Game.game:spawnParticles("power_spark", pos, pos2, color)
