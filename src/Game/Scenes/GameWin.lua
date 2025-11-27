@@ -16,6 +16,8 @@ function GameWin:new(game)
 	self.font = _Game.resourceManager:getFont("fonts/standard.json")
     self.time = 0
     self.chimePlayed = false
+
+    self.easterEgg = math.random() < 1/32
 end
 
 ---Returns whether the game win animation has finished.
@@ -44,8 +46,8 @@ function GameWin:draw()
             alpha = math.min((9.5 - self.time) / 2, 1)
         end
         _DrawFillRect(Vec2(), _Game:getNativeResolution(), _Utils.getRainbowColor(math.min((self.time - 2.5) / 2, 1.3)), alpha)
-        self.font:draw("YOU", natRes / 2, Vec2(0.5, 1), Color(0, 0, 0), 1, 6)
-        self.font:draw("WIN!", natRes / 2, Vec2(0.5, 0), Color(0, 0, 0), 1, 6)
+        self.font:draw(self.easterEgg and "YOU'RE" or "YOU", natRes / 2, Vec2(0.5, 1), Color(0, 0, 0), 1, 6)
+        self.font:draw(self.easterEgg and "WINNER !" or "WIN!", natRes / 2, Vec2(0.5, 0), Color(0, 0, 0), 1, 6)
     elseif self.time > 9.5 then
         local alpha = math.min(math.max((self.time - 9.5) * 2, 0), 1)
         self.font:draw("Congratulations!", Vec2(160, 10), Vec2(0.5), Color(1, 1, 0), alpha)

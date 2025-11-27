@@ -12,6 +12,8 @@ local CHAIN_TYPES = {
     chain_red = {
         sprite = "sprites/chain_red.json",
         linkSprite = "sprites/chain_link_red.json",
+        pauseSprite = "sprites/chain_pause.json",
+        pauseLinkSprite = "sprites/chain_link_pause.json",
         rendering = "chain",
         color = 1,
         affectedByGravity = true,
@@ -30,6 +32,8 @@ local CHAIN_TYPES = {
     chain_blue = {
         sprite = "sprites/chain_blue.json",
         linkSprite = "sprites/chain_link_blue.json",
+        pauseSprite = "sprites/chain_pause.json",
+        pauseLinkSprite = "sprites/chain_link_pause.json",
         rendering = "chain",
         color = 2,
         affectedByGravity = true,
@@ -48,6 +52,8 @@ local CHAIN_TYPES = {
     chain_yellow = {
         sprite = "sprites/chain_yellow.json",
         linkSprite = "sprites/chain_link_yellow.json",
+        pauseSprite = "sprites/chain_pause.json",
+        pauseLinkSprite = "sprites/chain_link_pause.json",
         rendering = "chain",
         color = 3,
         affectedByGravity = true,
@@ -66,6 +72,8 @@ local CHAIN_TYPES = {
     chain_rainbow = {
         sprite = "sprites/chain_rainbow.json",
         linkSprite = "sprites/chain_link_rainbow.json",
+        pauseSprite = "sprites/chain_pause.json",
+        pauseLinkSprite = "sprites/chain_link_pause.json",
         rendering = "chain",
         color = 0,
         affectedByGravity = true,
@@ -168,7 +176,10 @@ function Chain:new(board, coords, type, shape)
     }
     self.sprite = _Game.resourceManager:getSprite(self.config.sprite)
     self.linkSprite = self.config.linkSprite and _Game.resourceManager:getSprite(self.config.linkSprite)
+    self.pauseSprite = self.config.pauseSprite and _Game.resourceManager:getSprite(self.config.pauseSprite)
+    self.pauseLinkSprite = self.config.pauseLinkSprite and _Game.resourceManager:getSprite(self.config.pauseLinkSprite)
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
+    self.grayscaleShader = _Game.resourceManager:getShader("shaders/grayscale.glsl")
 
     self.delQueue = false
 end
@@ -705,21 +716,29 @@ function Chain:draw(offset)
     if offset then
         pos = pos + offset
     end
+    local pauseState = self.board.level:isPaused()
     local state = self:getState()
     local frame = self:getFrame()
-    local shader = self.flashTime and self.flashShader
+    local shader = nil
+    if not self.pauseSprite and pauseState then
+        shader = self.grayscaleShader
+    elseif self.flashTime then
+        shader = self.flashShader
+    end
+    local sprite = pauseState and self.pauseSprite or self.sprite
+    local linkSprite = pauseState and self.pauseLinkSprite or self.linkSprite
     -- Draw the shadow.
-    self.sprite:drawWithShadow(pos, nil, state, frame, nil, nil, nil, nil, shader, 0.6)
+    sprite:drawWithShadow(pos, nil, state, frame, nil, nil, nil, nil, shader, 0.6)
     -- Draw the debugging sprite.
     if _Debug.chainDebug then
         local logicalPos = self.board:getTilePos(self.coords)
-        self.sprite:drawWithShadow(logicalPos, nil, state, frame, nil, nil, 0.5)
+        sprite:drawWithShadow(logicalPos, nil, state, frame, nil, nil, 0.5)
     end
     -- Draw chain connections.
     for i = 1, 4 do
         if self:isVisuallyConnected(i) then
             local data = self.LINK_DATA[i]
-            self.linkSprite:drawWithShadow(pos + data.pos, nil, data.state, nil, data.rot, nil, nil, nil, shader)
+            linkSprite:drawWithShadow(pos + data.pos, nil, data.state, nil, data.rot, nil, nil, nil, shader)
         end
     end
 end

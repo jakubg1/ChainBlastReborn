@@ -351,6 +351,7 @@ function Level:setPause(pause)
         if self.dangerMusic then
             self.dangerMusic:play(0, 1)
         end
+        self.game.sceneManager.playPauseIntro = true
         self.game.sceneManager:changeScene({foreground = "level_pause"})
     else
         if self.dangerMusicFlag then
@@ -360,6 +361,12 @@ function Level:setPause(pause)
         end
         self.game.sceneManager:changeScene({foreground = ""})
     end
+end
+
+---Returns `true` if the level is currently paused, `false` otherwise.
+---@return boolean
+function Level:isPaused()
+    return self.pause
 end
 
 ---Increments the combo counter.
@@ -581,7 +588,7 @@ end
 ---Callback from `main.lua`.
 ---@param key string The pressed key code.
 function Level:keypressed(key)
-    if key == "space" then
+    if key == "space" or key == "escape" or key == "p" then
         self:togglePause()
     end
 end

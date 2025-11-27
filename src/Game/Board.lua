@@ -1440,6 +1440,9 @@ end
 ---The tile highlights show up when a powerup is active and the player is choosing its deployment position.
 ---@param offset Vector2 Offset used for screenshakes.
 function Board:drawTileHighlights(offset)
+    if self.level:isPaused() then
+        return
+    end
     for i = 1, self.size.x do
         for j = 1, self.size.y do
             local coords = Vec2(i, j)
@@ -1477,6 +1480,9 @@ end
 ---Draws the hint indicator, if it is currently present.
 ---@param offset Vector2 Offset used for screenshakes.
 function Board:drawHint(offset)
+    if self.level:isPaused() then
+        return
+    end
     if not self.hintCoords then
         return
     end
@@ -1489,6 +1495,9 @@ end
 ---Draws the cursor at the currently hovered tile position.
 ---@param offset Vector2 Offset used for screenshakes.
 function Board:drawCursor(offset)
+    if self.level:isPaused() then
+        return
+    end
     if not self.visualHoverCoords then
         return
     end

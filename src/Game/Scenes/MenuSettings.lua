@@ -57,7 +57,7 @@ function MenuSettings:new(game)
     self.texts = {
         header = Text(Vec2(160, 10), {text = "Settings", textAlign = Vec2(0.5, 0), color = Color("#4cff4c"), gradientWaveColor = Color("#199919"), gradientWaveFrequency = 200, gradientWaveSpeed = 100, shadowOffset = Vec2(1)}),
         description = Text(Vec2(25, 115), {text = "", textAlign = Vec2(0, 0), color = Color("#ffffff"), shadowOffset = Vec2(1)}),
-        back = Text(Vec2(160, 155), {text = "Back to Menu", textAlign = Vec2(0.5, 0), color = Color("#aaaaaa"), shadowOffset = Vec2(1)})
+        back = Text(Vec2(160, 155), {text = self:isInGame() and "Back" or "Back to Menu", textAlign = Vec2(0.5, 0), color = Color("#aaaaaa"), shadowOffset = Vec2(1)})
     }
     local categoryBuildX = 35
     for i, category in ipairs(self.settings) do
@@ -135,6 +135,13 @@ function MenuSettings:getCategoryCursorDetails(n)
     local x = categoryText.pos.x + w / 2
     w = w + 4
     return x, w
+end
+
+---Returns `true` if this Settings Menu exists while a level is active, i.e. has been invoked from the pause menu.
+---This changes the "Return to X" label as well as adds the background.
+---@return boolean
+function MenuSettings:isInGame()
+    return self.game.sceneManager:getLevel() ~= nil
 end
 
 ---Updates the Settings screen.
@@ -251,12 +258,22 @@ function MenuSettings:updateBackToMenu(dt)
     end
     self.backToMenuTime = self.backToMenuTime + dt
     if self.backToMenuTime >= 0.5 then
-        self.game.sceneManager:changeScene({foreground = "menu_main"})
+        if self:isInGame() then
+            self.game.sceneManager:changeScene({foreground = "level_pause"})
+        else
+            self.game.sceneManager:changeScene({foreground = "menu_main"})
+        end
     end
 end
 
 ---Draws the Settings on the screen.
 function MenuSettings:draw()
+    -- Background (only while ingame)
+    if self:isInGame() then
+        local natRes = _Game:getNativeResolution()
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)
+    end
     -- Text
     for id, text in pairs(self.texts) do
         text:draw()

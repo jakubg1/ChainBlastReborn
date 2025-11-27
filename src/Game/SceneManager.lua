@@ -48,6 +48,10 @@ function SceneManager:new(game)
 	-- This flag preserves the state of whether the intro animation should be played this time.
 	-- This flag turns off after the intro has played, and should be turned back on if required.
 	self.playMenuIntro = true
+	-- For the same reason we also need to keep track of the pause animation
+	-- (when we open the pause menu, the animation should play, but when coming back from settings, it shouldn't)
+	-- TODO: Make a mechanism which could detect which scene we are coming from and change the logic accordingly.
+	self.playPauseIntro = true
 
 	self.SCENE_CONSTRUCTORS = {
 		loading = LoadingScreen,
@@ -203,7 +207,8 @@ function SceneManager:mousepressed(x, y, button)
 		return
 	end
 	-- Handle actual scene input.
-	for i, layer in ipairs(self.layerOrder) do
+	for i = #self.layerOrder, 1, -1 do
+		local layer = self.layerOrder[i]
 		local scene = self.layers[layer]
 		if scene then
 			local consumed = scene:mousepressed(x, y, button)
@@ -224,7 +229,8 @@ function SceneManager:mousereleased(x, y, button)
 		return
 	end
 	-- Handle actual scene input.
-	for i, layer in ipairs(self.layerOrder) do
+	for i = #self.layerOrder, 1, -1 do
+		local layer = self.layerOrder[i]
 		local scene = self.layers[layer]
 		if scene then
 			local consumed = scene:mousereleased(x, y, button)
@@ -242,7 +248,8 @@ end
 ---@param dy integer The Y movement, in pixels.
 function SceneManager:mousemoved(x, y, dx, dy)
 	-- Handle actual scene input.
-	for i, layer in ipairs(self.layerOrder) do
+	for i = #self.layerOrder, 1, -1 do
+		local layer = self.layerOrder[i]
 		local scene = self.layers[layer]
 		if scene then
 			local consumed = scene:mousemoved(x, y, dx, dy)
@@ -262,7 +269,8 @@ function SceneManager:wheelmoved(x, y)
 		return
 	end
 	-- Handle actual scene input.
-	for i, layer in ipairs(self.layerOrder) do
+	for i = #self.layerOrder, 1, -1 do
+		local layer = self.layerOrder[i]
 		local scene = self.layers[layer]
 		if scene then
 			local consumed = scene:wheelmoved(x, y)
@@ -281,7 +289,8 @@ function SceneManager:keypressed(key)
 		return
 	end
 	-- Handle actual scene input.
-	for i, layer in ipairs(self.layerOrder) do
+	for i = #self.layerOrder, 1, -1 do
+		local layer = self.layerOrder[i]
 		local scene = self.layers[layer]
 		if scene then
 			local consumed = scene:keypressed(key)

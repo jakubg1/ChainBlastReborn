@@ -96,7 +96,7 @@ function MenuMain:hoverOption(index)
     end
 end
 
----Hovers the option that is currently under the mouse cursor, or unhovers the options if none of them is hovered.
+---Hovers the option that is currently under the mouse cursor, or unhovers the options if none of them are hovered.
 function MenuMain:hoverOptionAtCursor()
     for i, option in ipairs(self.menuOptions) do
         local pos = option:getPos()
@@ -106,6 +106,7 @@ function MenuMain:hoverOptionAtCursor()
             return
         end
     end
+    self.hoveredOption = nil
 end
 
 ---Hovers the previous option relative to the currently hovered one, or the last one if no option is hovered.
@@ -163,7 +164,7 @@ function MenuMain:update(dt)
     end
     -- Animate the rainbow cursor.
     if self.hoveredOption then
-        self.cursor:setY(90 + (self.hoveredOption - 1) * 12)
+        self.cursor:setY(self.menuOptions[self.hoveredOption].pos.y)
         self.cursor:setWidth(self.menuOptions[self.hoveredOption]:getFinalTextSize().x)
     end
     self.cursor:setGrab(self.hoveredOption ~= nil)
