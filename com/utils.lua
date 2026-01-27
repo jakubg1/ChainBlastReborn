@@ -1,6 +1,5 @@
 -- utils.lua by jakubg1
 -- version for OpenSMCE (might consider expanding this so that they get their own repository)
----NOTE: For backwards compatibility, the `.map()` function's arguments are reversed in comparison to standard OpenSMCE utils.
 
 local utf8 = require("utf8")
 local json = require("com.json")
@@ -20,7 +19,23 @@ local utils = {}
 function utils.loadFile(path)
 	local file, err = io.open(path, "r")
 	if not file then
-		return
+		-- Try also returning data from inside the executable if fused.
+		return love.filesystem.read(path)
+	end
+	io.input(file)
+	local contents = io.read("*a")
+	io.close(file)
+	return contents
+end
+
+---Loads a file from a given path and returns its contents in binary form, or `nil` if the file has not been found.
+---@param path string The path to the file.
+---@return string?
+function utils.loadFileBinary(path)
+	local file, err = io.open(path, "rb")
+	if not file then
+		-- Try also returning data from inside the executable if fused.
+		return love.filesystem.read(path)
 	end
 	io.input(file)
 	local contents = io.read("*a")
@@ -49,7 +64,7 @@ function utils.loadJson(path)
 		return nil
 	end
 	local success, data = pcall(function() return json.decode(contents) end)
-	assert(success, string.format("JSON error: %s: %s", path, data))
+	assert(success, string.format("JSON error: %s: %s", path, tostring(data)))
 	assert(data, string.format("Could not JSON-decode: %s, error in file contents", path))
 	return data
 end
@@ -69,15 +84,11 @@ end
 ---@param path string The path to the file.
 ---@return love.ImageData?
 function utils.loadImageData(path)
-	local f = io.open(path, "rb")
-	if f then
-		local data = f:read("*all")
-		f:close()
-		if data then
-			data = love.filesystem.newFileData(data, "tempname")
-			data = love.image.newImageData(data)
-			return data
-		end
+	local data = utils.loadFileBinary(path)
+	if data then
+		data = love.filesystem.newFileData(data, "tempname")
+		data = love.image.newImageData(data)
+		return data
 	end
 end
 
@@ -100,19 +111,15 @@ end
 ---@param path string The path to the file.
 ---@return love.SoundData?
 function utils.loadSoundData(path)
-	local f = io.open(path, "rb")
-	if f then
-		local data = f:read("*all")
-		f:close()
-		if data then
-			-- to make everything work properly, we need to get the extension from the path, because it is used
-			-- source: https://love2d.org/wiki/love.filesystem.newFileData
-			local t = utils.strSplit(path, ".")
-			local extension = t[#t]
-			data = love.filesystem.newFileData(data, "tempname." .. extension)
-			data = love.sound.newSoundData(data)
-			return data
-		end
+	local data = utils.loadFileBinary(path)
+	if data then
+		-- to make everything work properly, we need to get the extension from the path, because it is used
+		-- source: https://love2d.org/wiki/love.filesystem.newFileData
+		local t = utils.strSplit(path, ".")
+		local extension = t[#t]
+		data = love.filesystem.newFileData(data, "tempname." .. extension)
+		data = love.sound.newSoundData(data)
+		return data
 	end
 end
 
@@ -122,10 +129,7 @@ end
 ---@return love.Source?
 function utils.loadSound(path, type)
 	local soundData = utils.loadSoundData(path)
-	if not soundData then
-		return
-	end
-	return love.audio.newSource(soundData, type)
+	return soundData and love.audio.newSource(soundData, type)
 end
 
 -- This function allows to load fonts from external sources.
@@ -136,15 +140,11 @@ end
 ---@param size integer? The size of the font, in pixels. Defaults to LOVE-specified 12 pixels.
 ---@return love.Rasterizer?
 function utils.loadFontData(path, size)
-	local f = io.open(path, "rb")
-	if f then
-		local data = f:read("*all")
-		f:close()
-		if data then
-			data = love.filesystem.newFileData(data, "tempname")
-			data = love.font.newRasterizer(data, size)
-			return data
-		end
+	local data = utils.loadFileBinary(path)
+	if data then
+		data = love.filesystem.newFileData(data, "tempname")
+		data = love.font.newRasterizer(data, size)
+		return data
 	end
 end
 
@@ -154,10 +154,7 @@ end
 ---@return love.Font?
 function utils.loadFont(path, size)
 	local fontData = utils.loadFontData(path, size)
-	if not fontData then
-		return
-	end
-	return love.graphics.newFont(fontData)
+	return fontData and love.graphics.newFont(fontData)
 end
 
 ---Opens a shader file and constructs `love.Shader` from it. Returns `nil` if file not found.
@@ -165,11 +162,7 @@ end
 ---@return love.Shader?
 function utils.loadShader(path)
 	local data = utils.loadFile(path)
-	if not data then
-		return
-	end
-	local shader = love.graphics.newShader(data)
-	return shader
+	return data and love.graphics.newShader(data)
 end
 
 ---Returns a list of directories and/or files in a given path.
@@ -491,6 +484,21 @@ function utils.removeDeadObjects(t)
 			table.remove(t, i)
 		end
 	end
+end
+
+---Creates a multidimensional table (table of tables).
+---@param value any? The default value for all table elements. If `nil`, the table will be empty. If a function, the function's will be called for each item and the result will be put.
+---@param dimSize integer? First of the dimensions. If `nil`, returns the raw `value`.
+---@return any?
+function utils.tableNewMultidim(value, dimSize, ...)
+	if not dimSize then
+		return type(value) == "function" and value() or value
+	end
+	local tbl = {}
+	for i = 1, dimSize do
+		tbl[i] = utils.tableNewMultidim(value, ...)
+	end
+	return tbl
 end
 
 --##########################################--
@@ -898,27 +906,25 @@ function utils.lerpc(a, b, t)
 end
 
 ---Interpolates a number from `a` to `b` based on time `t` in range from `t1` to `t2`.
----NOTE: For backwards compatibility, this function's arguments are reversed compared to standard OpenSMCE utils.
----@param t number The time parameter.
----@param t1 number The time for which `a` is returned.
----@param t2 number The time for which `b` is returned.
 ---@param a number The value for `t = t1`.
 ---@param b number The value for `t = t2`.
+---@param t1 number The time for which `a` is returned.
+---@param t2 number The time for which `b` is returned.
+---@param t number The time parameter.
 ---@return number
-function utils.map(t, t1, t2, a, b)
+function utils.map(a, b, t1, t2, t)
 	return utils.lerp(a, b, (t - t1) / (t2 - t1))
 end
 
 ---Interpolates a number from `a` to `b` based on **clamped** time `t` in range from `t1` to `t2`.
 ---The result for `t < t1` is the same as `t = t1`, and the result for `t > t2` is the same as `t = t2`.
----NOTE: For backwards compatibility, this function's arguments are reversed compared to standard OpenSMCE utils.
----@param t number The time parameter.
+---@param a number The value for `t <= t1`.
+---@param b number The value for `t >= t2`.
 ---@param t1 number The time for which `a` is returned.
 ---@param t2 number The time for which `b` is returned.
----@param a number The value for `t = t1`.
----@param b number The value for `t = t2`.
+---@param t number The time parameter.
 ---@return number
-function utils.mapc(t, t1, t2, a, b)
+function utils.mapc(a, b, t1, t2, t)
 	return utils.lerpc(a, b, (t - t1) / (t2 - t1))
 end
 
@@ -981,7 +987,7 @@ function utils.ctextSplit(s, k)
 	return result
 end
 
----Adds a new text segment to the provided chunk of colored text.
+---Adds in-place a new text segment to the provided chunk of colored text.
 ---@param ctext ColoredText The colored text to be added to.
 ---@param text string|ColoredText The text or colored text to be added.
 ---@param color RawColor? The color of the new segment. If not specified, color of the previous segment will be used.
@@ -1184,6 +1190,21 @@ function utils.getRainbowColor(t)
 	local g = utils.clamp(2 * (1 - math.abs((t % 3) - 1)))
 	local b = utils.clamp(2 * (1 - math.abs((t % 3) - 2)))
 	return Color(r, g, b)
+end
+
+---Checks an expression list and returns `true` if all expressions evaluate to `true`.
+---@param expressions Expression[]? A list of expressions.
+---@return boolean
+function utils.checkExpressions(expressions)
+	if not expressions then
+		return true
+	end
+	for i, expression in ipairs(expressions) do
+		if not expression:evaluate() then
+			return false
+		end
+	end
+	return true
 end
 
 --####################################################################--

@@ -20,7 +20,7 @@ end
 ---Loads runtime data from `runtime.json`. If the file doesn't exist or is corrupted, generates a new runtime and prints a message to the log.
 function RuntimeManager:load()
 	-- if runtime.json exists, then load it
-	local data = _Utils.loadJson(_ParsePath("runtime.json"))
+	local data = _Utils.loadJson("runtime.json")
 	if data and data.player then
 		self.player:deserialize(data.player)
 	end
@@ -36,7 +36,7 @@ function RuntimeManager:save()
 	data.player = self.player:serialize()
 	data.options = self.options:serialize()
 
-	_Utils.saveJson(_ParsePath("runtime.json"), data)
+	_Utils.saveJson("runtime.json", data)
 end
 
 return RuntimeManager

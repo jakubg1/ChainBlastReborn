@@ -260,7 +260,7 @@ function Board:update(dt)
     _Utils.removeDeadObjects(self.bombs)
 
     -- Update the panic animation for chains.
-    self:setChainPanicStrength(_Utils.mapc(self.level.time, 0, self.level.minCoyoteTime, 0, 1))
+    self:setChainPanicStrength(_Utils.mapc(0, 1, 0, self.level.minCoyoteTime, self.level.time))
 
     -- Update dirtmap
     for x = 1, self.size.x do

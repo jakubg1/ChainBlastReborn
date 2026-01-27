@@ -53,7 +53,7 @@ function LevelPause:update(dt)
         end
         -- Animate the texts.
         for i, option in ipairs(self.options) do
-            option.pos.x = _Utils.mapc(self.startTime or 0.5, -0.1 + i * 0.1, 0.2 + i * 0.1, 400, 160)
+            option.pos.x = _Utils.mapc(400, 160, -0.1 + i * 0.1, 0.2 + i * 0.1, self.startTime or 0.5)
         end
     end
     -- Handle the end time
@@ -65,7 +65,7 @@ function LevelPause:update(dt)
         end
         -- Animate the texts.
         for i, option in ipairs(self.options) do
-            option.pos.x = _Utils.mapc(self.endTime or 0.5, -0.1 + i * 0.1, 0.2 + i * 0.1, 160, -80)
+            option.pos.x = _Utils.mapc(160, -80, -0.1 + i * 0.1, 0.2 + i * 0.1, self.endTime or 0.5)
         end
     end
     -- Highlight the hovered option.
@@ -161,9 +161,9 @@ function LevelPause:draw()
     -- Background
     local alpha = 1
     if self.startTime then
-        alpha = _Utils.mapc(self.startTime, 0, 0.2, 0, 1)
+        alpha = _Utils.mapc(0, 1, 0, 0.2, self.startTime)
     elseif self.endTime then
-        alpha = _Utils.mapc(self.endTime, 0.3, 0.5, 1, 0)
+        alpha = _Utils.mapc(1, 0, 0.3, 0.5, self.endTime)
     end
     love.graphics.setColor(0, 0, 0, alpha * 0.7)
     love.graphics.rectangle("fill", 0, 0, natRes.x, natRes.y)

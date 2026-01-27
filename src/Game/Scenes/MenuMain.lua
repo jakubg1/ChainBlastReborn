@@ -22,7 +22,7 @@ function MenuMain:new(game)
         title2 = Text(Vec2(1000, 10), {text = "Blast", textAlign = Vec2(0, 0), color = Color("#4cff4c"), gradientWaveColor = Color("#199919"), gradientWaveFrequency = 200, gradientWaveSpeed = 100, scale = 4, shadowOffset = Vec2(2)}),
         title = Text(Vec2(160, 10), {text = "Chain Blast", textAlign = Vec2(0.5, 0), color = Color("#4cff4c"), gradientWaveColor = Color("#199919"), gradientWaveFrequency = 200, gradientWaveSpeed = 100, scale = 4, shadowOffset = Vec2(2), alpha = 0}),
         header = Text(Vec2(160, 70), {text = "Main Menu", textAlign = Vec2(0.5, 0), color = Color("#ffffff"), shadowOffset = Vec2(1), alpha = 0}),
-        footer1 = Text(Vec2(3, 179), {text = "Pre-Alpha Version - Subject to change", textAlign = Vec2(0, 1), color = Color("#888888"), shadowOffset = Vec2(1), font = self.smallFont}),
+        footer1 = Text(Vec2(3, 179), {text = "Playtest Demo 1 - Subject to change", textAlign = Vec2(0, 1), color = Color("#888888"), shadowOffset = Vec2(1), font = self.smallFont}),
         footer2 = Text(Vec2(317, 179), {text = "(c) jakubg1", textAlign = Vec2(1, 1), color = Color("#888888"), shadowOffset = Vec2(1), font = self.smallFont}),
     }
     self.menuOptions = {

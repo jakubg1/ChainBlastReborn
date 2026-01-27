@@ -42,9 +42,9 @@ function Shaker:getOffset()
 	local total = Vec2()
 	for i, shake in ipairs(self.shakes) do
 		-- Count shake power.
-		local decayFactor = _Utils.map(shake.time, 0, shake.maxTime, 1, 0)
+		local decayFactor = _Utils.map(1, 0, 0, shake.maxTime, shake.time)
 		-- The following is a quadratic falloff, personally I feel like it is much more headache-inducing
-		--local decayFactor = 1 - _Utils.map(shake.time, 0, shake.maxTime, 0, 1) ^ 2
+		--local decayFactor = 1 - _Utils.map(0, 1, 0, shake.maxTime, shake.time) ^ 2
 		local t = math.sin((shake.time * shake.frequency) * math.pi * 2) * decayFactor
 		total = total + shake.vector * t
 	end

@@ -1,0 +1,9 @@
+name = "ChainBlast"
+default_targets = ["win32", "win64", "appimage"]
+build_directory = "makelove-build"
+
+love_files = [
+    "::git-ls-tree::",
+    "-*/.*",
+    "-runtime.json"
+]
