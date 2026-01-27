@@ -7,19 +7,25 @@
         {
             "sound": "sounds/chime8.wav",
             "conditions": [
-                "${[playerMade] && [length] == 4}"
+                "${[playerMade] && [length] == 4 && false}"
             ]
         },
         {
             "sound": "sounds/chime8_2.wav",
             "conditions": [
-                "${[playerMade] && [length] == 5}"
+                "${[playerMade] && [length] == 5 && false}"
             ]
         },
         {
             "sound": "sounds/chime8_3.wav",
             "conditions": [
-                "${[playerMade] && [length] >= 6}"
+                "${[playerMade] && [length] >= 6 && false}"
+            ]
+        },
+        {
+            "sound": "sounds/crit.wav",
+            "conditions": [
+                "${[playerMade] && [length] >= 5 && false}"
             ]
         }
     ]

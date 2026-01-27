@@ -1,6 +1,6 @@
 {
     "$schema": "../../schemas/config.json",
-    "name": "Chain Blast 2",
+    "name": "Chain Blast",
     "engineVersion": "v0.48.0",
     "nativeResolution": {
         "x": 320,

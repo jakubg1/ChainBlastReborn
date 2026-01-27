@@ -29,7 +29,6 @@ function LevelUI:new(game)
     self.scoreDisplay = self.game.player.session.score
     self.powerMeterDisplay = 0
     self.multiplierProgressDisplay = 0
-    self.pauseAnimation = 0
 
     self.hudAlpha = 0
     self.hudAlphaTarget = 0
@@ -90,12 +89,6 @@ function LevelUI:isAnimationPlaying()
     return self.game.sceneManager:isInputActive()
 end
 
----Returns `true` if the pause screen is visible in any capacity.
----@return boolean
-function LevelUI:isPauseVisible()
-    return self.pauseAnimation > 0
-end
-
 ---Sets the desired HUD alpha.
 ---@param alpha number Desired alpha. `1` - HUD visible, `0` - HUD hidden.
 ---@param instant boolean? If set, the change will be instant.
@@ -109,18 +102,7 @@ end
 ---Updates the level UI.
 ---@param dt number Time delta in seconds.
 function LevelUI:update(dt)
-    self:updatePause(dt)
     self:updateHUD(dt)
-end
-
----Updates the pause screen.
----@param dt number Time delta in seconds.
-function LevelUI:updatePause(dt)
-    if self.level.pause then
-        self.pauseAnimation = math.min(self.pauseAnimation + dt, 1)
-    else
-        self.pauseAnimation = math.max(self.pauseAnimation - dt, 0)
-    end
 end
 
 ---Updates gauges on the HUD.
