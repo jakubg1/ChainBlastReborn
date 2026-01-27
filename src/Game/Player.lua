@@ -2,14 +2,11 @@ local class = require "com.class"
 local Session = require("src.Game.Session")
 
 ---@class Player
----@overload fun(game):Player
+---@overload fun():Player
 local Player = class:derive("Player")
 
 ---Constructs a Player.
----@param game GameMain The main game class this Player belongs to.
-function Player:new(game)
-    self.game = game
-
+function Player:new()
     self.session = Session(self)
     ---@type table<integer, integer>
     self.levelRecords = {}
@@ -26,11 +23,27 @@ end
 ---@param score integer The score earned for that level.
 ---@return boolean
 function Player:checkAndSaveLevelHighscore(level, score)
-    if score > (self.levelRecords[level] or 0) then
-        self.levelRecords[level] = score
+    if score > (self.levelRecords[tostring(level)] or 0) then
+        self.levelRecords[tostring(level)] = score
         return true
     end
     return false
+end
+
+---Serializes this Player's data to be stored for later.
+---@return table
+function Player:serialize()
+    return {
+        session = self.session:serialize(),
+        levelRecords = self.levelRecords
+    }
+end
+
+---Restores this Player's state from data acquired by `:serialize()`.
+---@param t table Data to be restored from.
+function Player:deserialize(t)
+    self.session:deserialize(t.session)
+    self.levelRecords = t.levelRecords
 end
 
 return Player

@@ -8,7 +8,6 @@ local Game = class:derive("Game")
 
 
 local Vec2 = require("src.Essentials.Vector2")
-local Color = require("src.Essentials.Color")
 
 local Timer = require("src.Timer")
 
@@ -110,6 +109,12 @@ function Game:initSession()
 	-- Setup the UI and particles
 	--self.uiManager:init()
 	self.particleManager = ParticleManager()
+end
+
+---Returns the current player.
+---@return Player
+function Game:getPlayer()
+	return self.runtimeManager.player
 end
 
 

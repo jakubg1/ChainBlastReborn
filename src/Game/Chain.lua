@@ -565,7 +565,7 @@ function Chain:dispatchEffects(effects)
         _Game.game:shakeScreen(effects.screenShake.power, effects.screenShake.direction, effects.screenShake.frequency, effects.screenShake.duration)
     end
     if effects.countChainDestroyed then
-        _Game.game.player.session:incrementChainsDestroyed()
+        _Game:getPlayer().session:incrementChainsDestroyed()
     end
     if effects.powerCharge then
         self.board.level:addToPowerMeter(effects.powerCharge)

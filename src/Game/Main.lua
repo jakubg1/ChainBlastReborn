@@ -6,7 +6,6 @@ local GameMain = class:derive("GameMain")
 
 local Vec2 = require("src.Essentials.Vector2")
 local Settings = require("src.Game.Settings")
-local Player = require("src.Game.Player")
 local SceneManager = require("src.Game.SceneManager")
 local Particle2 = require("src.Game.Particle2")
 local ChainFragment = require("src.Game.ChainFragment")
@@ -74,7 +73,6 @@ function GameMain:new(game)
 	self.smallFont = self.game.resourceManager:getFont("fonts/small.json")
 
 	self.settings = Settings()
-	self.player = Player(self)
 	self.sceneManager = SceneManager(self)
 
 	self.particles = {}

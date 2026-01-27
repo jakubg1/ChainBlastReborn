@@ -109,6 +109,12 @@ function BootScreen:playSound(name, pos)
 	end
 end
 
+---Don't use. This is just a dummy function to silence warnings.
+---@return Player
+function BootScreen:getPlayer()
+---@diagnostic disable-next-line: missing-return
+end
+
 
 
 function BootScreen:mousepressed(x, y, button)

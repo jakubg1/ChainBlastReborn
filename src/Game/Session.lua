@@ -71,4 +71,34 @@ function Session:submitTimeElapsed(timeElapsed)
     self.timeElapsed = self.timeElapsed + timeElapsed
 end
 
+---Serializes this Session's data to be stored for later.
+---@return table
+function Session:serialize()
+    return {
+        score = self.score,
+        previousScore = self.previousScore,
+        level = self.level,
+        largestGroup = self.largestGroup,
+        maxCombo = self.maxCombo,
+        timeElapsed = self.timeElapsed,
+        chainsDestroyed = self.chainsDestroyed,
+        levelsStarted = self.levelsStarted,
+        levelsCompleted = self.levelsCompleted
+    }
+end
+
+---Restores this Session's state from data acquired by `:serialize()`.
+---@param t table Data to be restored from.
+function Session:deserialize(t)
+    self.score = t.score
+    self.previousScore = t.previousScore
+    self.level = t.level
+    self.largestGroup = t.largestGroup
+    self.maxCombo = t.maxCombo
+    self.timeElapsed = t.timeElapsed
+    self.chainsDestroyed = t.chainsDestroyed
+    self.levelsStarted = t.levelsStarted
+    self.levelsCompleted = t.levelsCompleted
+end
+
 return Session

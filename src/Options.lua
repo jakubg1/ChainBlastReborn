@@ -2,27 +2,27 @@ local class = require "com.class"
 
 ---Represents the Game options. Not to be mistaken with Engine Settings!
 ---@class Options
----@overload fun(data):Options
+---@overload fun():Options
 local Options = class:derive("Options")
 
 ---Constructs an Options object.
----@param data table The data to be read.
-function Options:new(data)
-	self.data = data
-	-- Audio
-	self.data.mute = self.data.mute == true
-	self.data.globalVolume = self.data.globalVolume or 0.25
-	self.data.musicVolume = self.data.musicVolume or 1
-	self.data.musicCueVolume = self.data.musicCueVolume or 1
-	self.data.soundVolume = self.data.soundVolume or 1
-	-- Video
-	self.data.fullscreen = self.data.fullscreen == true
-	self.data.reducedParticles = self.data.reducedParticles == true
-	self.data.screenFlashStrength = self.data.screenFlashStrength or 1
-	self.data.screenShakeStrength = self.data.screenShakeStrength or 1
-	self.data.autoPause = self.data.autoPause ~= false
-	-- Handicap
-	self.data.handicapTime = self.data.handicapTime == true
+function Options:new()
+	self.data = {
+		-- Audio
+		mute = false,
+		globalVolume = 0.25,
+		musicVolume = 1,
+		musicCueVolume = 1,
+		soundVolume = 1,
+		-- Video
+		fullscreen = false,
+		reducedParticles = false,
+		screenFlashStrength = 1,
+		screenShakeStrength = 1,
+		autoPause = true,
+		-- Handicap
+		handicapTime = false
+	}
 end
 
 ---Sets a setting based on its key.
@@ -59,6 +59,18 @@ end
 ---@return number
 function Options:getEffectiveMusicCueVolume()
 	return self.data.mute and 0 or self.data.musicCueVolume * self.data.globalVolume
+end
+
+---Returns Options' data, ready to be saved in JSON format.
+---@return table
+function Options:serialize()
+	return self.data
+end
+
+---Loads previously saved data into the Options.
+---@param t table Data previously saved with `:serialize()`.
+function Options:deserialize(t)
+	self.data = t
 end
 
 return Options

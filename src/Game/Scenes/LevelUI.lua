@@ -26,7 +26,7 @@ function LevelUI:new(game)
     self.bossbarDrainSprite = _Game.resourceManager:getSprite("sprites/bossbar_drain.json")
     self.flashShader = _Game.resourceManager:getShader("shaders/whiten.glsl")
 
-    self.scoreDisplay = self.game.player.session.score
+    self.scoreDisplay = _Game:getPlayer().session.score
     self.powerMeterDisplay = 0
     self.multiplierProgressDisplay = 0
 
@@ -116,8 +116,8 @@ function LevelUI:updateHUD(dt)
     end
 
     -- Score animation
-    if self.scoreDisplay < self.game.player.session.score then
-        self.scoreDisplay = self.scoreDisplay + math.ceil((self.game.player.session.score - self.scoreDisplay) / 8)
+    if self.scoreDisplay < _Game:getPlayer().session.score then
+        self.scoreDisplay = self.scoreDisplay + math.ceil((_Game:getPlayer().session.score - self.scoreDisplay) / 8)
     end
 
     -- Power meter gradual increase

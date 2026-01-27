@@ -13,7 +13,7 @@ function Level:new(game)
     self.name = "level"
     self.game = game
 
-    self.config = _Game.resourceManager:getLevelConfig("levels/level_" .. tostring(self.game.player.session.level) .. ".json")
+    self.config = _Game.resourceManager:getLevelConfig("levels/level_" .. tostring(_Game:getPlayer().session.level) .. ".json")
 
     self.board = nil
 
@@ -54,7 +54,7 @@ function Level:new(game)
     self.dangerMusic = self.config.dangerMusic
 
     _Game:playSound("sound_events/level_start.json")
-    self.game.player.session:incrementLevelsStarted()
+    _Game:getPlayer().session:incrementLevelsStarted()
     self.levelMusic:stop()
     self.levelMusic:play()
 end
@@ -295,7 +295,7 @@ end
 ---@param amount integer The amount of score to be added.
 function Level:addScore(amount)
     self.score = self.score + amount
-    self.game.player.session:addScore(amount)
+    _Game:getPlayer().session:addScore(amount)
 end
 
 ---Adds time to this level's timer.
@@ -517,7 +517,7 @@ function Level:win()
         self.dangerMusic:stop(0.25)
     end
     self.game.sceneManager:changeScene({foreground = "level_complete"})
-    self.game.player.session:incrementLevelsCompleted()
+    _Game:getPlayer().session:incrementLevelsCompleted()
 end
 
 ---Loses this Level by stopping the music, playing the level lose sound, starting the lose animation and panicking the board.
@@ -546,9 +546,9 @@ end
 
 ---Submits the level statistics to the Player, and upates the game records and statistics.
 function Level:submitLevelStats()
-    self.game.player.session:submitLargestGroup(self.largestGroup)
-    self.game.player.session:submitMaxCombo(self.maxCombo)
-    self.game.player.session:submitTimeElapsed(self.timeElapsed)
+    _Game:getPlayer().session:submitLargestGroup(self.largestGroup)
+    _Game:getPlayer().session:submitMaxCombo(self.maxCombo)
+    _Game:getPlayer().session:submitTimeElapsed(self.timeElapsed)
 end
 
 ---Draws the Level.

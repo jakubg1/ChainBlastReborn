@@ -62,7 +62,7 @@ function LevelResults:update(dt)
     -- First frame: Calculate the new record value and submit the level record.
     -- TODO: Do this in a better way.
     if self.newRecordCalculation == nil and not self.level.lost then
-        self.newRecordCalculation = self.game.player:checkAndSaveLevelHighscore(self.level, self.level.score)
+        self.newRecordCalculation = _Game:getPlayer():checkAndSaveLevelHighscore(_Game:getPlayer().session.level, self.level.score)
     end
 end
 
@@ -120,7 +120,7 @@ function LevelResults:draw()
         self.font:draw("Total Score:", Vec2(xLeft, 120), Vec2(0, 0.5))
     end
     if self.time > self.SOUND_STEPS[6] then
-        self.font:draw(tostring(self.game.player.session.score), Vec2(xRight, 120), Vec2(1, 0.5), Color(1, 1, 0))
+        self.font:draw(tostring(_Game:getPlayer().session.score), Vec2(xRight, 120), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > 4 then
         local text = "Click anywhere to start next level!"
@@ -150,9 +150,9 @@ function LevelResults:mousepressed(x, y, button)
                 self.game.sceneManager:changeScene({foreground = "game_win"})
             else
                 if not self.level.lost then
-                    self.game.player.session:advanceLevel()
+                    _Game:getPlayer().session:advanceLevel()
                 else
-                    self.game.player.session:restartLevel()
+                    _Game:getPlayer().session:restartLevel()
                 end
                 self.game.sceneManager:startLevel()
                 self.game.sceneManager:changeScene({foreground = "level_intro"})
