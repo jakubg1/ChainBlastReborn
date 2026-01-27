@@ -123,6 +123,9 @@ function Board:update(dt)
                 self:releaseChains()
                 self.level:win()
                 self.won = true
+                if self.boss then
+                    self.boss:kill()
+                end
             elseif not self:areMovesAvailable() then
                 self:shuffle()
             else
@@ -1088,7 +1091,7 @@ function Board:isComplete()
         end
     end
     -- Check the boss.
-    if self.boss and not self.boss.dead then
+    if self.boss and not self.boss.disarmed then
         return false
     end
     return true

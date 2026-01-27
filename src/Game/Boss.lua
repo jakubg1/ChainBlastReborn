@@ -60,6 +60,15 @@ local BOSS_DATA = {
             -- TODO: Sounds and perhaps something else too?
         }
     },
+    kill = {
+        effects = {
+            -- TODO: Dedicated sound for killing the boss.
+            sound = "sound_events/missile_explosion.json",
+            particle = "boss_fireball_explode",
+            screenShake = {power = 13, frequency = 12, duration = 1.35},
+            fragmentParticles = {}
+        }
+    },
     visualParts = {
         body = {
             sprite = "sprites/boss_1_idle.json",
@@ -92,6 +101,7 @@ function Boss:new(board)
     self.w, self.h = 3, 3
     self.health = BOSS_DATA.health
     self.active = false
+    self.disarmed = false
     self.dead = false
     self.shootTime = BOSS_DATA.attacks[1].delay
     self.shotCharged = false
@@ -128,13 +138,13 @@ end
 ---Hurts the boss by the given amount of health points.
 ---@param health integer The amount of health points to be taken away from the boss.
 function Boss:damage(health)
-    if self.dead then
+    if self.disarmed then
         return
     end
     self.health = math.max(self.health - health, 0)
     self:dispatchEffects(BOSS_DATA.damage.effects)
     if self.health == 0 then
-        self:die()
+        self:disarm()
     end
 end
 
@@ -145,13 +155,22 @@ function Boss:stun()
     self:dispatchEffects(BOSS_DATA.stun.effects)
 end
 
----Kills this boss. This function is automatically called when the boss' health reaches 0.
-function Boss:die()
+---Disarms this boss. This function is automatically called when the boss' health reaches 0.
+function Boss:disarm()
+    if self.disarmed then
+        return
+    end
+    self.disarmed = true
+    self:dispatchEffects(BOSS_DATA.disarm.effects)
+end
+
+---Kills this boss. The boss is no longer rendered and the death effect is shown, but the boss entity is still present.
+function Boss:kill()
     if self.dead then
         return
     end
     self.dead = true
-    self:dispatchEffects(BOSS_DATA.disarm.effects)
+    self:dispatchEffects(BOSS_DATA.kill.effects)
 end
 
 ---Returns the percentage of health this Boss currently has.
@@ -215,11 +234,17 @@ function Boss:dispatchEffects(effects)
         return
     end
     local pos = self:getCenterPos()
+    local reduce = _Game.runtimeManager.options:getSetting("reducedParticles")
     if effects.flash then
         self:flash(effects.flash)
     end
     if effects.particle then
         _Game.game:spawnParticles(effects.particle, pos)
+    end
+    if effects.fragmentParticles then
+        if not reduce then
+            _Game.game:spawnParticleFragments(pos, "", self.sprite, 1, 1, effects.fragmentParticles.maxAmount)
+        end
     end
     if effects.sound then
         _Game:playSound(effects.sound)
@@ -279,7 +304,7 @@ end
 ---@param dt number Time delta in seconds.
 function Boss:updateShoot(dt)
     -- The boss will not attempt to shoot if it is dormant, dead or stunned.
-    if not self.active or self.dead or self.stunTime then
+    if not self.active or self.disarmed or self.stunTime then
         return
     end
     self.shootTime = self.shootTime - dt
@@ -325,12 +350,12 @@ function Boss:updateDoor(dt)
         -- Door is open.
         self.doorAnimation = math.min(self.doorAnimation + dt / 0.35, 1)
         -- Close the door: The moment the animation finishes
-        self.doorAnimationTarget = self.doorAnimation < 1 or self.dead
+        self.doorAnimationTarget = self.doorAnimation < 1 or self.disarmed
     else
         -- Door is closed.
         self.doorAnimation = math.max(self.doorAnimation - dt / 0.35, 0)
         -- Open the door: 0.25 seconds before the shot (or when the boss is disarmed)
-        self.doorAnimationTarget = self.shootTime <= 0.25 or self.dead
+        self.doorAnimationTarget = self.shootTime <= 0.25 or self.disarmed
     end
 end
 
@@ -338,7 +363,7 @@ end
 ---@private
 ---@return Sprite
 function Boss:getSprite()
-    return self.dead and self.disarmedSprite or self.sprite
+    return self.disarmed and self.disarmedSprite or self.sprite
 end
 
 ---Returns whether the light at the provided index should be lit at this moment and which color.
@@ -350,7 +375,7 @@ function Boss:getLightState(index)
     if not self.active then
         -- Dormant (off)
         return 0
-    elseif self.dead then
+    elseif self.disarmed then
         -- Disarmed (off)
         return 0
     elseif self.stunTime then
@@ -375,6 +400,10 @@ end
 ---Draws the Boss on the screen.
 ---@param offset Vector2? If set, the offset from the actual draw position in pixels. Used for screen shake.
 function Boss:draw(offset)
+    -- Do not render if the boss is dead.
+    if self.dead then
+        return
+    end
     local pos = self.board:getTilePos(Vec2(self.x, self.y))
     if offset then
         pos = pos + offset
@@ -390,11 +419,11 @@ function Boss:draw(offset)
         end
     end
     -- Core
-    if self.dead then
+    if self.disarmed then
         self.coreSprite:draw(pos + BOSS_DATA.visualParts.core.offset, nil, nil, _TotalTime % 0.2 < 0.1 and 1 or 2)
     end
     -- Door
-    if not self.dead then
+    if not self.disarmed then
         self.doorSprite:draw(pos + BOSS_DATA.visualParts.door.offset, nil, nil, self:getDoorFrame(), nil, nil, nil, nil, shader)
     end
 end
