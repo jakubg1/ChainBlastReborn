@@ -245,7 +245,7 @@ function LevelUI:drawHUD()
                 self.font:draw(string.format("%.2f", time), Vec2(36, 150), Vec2(0.5, 0), Color(1, 0, 0), self.hudAlpha)
             end
         else
-            self.font:draw(string.format("%.1d:%.2d", time / 60, time % 60), Vec2(36, 150), Vec2(0.5, 0), nil, self.hudAlpha)
+            self.font:draw(string.format("%.1d:%.2d", math.floor(time / 60), math.floor(time % 60)), Vec2(36, 150), Vec2(0.5, 0), nil, self.hudAlpha)
         end
     end
 

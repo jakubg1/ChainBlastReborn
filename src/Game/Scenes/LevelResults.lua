@@ -82,7 +82,7 @@ function LevelResults:draw()
         self.font:draw("Time Elapsed:", Vec2(xLeft, 50), Vec2(0, 0.5))
     end
     if self.time > self.SOUND_STEPS[1] + 0.1 then
-        self.font:draw(string.format("%.1d:%.2d", self.level.timeElapsed / 60, self.level.timeElapsed % 60), Vec2(xRight, 50), Vec2(1, 0.5), Color(1, 1, 0))
+        self.font:draw(string.format("%.1d:%.2d", math.floor(self.level.timeElapsed / 60), math.floor(self.level.timeElapsed % 60)), Vec2(xRight, 50), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > self.SOUND_STEPS[2] then
         self.font:draw("Max Combo:", Vec2(xLeft, 60), Vec2(0, 0.5))

@@ -81,7 +81,7 @@ function GameResults:draw()
         self.font:draw("Total Time:", Vec2(xLeft, 80), Vec2(0, 0.5))
     end
     if self.time > 2.9 then
-        self.font:draw(string.format("%.1d:%.2d", _Game:getPlayer().session.timeElapsed / 60, _Game:getPlayer().session.timeElapsed % 60), Vec2(xRight, 80), Vec2(1, 0.5), Color(1, 1, 0))
+        self.font:draw(string.format("%.1d:%.2d", math.floor(_Game:getPlayer().session.timeElapsed / 60), math.floor(_Game:getPlayer().session.timeElapsed % 60)), Vec2(xRight, 80), Vec2(1, 0.5), Color(1, 1, 0))
     end
     if self.time > 3.4 then
         self.font:draw("Final Score:", Vec2(xMid, 105), Vec2(0.5))
