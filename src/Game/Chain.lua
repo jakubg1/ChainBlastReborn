@@ -112,6 +112,9 @@ local CHAIN_TYPES = {
         sprite = "sprites/rock.json",
         rendering = "crate",
         affectedByGravity = true,
+        onSideMatch = {
+            damage = 1
+        },
         onDestroy = {
             sound = "sound_events/rock_destroy.json",
             particle = "rock_destroy",

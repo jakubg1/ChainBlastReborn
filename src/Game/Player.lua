@@ -42,7 +42,9 @@ end
 ---Restores this Player's state from data acquired by `:serialize()`.
 ---@param t table Data to be restored from.
 function Player:deserialize(t)
-    self.session:deserialize(t.session)
+    if t.session then
+        self.session:deserialize(t.session)
+    end
     self.levelRecords = t.levelRecords
 end
 
